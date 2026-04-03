@@ -1,0 +1,320 @@
+/* ============================================================
+   AIAdvisor.module.css — Estilos del Asistente IA
+   ============================================================ */
+
+.advisor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-gold);
+}
+
+.title {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* ── PANEL DE CONTROL ── */
+.controlPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Resumen del personaje */
+.characterSummary {}
+
+.summaryTitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+
+.summaryInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.summaryBadge {
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  color: var(--gold);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-family: var(--font-title);
+}
+
+.warningText {
+  color: var(--color-warning);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Selector de tipo de análisis */
+.typeSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.typeSelectorLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.typeOptions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.typeBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  text-align: left;
+  transition: all var(--transition);
+  flex: 1;
+  min-width: 200px;
+}
+.typeBtn:hover {
+  border-color: var(--border-gold);
+  color: var(--text-primary);
+}
+.typeBtnActive {
+  border-color: var(--gold) !important;
+  background: rgba(201, 162, 39, 0.1) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-gold);
+}
+
+.typeBtnLabel {
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: inherit;
+}
+.typeBtnActive .typeBtnLabel {
+  color: var(--gold-light);
+}
+
+.typeBtnDesc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+/* Botón principal */
+.analyzeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #4a1d6e, #7c3aed);
+  border: 1px solid #7c3aed;
+  border-radius: var(--border-radius);
+  color: #fff;
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+.analyzeBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6b21a8, #8b5cf6);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+  transform: translateY(-1px);
+}
+.analyzeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── ERROR ── */
+.errorBox {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: var(--border-radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  color: var(--color-hp-light);
+}
+
+/* ── CARGANDO ── */
+.loadingBox {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 2.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.spellAnimation {
+  font-size: 2rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.loadingText {
+  font-family: var(--font-title);
+  color: var(--gold);
+  font-size: 1.1rem;
+}
+
+.loadingSubtext {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* ── RESULTADO ── */
+.resultContainer {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-gold);
+}
+
+.resultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.08), rgba(124, 58, 237, 0.08));
+  border-bottom: 1px solid var(--border-color);
+}
+
+.resultTitle {
+  font-size: 1.1rem;
+  color: var(--gold-light);
+  margin: 0;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.resultContent {
+  padding: 1.5rem;
+  max-height: 600px;
+  overflow-y: auto;
+  line-height: 1.7;
+}
+
+.markdownContent {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.resultFooter {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.75rem;
+  background: var(--bg-dark);
+}
+
+/* ── ESTADO VACÍO ── */
+.emptyState {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  filter: grayscale(0.3);
+}
+
+.emptyState h3 {
+  font-size: 1.2rem;
+  color: var(--gold);
+}
+
+.emptyState p {
+  color: var(--text-secondary);
+  max-width: 450px;
+  line-height: 1.6;
+}
+
+.emptyFeatures {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 0.5rem;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .typeOptions { flex-direction: column; }
+  .emptyFeatures { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,406 @@
+/* ============================================================
+   Compendium.module.css — Estilos del Compendio
+   ============================================================ */
+
+.compendium {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── HEADER ── */
+.header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-gold);
+}
+.title { font-size: 1.5rem; margin: 0 0 0.25rem; }
+.subtitle { color: var(--text-secondary); font-size: 0.85rem; font-style: italic; }
+
+/* ── TABS DE SECCIÓN ── */
+.sectionTabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sectionTab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-secondary);
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  transition: all var(--transition);
+}
+.sectionTab:hover {
+  color: var(--text-primary);
+  border-color: var(--border-gold);
+}
+.sectionTabActive {
+  background: rgba(201, 162, 39, 0.12) !important;
+  border-color: var(--gold) !important;
+  color: var(--gold-light) !important;
+  box-shadow: var(--shadow-gold);
+}
+
+/* ── CONTENIDO DE SECCIÓN ── */
+.sectionContent {
+  animation: fadeIn 0.25s ease;
+}
+
+/* ── LAYOUT DIVIDIDO (lista + detalle) ── */
+.splitLayout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1rem;
+  align-items: start;
+  min-height: 500px;
+}
+
+/* ── PANEL DE LISTA ── */
+.listPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 620px;
+}
+
+.panelTitle {
+  padding: 0.75rem 1rem;
+  background: var(--bg-medium);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.itemList {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  text-align: left;
+  transition: all var(--transition);
+}
+.listItem:last-child { border-bottom: none; }
+.listItem:hover {
+  background: var(--bg-medium);
+  color: var(--text-primary);
+}
+.listItemActive {
+  background: rgba(201, 162, 39, 0.1) !important;
+  color: var(--gold-light) !important;
+  border-left: 3px solid var(--gold);
+}
+
+.listItemName { font-size: 0.88rem; }
+.listItemArrow {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.listItemActive .listItemArrow { color: var(--gold); }
+
+/* ── PANEL DE DETALLE ── */
+.detailPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  max-height: 620px;
+  overflow-y: auto;
+}
+
+/* Prompt de selección */
+.selectPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  gap: 0.75rem;
+  height: 100%;
+  min-height: 300px;
+}
+.selectPrompt span { font-size: 3rem; opacity: 0.4; }
+.selectPrompt p { font-size: 0.9rem; font-style: italic; }
+
+/* Contenido del detalle */
+.detailContent {
+  padding: 1.5rem;
+}
+
+.detailTitle {
+  font-size: 1.5rem;
+  margin: 0 0 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Grid de información */
+.infoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.infoChip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.4rem 0.75rem;
+}
+.concentrationChip { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.ritualChip { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+
+.infoLabel {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-title);
+}
+.infoValue {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Títulos de subsección */
+.subsectionTitle {
+  font-size: 0.85rem;
+  color: var(--gold);
+  margin: 1rem 0 0.5rem;
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Nube de tags */
+.tagCloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.subclassTag, .abilityTag, .classTag, .propertyTag {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+.subclassTag {
+  background: rgba(201, 162, 39, 0.12);
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+}
+.abilityTag {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+.classTag {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+.propertyTag {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+}
+
+/* Equipo inicial */
+.equipList {
+  margin: 0 0 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.equipList li { margin-bottom: 0.25rem; }
+
+/* Tabla de niveles */
+.levelTable {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+.levelHeader, .levelRow {
+  display: grid;
+  grid-template-columns: 40px 100px 1fr;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.82rem;
+}
+.levelHeader {
+  background: var(--bg-medium);
+  color: var(--gold);
+  font-family: var(--font-title);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border-color);
+}
+.levelRow { border-bottom: 1px solid var(--border-color); }
+.levelRow:last-child { border-bottom: none; }
+.levelRow:hover { background: var(--bg-medium); }
+.levelNum { color: var(--gold); font-weight: 700; text-align: center; }
+.levelProf { color: var(--color-success); text-align: center; }
+.levelFeatures { color: var(--text-secondary); }
+
+/* Rasgos raciales */
+.traitList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.traitItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  background: var(--bg-medium);
+  border-radius: 4px;
+  border-left: 2px solid var(--border-gold);
+}
+.traitName {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.languageText { font-size: 0.9rem; color: var(--text-secondary); }
+.languageDesc { font-size: 0.82rem; color: var(--text-muted); font-style: italic; margin-top: 0.3rem; }
+
+/* Componentes de hechizo */
+.componentsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+  font-size: 0.85rem;
+}
+.compLabel { color: var(--text-muted); font-size: 0.8rem; }
+.compBadge {
+  background: rgba(201, 162, 39, 0.15);
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+.materialNote { color: var(--text-muted); font-style: italic; font-size: 0.8rem; }
+
+.descPara {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+}
+
+.damageBlock {}
+
+/* Filtros */
+.filters {
+  padding: 0.75rem;
+  background: var(--bg-medium);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.searchInput {
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+}
+.searchInput:focus { border-color: var(--gold-dark); }
+.filterRow {
+  display: flex;
+  gap: 0.4rem;
+}
+.filterSelect {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  outline: none;
+}
+.filterSelect:focus { border-color: var(--gold-dark); }
+
+.noResults {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+/* ── ESTADOS ── */
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--color-warning);
+  text-align: center;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .splitLayout { grid-template-columns: 1fr; }
+  .listPanel { max-height: 300px; }
+  .detailPanel { max-height: none; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

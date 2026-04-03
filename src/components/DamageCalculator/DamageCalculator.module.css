@@ -1,0 +1,422 @@
+/* ============================================================
+   DamageCalculator.module.css — Calculadora de Daño
+   ============================================================ */
+
+.calculator {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── HEADER ── */
+.header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-gold);
+}
+.title { font-size: 1.5rem; margin: 0 0 0.25rem; }
+.subtitle { color: var(--text-secondary); font-size: 0.85rem; font-style: italic; }
+
+/* ── LAYOUT DE DOS COLUMNAS ── */
+.layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* ── PANEL DE CONFIGURACIÓN ── */
+.configPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Stats del personaje */
+.statsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.statChip {
+  background: rgba(201, 162, 39, 0.1);
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-family: var(--font-title);
+}
+
+/* Categoría */
+.categorySelector {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.catBtn {
+  flex: 1;
+  padding: 0.6rem;
+  background: var(--bg-medium);
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  transition: all var(--transition);
+}
+.catBtn:hover { color: var(--text-primary); background: var(--bg-light); }
+.catBtnActive {
+  background: rgba(201, 162, 39, 0.15) !important;
+  color: var(--gold-light) !important;
+  border-bottom: 2px solid var(--gold);
+}
+
+/* Campos */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.fieldLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.select {
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+}
+.select:focus { border-color: var(--gold-dark); }
+
+/* Detalle del ítem */
+.itemDetail {
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.itemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.itemLabel { color: var(--text-muted); }
+.itemValue { color: var(--text-primary); font-weight: 600; }
+.saveHighlight { color: var(--color-mp-light); }
+
+/* Checkbox de competencia */
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.checkLabel input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+/* Ventaja/Desventaja */
+.advantageGroup {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+.advBtn {
+  flex: 1;
+  padding: 0.5rem 0.25rem;
+  background: var(--bg-medium);
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  text-align: center;
+  transition: all var(--transition);
+}
+.advBtn:hover { background: var(--bg-light); }
+.advBtnActive {
+  background: color-mix(in srgb, var(--adv-color) 15%, transparent) !important;
+  color: var(--adv-color) !important;
+  font-weight: 700;
+}
+
+/* Botón de tirar */
+.rollBtn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #7f1d1d, #dc2626);
+  border: 1px solid #dc2626;
+  border-radius: var(--border-radius);
+  color: white;
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition: all var(--transition);
+}
+.rollBtn:hover {
+  background: linear-gradient(135deg, #991b1b, #ef4444);
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+  transform: translateY(-1px);
+}
+.rollBtn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ── PANEL DE RESULTADOS ── */
+.resultsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Resultado vacío */
+.emptyResult {
+  background: var(--bg-card);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+.emptyDie { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
+
+/* Resultado de tirada */
+.rollResult {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  transition: border-color var(--transition);
+  animation: rollAppear 0.3s ease;
+}
+.rollResult.critical {
+  border-color: #eab308 !important;
+  background: linear-gradient(135deg, var(--bg-card), rgba(234, 179, 8, 0.08));
+  box-shadow: 0 0 30px rgba(234, 179, 8, 0.15);
+}
+.rollResult.critFail {
+  border-color: var(--color-danger) !important;
+  background: linear-gradient(135deg, var(--bg-card), rgba(220, 38, 38, 0.08));
+}
+
+@keyframes rollAppear {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.rollResultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.rollItemName {
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  color: var(--gold-light);
+}
+.critBadge {
+  background: linear-gradient(135deg, #854d0e, #eab308);
+  color: white;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  animation: pulse 1s ease infinite;
+}
+.failBadge {
+  background: rgba(220, 38, 38, 0.3);
+  color: var(--color-hp-light);
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+/* Secciones de resultado */
+.rollSection {
+  margin-bottom: 1.25rem;
+}
+.rollSection:last-child { margin-bottom: 0; }
+.rollSectionLabel {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+/* Desglose de tirada */
+.rollBreakdown {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.diceGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.dieResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  min-width: 36px;
+}
+.dieResult[data-size="large"] { min-width: 52px; }
+.dieResult[data-secondary] { opacity: 0.5; }
+.dieValue {
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-family: var(--font-title);
+  color: var(--text-white);
+  line-height: 1;
+}
+.dieResult[data-size="large"] .dieValue { font-size: 1.8rem; }
+.dieName {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.rollOp {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+}
+
+.bonusChip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(201, 162, 39, 0.1);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  color: var(--gold);
+  font-family: var(--font-title);
+}
+.bonusLabel { font-size: 0.6rem; color: var(--text-muted); }
+
+.totalRoll {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: var(--font-title);
+  color: var(--text-white);
+  background: var(--bg-light);
+  border: 2px solid var(--border-gold);
+  border-radius: var(--border-radius);
+  padding: 0.2rem 0.8rem;
+}
+
+.totalDmg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: var(--font-title);
+  color: var(--color-hp-light);
+  background: rgba(220, 38, 38, 0.1);
+  border: 2px solid var(--color-hp);
+  border-radius: var(--border-radius);
+  padding: 0.2rem 0.8rem;
+}
+.dmgType { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-ui); }
+
+/* CD de salvación */
+.saveDCDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.saveDCValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-title);
+  color: var(--color-mp-light);
+}
+.saveDCType { color: var(--text-secondary); font-size: 0.9rem; }
+
+.extrasNote {
+  color: var(--gold);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* ── HISTORIAL ── */
+.history {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--bg-medium);
+  border-bottom: 1px solid var(--border-color);
+}
+.historyTitle { font-size: 0.85rem; color: var(--text-secondary); margin: 0; }
+.historyList { display: flex; flex-direction: column; }
+.historyItem {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.82rem;
+  transition: background var(--transition);
+}
+.historyItem:last-child { border-bottom: none; }
+.historyItem:hover { background: var(--bg-medium); }
+.historyItemNew { background: rgba(201, 162, 39, 0.04); }
+.historyCrit { background: rgba(234, 179, 8, 0.06); }
+.historyName { color: var(--text-secondary); font-style: italic; }
+.historyAtk { color: var(--gold); font-family: var(--font-title); }
+.historyDmg { color: var(--color-hp-light); font-family: var(--font-title); font-weight: 700; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}

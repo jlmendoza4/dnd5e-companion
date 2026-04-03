@@ -1,0 +1,297 @@
+/* ============================================================
+   ESTILOS GLOBALES — D&D 5e Companion
+   Tema oscuro con estética medieval/fantástica
+   ============================================================ */
+
+/* Variables CSS — paleta de colores temáticos */
+:root {
+  /* Fondos oscuros */
+  --bg-darkest: #0d0d14;
+  --bg-dark: #141420;
+  --bg-medium: #1e1e30;
+  --bg-light: #282840;
+  --bg-card: #1a1a2e;
+  --bg-card-hover: #22223a;
+
+  /* Colores de acento — oro/ámbar como pergamino */
+  --gold: #c9a227;
+  --gold-light: #e8c547;
+  --gold-dark: #9a7a1a;
+
+  /* Texto */
+  --text-primary: #f4e4c1;
+  --text-secondary: #b8a080;
+  --text-muted: #7a6a50;
+  --text-white: #ffffff;
+
+  /* Estado */
+  --color-hp: #dc2626;
+  --color-hp-light: #ef4444;
+  --color-mp: #7c3aed;
+  --color-mp-light: #8b5cf6;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-info: #0ea5e9;
+  --color-danger: #dc2626;
+
+  /* Bordes */
+  --border-color: #3a3a5c;
+  --border-gold: #9a7a1a;
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+
+  /* Sombras */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 0 20px rgba(201, 162, 39, 0.15);
+
+  /* Tipografías */
+  --font-title: 'Cinzel', serif;        /* Títulos y cabeceras */
+  --font-body: 'Crimson Text', serif;   /* Texto de contenido */
+  --font-ui: system-ui, sans-serif;     /* Interfaz de usuario */
+
+  /* Transiciones */
+  --transition: 0.2s ease;
+}
+
+/* Reset y base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-darkest);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  min-height: 100vh;
+  /* Textura sutil de pergamino oscuro */
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(30, 10, 60, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(10, 30, 60, 0.3) 0%, transparent 50%);
+}
+
+/* Estilos de scrollbar personalizados */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-gold);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+/* Tipografías */
+h1, h2, h3 {
+  font-family: var(--font-title);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--gold-light);
+  text-shadow: 0 0 20px rgba(201, 162, 39, 0.3);
+}
+
+h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+a:hover {
+  color: var(--gold-light);
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: all var(--transition);
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: var(--border-radius);
+  padding: 0.5rem 0.75rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold-dark);
+  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.15);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+select option {
+  background: var(--bg-medium);
+  color: var(--text-primary);
+}
+
+/* Botón base */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+  transition: all var(--transition);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--bg-darkest);
+  border-color: var(--gold);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  box-shadow: var(--shadow-gold);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--bg-light);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--gold-dark);
+}
+
+.btn-danger {
+  background: rgba(220, 38, 38, 0.2);
+  color: var(--color-hp-light);
+  border-color: var(--color-hp);
+}
+.btn-danger:hover {
+  background: rgba(220, 38, 38, 0.35);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Tarjeta base */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.card:hover {
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-md);
+}
+
+/* Divisor decorativo dorado */
+.divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+  margin: 1rem 0;
+}
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-family: var(--font-ui);
+  font-weight: 600;
+}
+
+/* Estados de carga */
+.loading-spinner {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Markdown rendering básico */
+.markdown h1, .markdown h2, .markdown h3 { margin-top: 1.5rem; margin-bottom: 0.5rem; }
+.markdown p { margin-bottom: 0.75rem; }
+.markdown ul, .markdown ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+.markdown li { margin-bottom: 0.25rem; }
+.markdown strong { color: var(--gold-light); }
+.markdown code {
+  background: var(--bg-light);
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: var(--color-info);
+}
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+}
+.markdown th {
+  background: var(--bg-light);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border: 1px solid var(--border-color);
+  color: var(--gold);
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+}
+.markdown td {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border-color);
+  font-size: 0.9rem;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Responsive helpers */
+@media (max-width: 768px) {
+  body { font-size: 0.95rem; }
+}
