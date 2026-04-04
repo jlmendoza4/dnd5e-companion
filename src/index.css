@@ -1,58 +1,77 @@
 /* ============================================================
    ESTILOS GLOBALES — D&D 5e Companion
-   Tema oscuro con estética medieval/fantástica
+   Tema oscuro moderno — purple neon + glassmorphism
    ============================================================ */
 
-/* Variables CSS — paleta de colores temáticos */
+/* Variables CSS */
 :root {
-  /* Fondos oscuros */
-  --bg-darkest: #0d0d14;
-  --bg-dark: #141420;
-  --bg-medium: #1e1e30;
-  --bg-light: #282840;
-  --bg-card: #1a1a2e;
-  --bg-card-hover: #22223a;
+  /* Fondos oscuros profundos */
+  --bg-darkest: #04040c;
+  --bg-dark: #070710;
+  --bg-medium: #0c0c1e;
+  --bg-light: #121228;
+  --bg-card: rgba(12, 12, 28, 0.85);
+  --bg-card-hover: rgba(18, 18, 40, 0.95);
+  --bg-glass: rgba(255, 255, 255, 0.03);
+  --bg-glass-hover: rgba(255, 255, 255, 0.06);
 
-  /* Colores de acento — oro/ámbar como pergamino */
-  --gold: #c9a227;
-  --gold-light: #e8c547;
-  --gold-dark: #9a7a1a;
+  /* Púrpura eléctrico — color principal */
+  --purple: #7c3aed;
+  --purple-light: #a78bfa;
+  --purple-bright: #8b5cf6;
+  --purple-dim: #4c1d95;
+
+  /* Cian — acento secundario */
+  --cyan: #06b6d4;
+  --cyan-light: #22d3ee;
+  --cyan-dark: #0891b2;
+
+  /* Oro — sabor D&D */
+  --gold: #f59e0b;
+  --gold-light: #fbbf24;
+  --gold-dark: #d97706;
 
   /* Texto */
-  --text-primary: #f4e4c1;
-  --text-secondary: #b8a080;
-  --text-muted: #7a6a50;
+  --text-primary: #ede9ff;
+  --text-secondary: #9d9ab8;
+  --text-muted: #555575;
   --text-white: #ffffff;
 
   /* Estado */
-  --color-hp: #dc2626;
-  --color-hp-light: #ef4444;
-  --color-mp: #7c3aed;
-  --color-mp-light: #8b5cf6;
-  --color-success: #16a34a;
-  --color-warning: #d97706;
-  --color-info: #0ea5e9;
-  --color-danger: #dc2626;
+  --color-hp: #ef4444;
+  --color-hp-light: #f87171;
+  --color-mp: #8b5cf6;
+  --color-mp-light: #a78bfa;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-info: #22d3ee;
+  --color-danger: #ef4444;
 
   /* Bordes */
-  --border-color: #3a3a5c;
-  --border-gold: #9a7a1a;
-  --border-radius: 8px;
-  --border-radius-lg: 12px;
+  --border-color: rgba(124, 58, 237, 0.18);
+  --border-bright: rgba(124, 58, 237, 0.45);
+  --border-gold: rgba(245, 158, 11, 0.4);
+  --border-cyan: rgba(6, 182, 212, 0.4);
+  --border-radius: 10px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
 
   /* Sombras */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
-  --shadow-gold: 0 0 20px rgba(201, 162, 39, 0.15);
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 28px rgba(0, 0, 0, 0.65);
+  --shadow-lg: 0 12px 56px rgba(0, 0, 0, 0.75);
+  --shadow-purple: 0 0 28px rgba(124, 58, 237, 0.35);
+  --shadow-gold: 0 0 28px rgba(245, 158, 11, 0.25);
+  --shadow-cyan: 0 0 28px rgba(6, 182, 212, 0.25);
 
   /* Tipografías */
-  --font-title: 'Cinzel', serif;        /* Títulos y cabeceras */
-  --font-body: 'Crimson Text', serif;   /* Texto de contenido */
-  --font-ui: system-ui, sans-serif;     /* Interfaz de usuario */
+  --font-title: 'Cinzel', serif;
+  --font-body: 'Crimson Text', serif;
+  --font-ui: system-ui, -apple-system, sans-serif;
 
   /* Transiciones */
-  --transition: 0.2s ease;
+  --transition: 0.18s ease;
+  --transition-slow: 0.35s ease;
 }
 
 /* Reset y base */
@@ -74,35 +93,38 @@ body {
   font-size: 1rem;
   line-height: 1.6;
   min-height: 100vh;
-  /* Textura sutil de pergamino oscuro */
   background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(30, 10, 60, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(10, 30, 60, 0.3) 0%, transparent 50%);
+    radial-gradient(ellipse at 15% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 50%, rgba(76, 29, 149, 0.06) 0%, transparent 65%);
 }
 
 /* Estilos de scrollbar personalizados */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-dark);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-gold);
-  border-radius: 4px;
+  background: linear-gradient(180deg, var(--purple), var(--cyan-dark));
+  border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gold);
+  background: linear-gradient(180deg, var(--purple-light), var(--cyan));
 }
 
 /* Tipografías */
 h1, h2, h3 {
   font-family: var(--font-title);
   font-weight: 600;
-  letter-spacing: 0.05em;
-  color: var(--gold-light);
-  text-shadow: 0 0 20px rgba(201, 162, 39, 0.3);
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, #fff 0%, var(--purple-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 h4, h5, h6 {
@@ -112,12 +134,12 @@ h4, h5, h6 {
 }
 
 a {
-  color: var(--gold);
+  color: var(--purple-light);
   text-decoration: none;
   transition: color var(--transition);
 }
 a:hover {
-  color: var(--gold-light);
+  color: var(--cyan-light);
 }
 
 button {
@@ -128,18 +150,19 @@ button {
 
 input, select, textarea {
   font-family: var(--font-body);
-  background: var(--bg-medium);
+  background: rgba(12, 12, 28, 0.7);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   border-radius: var(--border-radius);
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.85rem;
   transition: border-color var(--transition), box-shadow var(--transition);
   outline: none;
+  backdrop-filter: blur(4px);
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: var(--gold-dark);
-  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.15);
+  border-color: var(--purple-bright);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), inset 0 0 0 1px rgba(139, 92, 246, 0.1);
 }
 
 input::placeholder, textarea::placeholder {
@@ -156,48 +179,54 @@ select option {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1.25rem;
+  padding: 0.55rem 1.35rem;
   border-radius: var(--border-radius);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   border: 1px solid transparent;
   transition: all var(--transition);
+  letter-spacing: 0.02em;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-  color: var(--bg-darkest);
-  border-color: var(--gold);
+  background: linear-gradient(135deg, var(--purple), var(--purple-bright));
+  color: white;
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
 }
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  box-shadow: var(--shadow-gold);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--purple-bright), var(--purple-light));
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.55);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
-  background: var(--bg-light);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
   border-color: var(--border-color);
+  backdrop-filter: blur(4px);
 }
 .btn-secondary:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--gold-dark);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--border-bright);
+  box-shadow: var(--shadow-purple);
 }
 
 .btn-danger {
-  background: rgba(220, 38, 38, 0.2);
+  background: rgba(239, 68, 68, 0.12);
   color: var(--color-hp-light);
-  border-color: var(--color-hp);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 .btn-danger:hover {
-  background: rgba(220, 38, 38, 0.35);
+  background: rgba(239, 68, 68, 0.22);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 /* Tarjeta base */
@@ -207,30 +236,33 @@ select option {
   border-radius: var(--border-radius-lg);
   padding: 1.25rem;
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  backdrop-filter: blur(8px);
 }
 
 .card:hover {
-  border-color: var(--border-gold);
-  box-shadow: var(--shadow-md);
+  border-color: var(--border-bright);
+  box-shadow: var(--shadow-purple);
+  transform: translateY(-1px);
 }
 
-/* Divisor decorativo dorado */
+/* Divisor decorativo */
 .divider {
   border: none;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-bright), transparent);
   margin: 1rem 0;
 }
 
 /* Badge */
 .badge {
   display: inline-block;
-  padding: 0.15rem 0.6rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-family: var(--font-ui);
   font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 /* Estados de carga */
@@ -238,10 +270,10 @@ select option {
   display: inline-block;
   width: 1.5rem;
   height: 1.5rem;
-  border: 2px solid var(--border-color);
-  border-top-color: var(--gold);
+  border: 2px solid rgba(139, 92, 246, 0.15);
+  border-top-color: var(--purple-light);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.75s linear infinite;
 }
 
 @keyframes spin {
@@ -253,13 +285,14 @@ select option {
 .markdown p { margin-bottom: 0.75rem; }
 .markdown ul, .markdown ol { margin: 0.5rem 0 0.75rem 1.5rem; }
 .markdown li { margin-bottom: 0.25rem; }
-.markdown strong { color: var(--gold-light); }
+.markdown strong { color: var(--purple-light); }
 .markdown code {
-  background: var(--bg-light);
-  padding: 0.1em 0.4em;
-  border-radius: 3px;
-  font-size: 0.9em;
-  color: var(--color-info);
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  padding: 0.1em 0.45em;
+  border-radius: 4px;
+  font-size: 0.88em;
+  color: var(--cyan-light);
 }
 .markdown table {
   width: 100%;
@@ -267,13 +300,14 @@ select option {
   margin: 0.75rem 0;
 }
 .markdown th {
-  background: var(--bg-light);
+  background: rgba(124, 58, 237, 0.1);
   padding: 0.5rem 0.75rem;
   text-align: left;
   border: 1px solid var(--border-color);
-  color: var(--gold);
+  color: var(--purple-light);
   font-family: var(--font-title);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
 }
 .markdown td {
   padding: 0.4rem 0.75rem;
@@ -283,8 +317,13 @@ select option {
 
 /* Animaciones */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(124, 58, 237, 0.2); }
+  50% { box-shadow: 0 0 24px rgba(124, 58, 237, 0.45); }
 }
 
 .fade-in {

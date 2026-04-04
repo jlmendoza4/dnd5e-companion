@@ -41,10 +41,10 @@
   border-color: var(--border-gold);
 }
 .sectionTabActive {
-  background: rgba(201, 162, 39, 0.12) !important;
-  border-color: var(--gold) !important;
-  color: var(--gold-light) !important;
-  box-shadow: var(--shadow-gold);
+  background: rgba(124, 58, 237, 0.1) !important;
+  border-color: var(--purple-bright) !important;
+  color: var(--purple-light) !important;
+  box-shadow: 0 0 14px rgba(124, 58, 237, 0.2);
 }
 
 /* ── CONTENIDO DE SECCIÓN ── */
@@ -63,25 +63,26 @@
 
 /* ── PANEL DE LISTA ── */
 .listPanel {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: rgba(7, 7, 16, 0.7);
+  border: 1px solid rgba(124, 58, 237, 0.18);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   max-height: 620px;
+  backdrop-filter: blur(8px);
 }
 
 .panelTitle {
   padding: 0.75rem 1rem;
-  background: var(--bg-medium);
-  border-bottom: 1px solid var(--border-color);
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  background: rgba(7, 7, 16, 0.5);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.12);
+  font-size: 0.72rem;
+  color: var(--text-muted);
   margin: 0;
   font-family: var(--font-title);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
 .itemList {
@@ -108,9 +109,9 @@
   color: var(--text-primary);
 }
 .listItemActive {
-  background: rgba(201, 162, 39, 0.1) !important;
-  color: var(--gold-light) !important;
-  border-left: 3px solid var(--gold);
+  background: rgba(124, 58, 237, 0.1) !important;
+  color: var(--purple-light) !important;
+  border-left: 3px solid var(--purple-bright);
 }
 
 .listItemName { font-size: 0.88rem; }
@@ -119,16 +120,17 @@
   font-size: 1.2rem;
   line-height: 1;
 }
-.listItemActive .listItemArrow { color: var(--gold); }
+.listItemActive .listItemArrow { color: var(--purple-light); }
 
 /* ── PANEL DE DETALLE ── */
 .detailPanel {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: rgba(7, 7, 16, 0.7);
+  border: 1px solid rgba(124, 58, 237, 0.18);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
   max-height: 620px;
   overflow-y: auto;
+  backdrop-filter: blur(8px);
 }
 
 /* Prompt de selección */
@@ -156,7 +158,11 @@
   font-size: 1.5rem;
   margin: 0 0 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+  background: linear-gradient(135deg, #fff 30%, var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Grid de información */
@@ -194,12 +200,12 @@
 
 /* Títulos de subsección */
 .subsectionTitle {
-  font-size: 0.85rem;
-  color: var(--gold);
+  font-size: 0.82rem;
+  color: var(--purple-light);
   margin: 1rem 0 0.5rem;
   font-family: var(--font-title);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 /* Nube de tags */
@@ -216,9 +222,9 @@
   font-size: 0.8rem;
 }
 .subclassTag {
-  background: rgba(201, 162, 39, 0.12);
-  border: 1px solid var(--border-gold);
-  color: var(--gold);
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: var(--purple-light);
 }
 .abilityTag {
   background: rgba(34, 197, 94, 0.12);
@@ -258,18 +264,18 @@
   font-size: 0.82rem;
 }
 .levelHeader {
-  background: var(--bg-medium);
-  color: var(--gold);
+  background: rgba(7, 7, 16, 0.7);
+  color: var(--purple-light);
   font-family: var(--font-title);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid var(--border-color);
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.15);
 }
 .levelRow { border-bottom: 1px solid var(--border-color); }
 .levelRow:last-child { border-bottom: none; }
-.levelRow:hover { background: var(--bg-medium); }
-.levelNum { color: var(--gold); font-weight: 700; text-align: center; }
+.levelRow:hover { background: rgba(124, 58, 237, 0.04); }
+.levelNum { color: var(--purple-light); font-weight: 700; text-align: center; }
 .levelProf { color: var(--color-success); text-align: center; }
 .levelFeatures { color: var(--text-secondary); }
 
@@ -285,9 +291,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.5rem;
-  background: var(--bg-medium);
-  border-radius: 4px;
-  border-left: 2px solid var(--border-gold);
+  background: rgba(124, 58, 237, 0.04);
+  border-radius: var(--border-radius);
+  border-left: 2px solid rgba(124, 58, 237, 0.4);
 }
 .traitName {
   font-size: 0.88rem;
@@ -308,14 +314,14 @@
 }
 .compLabel { color: var(--text-muted); font-size: 0.8rem; }
 .compBadge {
-  background: rgba(201, 162, 39, 0.15);
-  border: 1px solid var(--border-gold);
-  color: var(--gold);
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  color: var(--purple-light);
   padding: 0.1rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 999px;
   font-family: var(--font-title);
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 .materialNote { color: var(--text-muted); font-style: italic; font-size: 0.8rem; }
 
@@ -338,8 +344,8 @@
 }
 
 .spellUseCard {
-  border-color: var(--border-gold);
-  background: rgba(201, 162, 39, 0.08);
+  border-color: rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.06);
 }
 
 .spellMathNote {
@@ -351,7 +357,7 @@
 
 .spellFormula {
   margin-top: 0.35rem;
-  color: var(--gold-light);
+  color: var(--purple-light);
   font-size: 0.85rem;
   font-family: var(--font-title);
 }
@@ -375,7 +381,7 @@
   font-size: 0.85rem;
   outline: none;
 }
-.searchInput:focus { border-color: var(--gold-dark); }
+.searchInput:focus { border-color: var(--purple-bright); }
 .filterRow {
   display: flex;
   gap: 0.4rem;
@@ -383,14 +389,14 @@
 .filterSelect {
   flex: 1;
   padding: 0.35rem 0.5rem;
-  background: var(--bg-dark);
-  border: 1px solid var(--border-color);
+  background: rgba(7, 7, 16, 0.6);
+  border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: var(--border-radius);
   color: var(--text-primary);
   font-size: 0.8rem;
   outline: none;
 }
-.filterSelect:focus { border-color: var(--gold-dark); }
+.filterSelect:focus { border-color: var(--purple-bright); }
 
 .noResults {
   padding: 1.5rem 1rem;

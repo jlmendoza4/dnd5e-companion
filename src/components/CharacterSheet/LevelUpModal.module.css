@@ -23,17 +23,18 @@
 
 /* ── CONTENEDOR DEL MODAL ── */
 .modal {
-  background: var(--bg-card, #1e1e2e);
-  border: 1px solid var(--border-gold, #c9a227);
-  border-radius: var(--border-radius-lg, 12px);
+  background: rgba(10, 10, 22, 0.92);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: var(--border-radius-lg, 16px);
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 60px rgba(124, 58, 237, 0.12);
   animation: slideUp 0.2s ease;
   overflow: hidden;
+  backdrop-filter: blur(20px);
 }
 
 @keyframes slideUp {
@@ -47,8 +48,8 @@
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, rgba(201, 162, 39, 0.15), rgba(201, 162, 39, 0.05));
-  border-bottom: 1px solid var(--border-gold, #c9a227);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(76, 29, 149, 0.08));
+  border-bottom: 1px solid rgba(124, 58, 237, 0.25);
   flex-shrink: 0;
 }
 
@@ -59,11 +60,12 @@
   justify-content: center;
   width: 3.5rem;
   height: 3.5rem;
-  background: var(--gold, #c9a227);
-  color: #000;
+  background: linear-gradient(135deg, var(--purple, #7c3aed), var(--purple-bright, #8b5cf6));
+  color: white;
   border-radius: 50%;
   flex-shrink: 0;
   line-height: 1;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
 }
 
 .levelArrow {
@@ -86,7 +88,7 @@
 .title {
   font-size: 1.25rem;
   margin: 0 0 0.2rem;
-  color: var(--gold, #c9a227);
+  color: var(--purple-light, #a78bfa);
   font-family: var(--font-title, serif);
 }
 
@@ -124,19 +126,22 @@
 
 /* ── SECCIONES ── */
 .section {
-  background: var(--bg-medium, #252535);
-  border: 1px solid var(--border-color, #333);
-  border-radius: var(--border-radius, 8px);
+  background: rgba(7, 7, 16, 0.5);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: var(--border-radius, 10px);
   padding: 1rem 1.25rem;
+  backdrop-filter: blur(4px);
 }
 
 .sectionTitle {
-  font-size: 0.9rem;
-  color: var(--gold, #c9a227);
+  font-size: 0.82rem;
+  color: var(--purple-light, #a78bfa);
   font-family: var(--font-title, serif);
   margin: 0 0 0.75rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color, #333);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 /* ── PUNTOS DE GOLPE ── */
@@ -169,16 +174,16 @@
   user-select: none;
 }
 .hpOption input[type="radio"] {
-  accent-color: var(--gold);
+  accent-color: var(--purple-bright, #8b5cf6);
   cursor: pointer;
 }
 .hpOption:hover {
-  border-color: var(--border-gold);
-  background: rgba(201, 162, 39, 0.05);
+  border-color: rgba(124, 58, 237, 0.45);
+  background: rgba(124, 58, 237, 0.06);
 }
 .hpOptionActive {
-  border-color: var(--gold) !important;
-  background: rgba(201, 162, 39, 0.1) !important;
+  border-color: var(--purple-bright, #8b5cf6) !important;
+  background: rgba(124, 58, 237, 0.1) !important;
 }
 
 .hpOptionLabel {
@@ -202,9 +207,9 @@
 .customHpInput {
   width: 5rem;
   padding: 0.25rem 0.4rem;
-  background: var(--bg-dark);
-  border: 1px solid var(--border-gold);
-  border-radius: 4px;
+  background: rgba(4, 4, 12, 0.8);
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  border-radius: 6px;
   color: var(--text-white);
   font-size: 0.9rem;
   text-align: center;
@@ -247,7 +252,7 @@
 }
 
 .profArrow {
-  color: var(--gold);
+  color: var(--purple-light);
   font-size: 1.2rem;
 }
 
@@ -266,8 +271,8 @@
 
 /* ── ASI ── */
 .asiSection {
-  border-color: var(--gold);
-  background: rgba(201, 162, 39, 0.06);
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(124, 58, 237, 0.06);
 }
 
 .asiMsg {
@@ -321,11 +326,11 @@
   transition: color 0.15s;
 }
 .featureHeader:hover {
-  color: var(--gold);
+  color: var(--purple-light);
 }
 
 .featureDot {
-  color: var(--gold);
+  color: var(--purple-light);
   font-size: 0.7rem;
   margin-top: 0.25rem;
   flex-shrink: 0;
@@ -348,9 +353,9 @@
 .featureDesc {
   margin: 0.25rem 0 0.5rem 1.2rem;
   padding: 0.6rem 0.75rem;
-  border-left: 2px solid var(--border-gold);
-  background: rgba(201, 162, 39, 0.04);
-  border-radius: 0 4px 4px 0;
+  border-left: 2px solid rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.04);
+  border-radius: 0 6px 6px 0;
 }
 
 .featureDescPara {
@@ -451,9 +456,10 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-dark);
+  border-top: 1px solid rgba(124, 58, 237, 0.15);
+  background: rgba(4, 4, 12, 0.5);
   flex-shrink: 0;
+  backdrop-filter: blur(4px);
 }
 
 /* ── RESPONSIVE ── */

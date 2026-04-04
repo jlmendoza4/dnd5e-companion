@@ -19,23 +19,27 @@
 
 /* ── SECCIONES ── */
 .section {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: rgba(7, 7, 16, 0.6);
+  border: 1px solid rgba(124, 58, 237, 0.18);
   border-radius: var(--border-radius-lg);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  backdrop-filter: blur(8px);
+  transition: border-color var(--transition);
 }
-.section:hover { border-color: var(--border-gold); }
+.section:hover { border-color: rgba(124, 58, 237, 0.38); }
 
 .sectionTitle {
-  font-size: 1rem;
-  color: var(--gold);
+  font-size: 0.82rem;
+  color: var(--purple-light);
   margin: 0;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.15);
   font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .sectionDesc {
@@ -155,8 +159,8 @@
   font-size: 0.82rem;
   color: var(--text-muted);
   line-height: 1.5;
-  background: rgba(201, 162, 39, 0.05);
-  border: 1px solid var(--border-color);
+  background: rgba(124, 58, 237, 0.04);
+  border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: var(--border-radius);
   padding: 0.6rem 0.85rem;
 }
@@ -214,9 +218,9 @@
 }
 
 .techBadge {
-  background: rgba(201, 162, 39, 0.1);
-  border: 1px solid var(--border-gold);
-  color: var(--gold);
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  color: var(--purple-light);
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
   font-size: 0.75rem;
