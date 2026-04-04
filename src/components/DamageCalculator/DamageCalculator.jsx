@@ -13,7 +13,7 @@
  * - Simulador de críticos
  */
 import { useState, useEffect, useCallback } from 'react'
-import { getModifier } from '../../services/claudeApi'
+import { getModifier } from '../../services/dndUtils'
 import { getWeapons, getSpells, getEquipmentDetail, getSpellDetail } from '../../services/dndApi'
 import styles from './DamageCalculator.module.css'
 
@@ -52,6 +52,104 @@ function getProfBonus(level) {
   return Math.ceil(level / 4) + 1
 }
 
+function normalizeClassName(name = '') {
+  return String(name)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+function getSpellcastingAbilityKey(className = '', stats = {}) {
+  const c = normalizeClassName(className)
+
+  if (c === 'mago' || c === 'wizard' || c === 'artificer') return 'INT'
+  if (c === 'clerigo' || c === 'druida' || c === 'explorador' || c === 'cleric' || c === 'druid' || c === 'ranger') return 'SAB'
+  if (c === 'bardo' || c === 'paladin' || c === 'hechicero' || c === 'sorcerer' || c === 'warlock' || c === 'brujo') return 'CAR'
+
+  // Si no hay clase lanzadora clara, usar la mejor mental.
+  const mental = ['INT', 'SAB', 'CAR']
+  return mental.reduce((best, key) => {
+    const bestVal = Number(stats[best] || 10)
+    const keyVal = Number(stats[key] || 10)
+    return keyVal > bestVal ? key : best
+  }, 'INT')
+}
+
+function getClassIndexForApi(className = '') {
+  const c = normalizeClassName(className)
+  const map = {
+    barbaro: 'barbarian',
+    barbarian: 'barbarian',
+    bardo: 'bard',
+    bard: 'bard',
+    clerigo: 'cleric',
+    cleric: 'cleric',
+    druida: 'druid',
+    druid: 'druid',
+    explorador: 'ranger',
+    ranger: 'ranger',
+    guerrero: 'fighter',
+    fighter: 'fighter',
+    mago: 'wizard',
+    wizard: 'wizard',
+    monje: 'monk',
+    monk: 'monk',
+    paladin: 'paladin',
+    picaro: 'rogue',
+    rogue: 'rogue',
+    hechicero: 'sorcerer',
+    sorcerer: 'sorcerer',
+    warlock: 'warlock',
+    brujo: 'warlock'
+  }
+  return map[c] || ''
+}
+
+function getFirstDamageDice(detail) {
+  if (!detail?.damage) return null
+
+  if (detail.damage.damage_at_slot_level) {
+    const entries = Object.entries(detail.damage.damage_at_slot_level)
+      .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
+    return entries[0]?.[1] || null
+  }
+
+  if (detail.damage.damage_at_character_level) {
+    const entries = Object.entries(detail.damage.damage_at_character_level)
+      .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
+    return entries[0]?.[1] || null
+  }
+
+  return detail.damage.damage_dice || null
+}
+
+function mapApiSpellToCalculator(detail) {
+  const rawSave = detail?.dc?.dc_type?.index || ''
+  const saveType = rawSave ? rawSave.toUpperCase() : null
+  const dmgDice = getFirstDamageDice(detail) || '0d0'
+  const dmgType = detail?.damage?.damage_type?.name || 'variable'
+  const name = detail?.name || 'Hechizo'
+
+  // Conjuros como Magic Missile no usan tirada de ataque ni salvación.
+  const normalized = name.toLowerCase()
+  const isAutoHit = normalized.includes('magic missile') || normalized.includes('proyectil magico')
+  const noRoll = isAutoHit || (!detail?.attack_type && !saveType)
+
+  return {
+    source: 'api',
+    index: detail.index,
+    name,
+    dmgDice,
+    dmgType,
+    range: detail.range,
+    level: detail.level,
+    saveType,
+    saveMod: saveType,
+    noRoll
+  }
+}
+
 // ── Lanza un dado virtual ──
 function rollDie(sides) {
   return Math.floor(Math.random() * sides) + 1
@@ -85,79 +183,185 @@ export default function DamageCalculator({ character }) {
   const [advantage, setAdvantage]     = useState('normal') // 'normal'|'advantage'|'disadvantage'
   const [rollHistory, setRollHistory] = useState([])
   const [lastRoll, setLastRoll]       = useState(null)
+  const [apiSpellList, setApiSpellList] = useState([])
+  const [spellListLoading, setSpellListLoading] = useState(false)
+  const [spellError, setSpellError] = useState(null)
+  const [spellDetailLoading, setSpellDetailLoading] = useState(false)
+  const [spellScope, setSpellScope] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dnd_spell_scope')
+      return saved === 'all' ? 'all' : 'class'
+    } catch {
+      return 'class'
+    }
+  }) // 'class' | 'all'
 
   // Estadísticas del personaje
   const stats = character.stats || {}
   const level = character.level || 1
   const profBonus = getProfBonus(level)
 
-  // ── Obtiene el modificador de la estadística del ítem seleccionado ──
-  const getItemMod = useCallback(() => {
-    const modKey = selectedItem?.atkMod || selectedItem?.saveMod
+  const spellAbilityKey = getSpellcastingAbilityKey(character.class, stats)
+  const spellAbilityMod = getModifier(stats[spellAbilityKey] || 10)
+  const spellSaveDC = 8 + profBonus + spellAbilityMod
+  const spellAttackBonus = profBonus + spellAbilityMod
+
+  const classIndex = getClassIndexForApi(character.class)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dnd_spell_scope', spellScope)
+    } catch {
+      // Ignorar errores de almacenamiento (modo privado, etc.)
+    }
+  }, [spellScope])
+
+  // ── Obtiene el modificador para armas (FUE/DES) ──
+  const getWeaponMod = useCallback(() => {
+    const modKey = selectedItem?.atkMod
     if (!modKey || !stats[modKey]) return 0
     return getModifier(stats[modKey])
   }, [selectedItem, stats])
 
-  // ── CD de salvación para hechizos ──
-  const getSpellSaveDC = useCallback(() => {
-    const spellMod = getModifier(stats.INT || stats.SAB || stats.CAR || 10)
-    return 8 + profBonus + spellMod
-  }, [stats, profBonus])
+  // ── Carga hechizos reales de la API (filtrados por clase si aplica) ──
+  useEffect(() => {
+    if (category !== 'spell') return
+
+    let cancelled = false
+    setSpellListLoading(true)
+    setSpellError(null)
+
+    const query = spellScope === 'class' && classIndex
+      ? { classIndex }
+      : {}
+
+    getSpells(query)
+      .then((spells) => {
+        if (cancelled) return
+        const mapped = (spells || []).map(s => ({
+          source: 'api-list',
+          index: s.index,
+          name: s.name,
+          level: null,
+          dmgDice: '?',
+          dmgType: 'por determinar'
+        }))
+        setApiSpellList(mapped)
+
+        // Si no hay hechizo seleccionado en modo spell, selecciona el primero.
+        if (!selectedItem || selectedItem.source !== 'api') {
+          if (mapped[0]) setSelectedItem(mapped[0])
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setSpellError(err.message)
+          setApiSpellList([])
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSpellListLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [category, classIndex, spellScope])
+
+  // ── Cuando se elige un hechizo de la API, carga su detalle real ──
+  useEffect(() => {
+    if (category !== 'spell') return
+    if (!selectedItem || selectedItem.source !== 'api-list') return
+
+    let cancelled = false
+    setSpellDetailLoading(true)
+    getSpellDetail(selectedItem.index)
+      .then((detail) => {
+        if (cancelled) return
+        setSelectedItem(mapApiSpellToCalculator(detail))
+      })
+      .catch((err) => {
+        if (!cancelled) setSpellError(err.message)
+      })
+      .finally(() => {
+        if (!cancelled) setSpellDetailLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [category, selectedItem])
 
   // ── Realiza una tirada de ataque completa ──
   const rollAttack = useCallback(() => {
     if (!selectedItem) return
 
-    const isCrit     = false
-    const d20Roll    = rollDie(20)
-    const d20Roll2   = advantage !== 'normal' ? rollDie(20) : null
+    if (category === 'spell' && selectedItem.source === 'api-list') {
+      setSpellError('Todavia se esta cargando el detalle del hechizo. Espera un segundo.')
+      return
+    }
+
+    const isSpell = category === 'spell'
+    const saveType = isSpell ? (selectedItem.saveType || selectedItem.saveMod || null) : null
+    const usesSave = Boolean(saveType)
+    const usesSpellAttack = isSpell && !usesSave && !selectedItem.noRoll
+    const usesAttackRoll = category === 'weapon' || usesSpellAttack
+
+    const d20Roll    = usesAttackRoll ? rollDie(20) : null
+    const d20Roll2   = usesAttackRoll && advantage !== 'normal' ? rollDie(20) : null
 
     let finalD20 = d20Roll
-    if (advantage === 'advantage')    finalD20 = Math.max(d20Roll, d20Roll2)
-    if (advantage === 'disadvantage') finalD20 = Math.min(d20Roll, d20Roll2)
+    if (usesAttackRoll && advantage === 'advantage')    finalD20 = Math.max(d20Roll, d20Roll2)
+    if (usesAttackRoll && advantage === 'disadvantage') finalD20 = Math.min(d20Roll, d20Roll2)
 
-    const isCriticalHit  = finalD20 === 20
-    const isCriticalFail = finalD20 === 1
+    const isCriticalHit  = usesAttackRoll && finalD20 === 20
+    const isCriticalFail = usesAttackRoll && finalD20 === 1
 
     // Modificador total de ataque
-    const atkMod = selectedItem.noRoll ? 0 : getItemMod()
-    const profMod = isProficient ? profBonus : 0
-    const totalAtkBonus = atkMod + profMod
-    const finalAtkRoll  = finalD20 + totalAtkBonus
+    let totalAtkBonus = 0
+    if (category === 'weapon') {
+      const atkMod = selectedItem.noRoll ? 0 : getWeaponMod()
+      const profMod = isProficient ? profBonus : 0
+      totalAtkBonus = atkMod + profMod
+    } else if (usesSpellAttack) {
+      totalAtkBonus = spellAttackBonus
+    }
+    const finalAtkRoll = usesAttackRoll ? finalD20 + totalAtkBonus : null
 
     // Tirada de daño (doble dados en crítico)
     const dmgResult = rollDice(selectedItem.dmgDice, isCriticalHit)
-    const dmgMod    = selectedItem.noRoll ? (selectedItem.bonus || 0) : getItemMod()
+    const dmgMod    = selectedItem.noRoll
+      ? (selectedItem.bonus || 0)
+      : (category === 'weapon' ? getWeaponMod() : 0)
     const extras    = selectedItem.extras ? ` +${selectedItem.extras} proyectiles adicionales` : ''
     const totalDmg  = dmgResult.total + dmgMod
 
     const roll = {
       id:           Date.now(),
       itemName:     selectedItem.name,
-      type:         selectedItem.saveMod ? 'save' : 'attack',
+      type:         usesSave ? 'save' : (usesAttackRoll ? 'attack' : 'effect'),
       d20:          finalD20,
       d20_1:        d20Roll,
       d20_2:        d20Roll2,
       advantage,
       atkBonus:     totalAtkBonus,
       totalAtkRoll: finalAtkRoll,
+      hasAttackRoll: usesAttackRoll,
       isCriticalHit,
       isCriticalFail,
       dmgRolls:     dmgResult.rolls,
       dmgMod,
       totalDmg,
       dmgType:      selectedItem.dmgType,
-      saveDC:       selectedItem.saveMod ? getSpellSaveDC() : null,
-      saveType:     selectedItem.saveMod,
+      saveDC:       usesSave ? spellSaveDC : null,
+      saveType:     saveType,
       extras,
       diceNotation: dmgResult.notation || selectedItem.dmgDice
     }
 
     setLastRoll(roll)
     setRollHistory(prev => [roll, ...prev].slice(0, 10)) // Máximo 10 entradas
-  }, [selectedItem, advantage, isProficient, getItemMod, profBonus, getSpellSaveDC])
+  }, [selectedItem, category, advantage, isProficient, getWeaponMod, profBonus, spellAttackBonus, spellSaveDC])
 
-  const items = category === 'weapon' ? QUICK_WEAPONS : QUICK_SPELLS
+  const items = category === 'weapon'
+    ? QUICK_WEAPONS
+    : (apiSpellList.length > 0 ? apiSpellList : QUICK_SPELLS)
 
   return (
     <div className={styles.calculator}>
@@ -181,12 +385,25 @@ export default function DamageCalculator({ character }) {
             <div className={styles.statChip}>
               <span>+{profBonus} Competencia</span>
             </div>
-            {selectedItem?.atkMod && (
+            {category === 'weapon' && selectedItem?.atkMod && (
               <div className={styles.statChip}>
                 <span>
-                  {selectedItem.atkMod} {getItemMod() >= 0 ? '+' : ''}{getItemMod()}
+                  {selectedItem.atkMod} {getWeaponMod() >= 0 ? '+' : ''}{getWeaponMod()}
                 </span>
               </div>
+            )}
+            {category === 'spell' && (
+              <>
+                <div className={styles.statChip}>
+                  <span>{spellAbilityKey} {spellAbilityMod >= 0 ? '+' : ''}{spellAbilityMod}</span>
+                </div>
+                <div className={styles.statChip}>
+                  <span>CD {spellSaveDC}</span>
+                </div>
+                <div className={styles.statChip}>
+                  <span>Ataque conjuro +{spellAttackBonus}</span>
+                </div>
+              </>
             )}
           </div>
 
@@ -200,11 +417,44 @@ export default function DamageCalculator({ character }) {
             </button>
             <button
               className={`${styles.catBtn} ${category === 'spell' ? styles.catBtnActive : ''}`}
-              onClick={() => { setCategory('spell'); setSelectedItem(QUICK_SPELLS[0]) }}
+              onClick={() => {
+                setCategory('spell')
+                setSelectedItem(apiSpellList[0] || QUICK_SPELLS[0])
+              }}
             >
               ✨ Hechizos
             </button>
           </div>
+
+          {category === 'spell' && spellListLoading && (
+            <p className={styles.apiHint}>Cargando hechizos de la API...</p>
+          )}
+          {category === 'spell' && spellDetailLoading && (
+            <p className={styles.apiHint}>Cargando detalle del hechizo...</p>
+          )}
+          {category === 'spell' && spellScope === 'class' && !classIndex && (
+            <p className={styles.apiHint}>No se detecta una clase lanzadora en tu ficha. Mostrando todos los hechizos.</p>
+          )}
+          {category === 'spell' && spellError && (
+            <p className={styles.apiError}>No se pudieron cargar hechizos API: {spellError}</p>
+          )}
+
+          {category === 'spell' && (
+            <div className={styles.advantageGroup}>
+              <button
+                className={`${styles.advBtn} ${spellScope === 'class' ? styles.advBtnActive : ''}`}
+                onClick={() => setSpellScope('class')}
+              >
+                Mi clase
+              </button>
+              <button
+                className={`${styles.advBtn} ${spellScope === 'all' ? styles.advBtnActive : ''}`}
+                onClick={() => setSpellScope('all')}
+              >
+                Todos
+              </button>
+            </div>
+          )}
 
           {/* Selector de ítem */}
           <div className={styles.field}>
@@ -221,7 +471,7 @@ export default function DamageCalculator({ character }) {
             >
               {items.map(item => (
                 <option key={item.name} value={item.name}>
-                  {item.name} — {item.dmgDice}
+                  {item.name} — {item.dmgDice || '?'}
                 </option>
               ))}
             </select>
@@ -244,7 +494,7 @@ export default function DamageCalculator({ character }) {
                   <span className={styles.itemValue}>{selectedItem.range}</span>
                 </div>
               )}
-              {selectedItem.level !== undefined && (
+              {selectedItem.level !== undefined && selectedItem.level !== null && (
                 <div className={styles.itemRow}>
                   <span className={styles.itemLabel}>Nivel:</span>
                   <span className={styles.itemValue}>
@@ -256,8 +506,39 @@ export default function DamageCalculator({ character }) {
                 <div className={styles.itemRow}>
                   <span className={styles.itemLabel}>CD de salvación:</span>
                   <span className={`${styles.itemValue} ${styles.saveHighlight}`}>
-                    {getSpellSaveDC()} ({selectedItem.saveMod})
+                    {spellSaveDC} ({selectedItem.saveType || selectedItem.saveMod})
                   </span>
+                </div>
+              )}
+
+              {category === 'spell' && (
+                <div className={styles.spellGuideBox}>
+                  {selectedItem.saveType || selectedItem.saveMod ? (
+                    <>
+                      <p className={styles.spellGuideTitle}>Este hechizo usa TIRADA DE SALVACIÓN</p>
+                      <p className={styles.spellGuideText}>
+                        El objetivo tira {selectedItem.saveType || selectedItem.saveMod} contra tu CD {spellSaveDC}.
+                      </p>
+                      <p className={styles.spellGuideFormula}>
+                        CD = 8 + competencia (+{profBonus}) + mod {spellAbilityKey} ({spellAbilityMod >= 0 ? '+' : ''}{spellAbilityMod})
+                      </p>
+                    </>
+                  ) : selectedItem.noRoll ? (
+                    <>
+                      <p className={styles.spellGuideTitle}>Este hechizo no usa ataque ni CD</p>
+                      <p className={styles.spellGuideText}>Aplica su efecto directamente.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className={styles.spellGuideTitle}>Este hechizo usa ATAQUE DE CONJURO</p>
+                      <p className={styles.spellGuideText}>
+                        Tira 1d20 y suma +{spellAttackBonus}.
+                      </p>
+                      <p className={styles.spellGuideFormula}>
+                        Ataque conjuro = competencia (+{profBonus}) + mod {spellAbilityKey} ({spellAbilityMod >= 0 ? '+' : ''}{spellAbilityMod})
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -301,8 +582,14 @@ export default function DamageCalculator({ character }) {
           </div>
 
           {/* Botón de tirar */}
-          <button className={styles.rollBtn} onClick={rollAttack}>
-            🎲 ¡Tirar!
+          <button
+            className={styles.rollBtn}
+            onClick={rollAttack}
+            disabled={category === 'spell' && selectedItem?.source === 'api-list'}
+          >
+            {category === 'spell' && selectedItem?.source === 'api-list'
+              ? '⏳ Cargando hechizo...'
+              : '🎲 ¡Tirar!'}
           </button>
         </div>
 
@@ -322,7 +609,7 @@ export default function DamageCalculator({ character }) {
               </div>
 
               {/* Tirada de ataque */}
-              {!lastRoll.saveMod && (
+              {lastRoll.hasAttackRoll && (
                 <div className={styles.rollSection}>
                   <span className={styles.rollSectionLabel}>Tirada de Ataque</span>
                   <div className={styles.rollBreakdown}>

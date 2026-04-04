@@ -13,7 +13,10 @@
  *  5. Equipo y rasgos
  */
 import { useState } from 'react'
-import { getModifier } from '../../services/claudeApi'
+import { getModifier } from '../../services/dndUtils'
+import LevelUpModal from './LevelUpModal'
+import SpellBook from './SpellBook'
+import ClassPanel from './ClassPanel'
 import styles from './CharacterSheet.module.css'
 
 // ── Configuración de clases disponibles en D&D 5e ──
@@ -29,11 +32,26 @@ const DND_RACES = [
   'Semiorco', 'Halfling', 'Humano', 'Tiefling'
 ]
 
-// ── Trasfondos comunes ──
+// ── Trasfondos completos de D&D 5e ──
 const DND_BACKGROUNDS = [
-  'Acólito', 'Artesano de Gremio', 'Charlatan', 'Criminal',
-  'Entretenedor', 'Forastero', 'Héroe del Pueblo', 'Marinero',
-  'Noble', 'Sabio', 'Soldado', 'Vagabundo'
+  'Acólito', 'Agente Criminal', 'Artesano de Gremio', 'Artista del Circo',
+  'Bardo Callejero', 'Bufón de Corte', 'Charlatán', 'Criminal',
+  'Empleado de Posada', 'Entretenedor', 'Ermitaño', 'Esclavo Liberado',
+  'Espadachín', 'Espía', 'Falsificador', 'Filósofo', 'Forastero',
+  'Gladiador', 'Granjero', 'Guardia Forestal', 'Guerrero Exiliado',
+  'Héroe del Pueblo', 'Historiador', 'Investigador de Crímenes', 'Jardinero',
+  'Joyero', 'Jugador Profesional', 'Ladrón de Caminos', 'Marinero',
+  'Mercader', 'Merodeador', 'Militar', 'Minero', 'Misionero', 'Monje',
+  'Músico', 'Noble', 'Posadero', 'Predicador', 'Prisionero Liberado',
+  'Profesor', 'Publicano', 'Sabio', 'Sacerdote', 'Saltimbanqui',
+  'Sastre', 'Secretario', 'Segador', 'Sembrador', 'Soldado'
+]
+
+// ── Alineamientos ──
+const DND_ALIGNMENTS = [
+  'Legal Bueno', 'Neutral Bueno', 'Caótico Bueno',
+  'Legal Neutral', 'Neutral Puro', 'Caótico Neutral',
+  'Legal Maligno', 'Neutral Maligno', 'Caótico Maligno'
 ]
 
 // ── Las seis estadísticas base y sus iconos ──
@@ -53,8 +71,8 @@ function getProficiencyBonus(level) {
 
 export default function CharacterSheet({ character, onUpdate, onReset }) {
   // Estado local para el campo de nuevo hechizo/equipo que se está añadiendo
-  const [newSpell, setNewSpell] = useState('')
   const [newEquipment, setNewEquipment] = useState('')
+  const [showLevelUp, setShowLevelUp] = useState(false)
 
   // ── Manejadores de cambio de campos simples ──
   const handleField = (field, value) => onUpdate({ [field]: value })
@@ -63,19 +81,6 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
   const handleStat = (statKey, value) => {
     const numVal = Math.max(1, Math.min(30, parseInt(value) || 1))
     onUpdate({ stats: { ...character.stats, [statKey]: numVal } })
-  }
-
-  // ── Añadir hechizo a la lista ──
-  const addSpell = () => {
-    const trimmed = newSpell.trim()
-    if (!trimmed || character.spells.includes(trimmed)) return
-    onUpdate({ spells: [...character.spells, trimmed] })
-    setNewSpell('')
-  }
-
-  // ── Eliminar hechizo ──
-  const removeSpell = (spell) => {
-    onUpdate({ spells: character.spells.filter(s => s !== spell) })
   }
 
   // ── Añadir equipo ──
@@ -94,6 +99,7 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
   const profBonus = getProficiencyBonus(character.level)
 
   return (
+    <>
     <div className={styles.sheet}>
       {/* ══ CABECERA DE LA FICHA ══ */}
       <div className={styles.sheetHeader}>
@@ -127,14 +133,17 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
           {/* Clase */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Clase</label>
-            <select
-              className={styles.select}
+            <input
+              type="text"
+              className={styles.input}
+              list="classesDatalist"
               value={character.class}
               onChange={e => handleField('class', e.target.value)}
-            >
-              <option value="">— Seleccionar clase —</option>
-              {DND_CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+              placeholder="Ej: Mago"
+            />
+            <datalist id="classesDatalist">
+              {DND_CLASSES.map(c => <option key={c} value={c} />)}
+            </datalist>
           </div>
 
           {/* Subclase */}
@@ -152,40 +161,75 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
           {/* Raza */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Raza</label>
-            <select
-              className={styles.select}
+            <input
+              type="text"
+              className={styles.input}
+              list="racesDatalist"
               value={character.race}
               onChange={e => handleField('race', e.target.value)}
-            >
-              <option value="">— Seleccionar raza —</option>
-              {DND_RACES.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
+              placeholder="Ej: Elfo"
+            />
+            <datalist id="racesDatalist">
+              {DND_RACES.map(r => <option key={r} value={r} />)}
+            </datalist>
           </div>
 
           {/* Nivel */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Nivel</label>
-            <input
-              type="number"
-              className={styles.input}
-              value={character.level}
-              min={1}
-              max={20}
-              onChange={e => handleField('level', parseInt(e.target.value) || 1)}
-            />
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                type="number"
+                className={styles.input}
+                value={character.level}
+                min={1}
+                max={20}
+                onChange={e => handleField('level', parseInt(e.target.value) || 1)}
+                style={{ flex: 1 }}
+              />
+              {character.level < 20 && (
+                <button
+                  className="btn btn-primary"
+                  style={{ whiteSpace: 'nowrap', fontSize: '0.8rem', padding: '0.45rem 0.65rem' }}
+                  onClick={() => setShowLevelUp(true)}
+                  title={`Subir al nivel ${character.level + 1}`}
+                >
+                  ⬆️ Subir
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Trasfondo */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Trasfondo</label>
-            <select
-              className={styles.select}
+            <input
+              type="text"
+              className={styles.input}
+              list="backgroundsDatalist"
               value={character.background}
               onChange={e => handleField('background', e.target.value)}
-            >
-              <option value="">— Seleccionar trasfondo —</option>
-              {DND_BACKGROUNDS.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
+              placeholder="Ej: Soldado"
+            />
+            <datalist id="backgroundsDatalist">
+              {DND_BACKGROUNDS.map(b => <option key={b} value={b} />)}
+            </datalist>
+          </div>
+
+          {/* Alineamiento */}
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>Alineamiento</label>
+            <input
+              type="text"
+              className={styles.input}
+              list="alignmentsDatalist"
+              value={character.alignment}
+              onChange={e => handleField('alignment', e.target.value)}
+              placeholder="Ej: Legal Bueno"
+            />
+            <datalist id="alignmentsDatalist">
+              {DND_ALIGNMENTS.map(a => <option key={a} value={a} />)}
+            </datalist>
           </div>
         </div>
       </section>
@@ -293,40 +337,7 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
 
       {/* ══ SECCIÓN 4: HECHIZOS ══ */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>✨ Hechizos Conocidos</h3>
-        <div className={styles.listSection}>
-          {/* Campo para añadir hechizo */}
-          <div className={styles.addRow}>
-            <input
-              type="text"
-              className={styles.input}
-              value={newSpell}
-              onChange={e => setNewSpell(e.target.value)}
-              placeholder="Nombre del hechizo (ej: Bola de Fuego)"
-              onKeyDown={e => e.key === 'Enter' && addSpell()}
-            />
-            <button className="btn btn-primary" onClick={addSpell}>
-              ➕ Añadir
-            </button>
-          </div>
-          {/* Lista de hechizos */}
-          <div className={styles.tagList}>
-            {character.spells.length === 0 ? (
-              <p className={styles.emptyMsg}>No hay hechizos registrados</p>
-            ) : (
-              character.spells.map(spell => (
-                <span key={spell} className={styles.tag} style={{ '--tag-color': 'var(--color-mp)' }}>
-                  ✨ {spell}
-                  <button
-                    className={styles.tagRemove}
-                    onClick={() => removeSpell(spell)}
-                    title="Eliminar"
-                  >×</button>
-                </span>
-              ))
-            )}
-          </div>
-        </div>
+        <SpellBook character={character} onUpdate={onUpdate} />
       </section>
 
       {/* ══ SECCIÓN 5: EQUIPO ══ */}
@@ -376,6 +387,21 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
           rows={5}
         />
       </section>
+      {/* ══ PANEL DE RASGOS DE CLASE ══ */}
+      <ClassPanel character={character} />
     </div>
+
+    {/* ══ MODAL DE SUBIDA DE NIVEL ══ */}
+    {showLevelUp && (
+      <LevelUpModal
+        character={character}
+        onConfirm={(updates) => {
+          onUpdate(updates)
+          setShowLevelUp(false)
+        }}
+        onCancel={() => setShowLevelUp(false)}
+      />
+    )}
+    </>
   )
 }

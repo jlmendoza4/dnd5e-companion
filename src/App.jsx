@@ -11,7 +11,6 @@
  */
 import { useState, useEffect, useCallback } from 'react'
 import CharacterSheet from './components/CharacterSheet/CharacterSheet'
-import AIAdvisor from './components/AIAdvisor/AIAdvisor'
 import DamageCalculator from './components/DamageCalculator/DamageCalculator'
 import Compendium from './components/Compendium/Compendium'
 import Settings from './components/Settings/Settings'
@@ -20,7 +19,6 @@ import styles from './App.module.css'
 // Tabs de navegación principal
 const TABS = [
   { id: 'character', label: 'Ficha', icon: '📜' },
-  { id: 'advisor',   label: 'Asistente IA', icon: '🤖' },
   { id: 'damage',    label: 'Calculadora', icon: '🎲' },
   { id: 'compendium',label: 'Compendio', icon: '📚' },
   { id: 'settings',  label: 'Config', icon: '⚙️' }
@@ -34,6 +32,7 @@ const DEFAULT_CHARACTER = {
   race: '',
   level: 1,
   background: '',
+  alignment: '',
   stats: { FUE: 10, DES: 10, CON: 10, INT: 10, SAB: 10, CAR: 10 },
   currentHP: 8,
   maxHP: 8,
@@ -124,17 +123,17 @@ export default function App() {
               onReset={resetCharacter}
             />
           )}
-          {activeTab === 'advisor' && (
-            <AIAdvisor character={character} />
-          )}
           {activeTab === 'damage' && (
             <DamageCalculator character={character} />
           )}
           {activeTab === 'compendium' && (
-            <Compendium />
+            <Compendium character={character} />
           )}
           {activeTab === 'settings' && (
-            <Settings />
+            <Settings
+              onUpdate={updateCharacter}
+              onNavigate={setActiveTab}
+            />
           )}
         </div>
       </main>
@@ -144,8 +143,6 @@ export default function App() {
         <p>
           D&amp;D 5e Companion · Datos de{' '}
           <a href="https://www.dnd5eapi.co" target="_blank" rel="noopener">dnd5eapi.co</a>
-          {' '}· IA por{' '}
-          <a href="https://www.anthropic.com" target="_blank" rel="noopener">Anthropic Claude</a>
         </p>
       </footer>
     </div>

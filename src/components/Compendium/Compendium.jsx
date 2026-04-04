@@ -20,6 +20,19 @@ import {
   getEquipment, getEquipmentDetail,
   getWeapons
 } from '../../services/dndApi'
+import {
+  tClass,
+  tRace,
+  tSchool,
+  tDamageType,
+  tAbility,
+  tEquipmentCategory,
+  tSimpleText,
+  tComponent,
+  tErrorMessage
+} from '../../services/dndTranslations'
+import { getModifier } from '../../services/dndUtils'
+import { translateArray } from '../../services/autoTranslate'
 import styles from './Compendium.module.css'
 
 // Secciones del compendio
@@ -39,6 +52,61 @@ const SPELL_LEVELS = [
     label: `Nivel ${i + 1}`
   }))
 ]
+
+function getProficiencyBonus(level = 1) {
+  return Math.ceil((Number(level) || 1) / 4) + 1
+}
+
+function normalizeClassName(name = '') {
+  return String(name)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+function getCastingAbilityByClass(className = '') {
+  const c = normalizeClassName(className)
+
+  if (['mago', 'wizard', 'artificer', 'artifice'].includes(c)) return 'INT'
+  if (['clerigo', 'clérigo', 'druida', 'druid', 'explorador', 'ranger'].includes(c)) return 'SAB'
+  if (['bardo', 'bard', 'paladin', 'paladin', 'hechicero', 'sorcerer', 'warlock', 'brujo'].includes(c)) return 'CAR'
+
+  // Clases no lanzadoras o no definidas: fallback al mayor mental
+  return null
+}
+
+function getBestMentalAbility(stats = {}) {
+  const pool = ['INT', 'SAB', 'CAR']
+  let best = 'INT'
+  let bestVal = Number(stats.INT || 10)
+  for (const key of pool) {
+    const val = Number(stats[key] || 10)
+    if (val > bestVal) {
+      bestVal = val
+      best = key
+    }
+  }
+  return best
+}
+
+function getAbilityLabel(key) {
+  if (key === 'INT') return 'Inteligencia'
+  if (key === 'SAB') return 'Sabiduría'
+  if (key === 'CAR') return 'Carisma'
+  return key
+}
+
+function getSaveLabel(dcTypeIndex = '') {
+  const k = String(dcTypeIndex).toLowerCase()
+  if (k === 'str') return 'FUE'
+  if (k === 'dex') return 'DES'
+  if (k === 'con') return 'CON'
+  if (k === 'int') return 'INT'
+  if (k === 'wis') return 'SAB'
+  if (k === 'cha') return 'CAR'
+  return String(dcTypeIndex || '').toUpperCase()
+}
 
 // Componente de estado de carga genérico
 function LoadingState({ message = 'Cargando...' }) {
@@ -82,7 +150,7 @@ function ClassesSection() {
     setLoading(true)
     getClasses()
       .then(setClasses)
-      .catch(e => setError(e.message))
+      .catch(e => setError(tErrorMessage(e.message)))
       .finally(() => setLoading(false))
   }, [])
 
@@ -104,7 +172,7 @@ function ClassesSection() {
         setSubclasses(subs)
         setLevels(lvls.slice(0, 5)) // Primeros 5 niveles de progresión
       })
-      .catch(e => setError(e.message))
+      .catch(e => setError(tErrorMessage(e.message)))
       .finally(() => setDetailLoading(false))
   }, [selected])
 
@@ -123,7 +191,7 @@ function ClassesSection() {
               className={`${styles.listItem} ${selected?.index === cls.index ? styles.listItemActive : ''}`}
               onClick={() => setSelected(cls)}
             >
-              <span className={styles.listItemName}>{cls.name}</span>
+              <span className={styles.listItemName}>{tClass(cls)}</span>
               <span className={styles.listItemArrow}>›</span>
             </button>
           ))}
@@ -141,7 +209,7 @@ function ClassesSection() {
         {detailLoading && <LoadingState message="Cargando detalles..." />}
         {detail && !detailLoading && (
           <div className={styles.detailContent}>
-            <h2 className={styles.detailTitle}>{detail.name}</h2>
+            <h2 className={styles.detailTitle}>{tClass(detail)}</h2>
 
             {/* Info básica */}
             <div className={styles.infoGrid}>
@@ -159,7 +227,7 @@ function ClassesSection() {
                 <div className={styles.infoChip}>
                   <span className={styles.infoLabel}>Tiradas de Salvación</span>
                   <span className={styles.infoValue}>
-                    {detail.saving_throws.map(s => s.name).join(', ')}
+                    {detail.saving_throws.map(s => tAbility(s)).join(', ')}
                   </span>
                 </div>
               )}
@@ -171,7 +239,7 @@ function ClassesSection() {
                 <h3 className={styles.subsectionTitle}>Subclases</h3>
                 <div className={styles.tagCloud}>
                   {subclasses.map(sub => (
-                    <span key={sub.index} className={styles.subclassTag}>{sub.name}</span>
+                    <span key={sub.index} className={styles.subclassTag}>{tSimpleText(sub.name)}</span>
                   ))}
                 </div>
               </>
@@ -184,7 +252,7 @@ function ClassesSection() {
                 <ul className={styles.equipList}>
                   {detail.starting_equipment.map((eq, i) => (
                     <li key={i}>
-                      {eq.equipment?.name} ×{eq.quantity || 1}
+                      {tSimpleText(eq.equipment?.name)} ×{eq.quantity || 1}
                     </li>
                   ))}
                 </ul>
@@ -206,7 +274,7 @@ function ClassesSection() {
                       <span className={styles.levelNum}>{lvl.level}</span>
                       <span className={styles.levelProf}>+{lvl.prof_bonus}</span>
                       <span className={styles.levelFeatures}>
-                        {lvl.features?.map(f => f.name).join(', ') || '—'}
+                        {lvl.features?.map(f => tSimpleText(f.name)).join(', ') || '—'}
                       </span>
                     </div>
                   ))}
@@ -230,11 +298,18 @@ function RacesSection() {
   const [loading, setLoading]   = useState(true)
   const [detailLoad, setDetailLoad] = useState(false)
   const [error, setError]       = useState(null)
+  const [transLangDesc, setTransLangDesc] = useState('')
+
+  useEffect(() => {
+    if (!detail) { setTransLangDesc(''); return }
+    if (detail.language_desc) translateArray([detail.language_desc]).then(r => setTransLangDesc(r[0] || ''))
+    else setTransLangDesc('')
+  }, [detail?.index])
 
   useEffect(() => {
     getRaces()
       .then(setRaces)
-      .catch(e => setError(e.message))
+      .catch(e => setError(tErrorMessage(e.message)))
       .finally(() => setLoading(false))
   }, [])
 
@@ -243,7 +318,7 @@ function RacesSection() {
     setDetailLoad(true)
     getRaceDetail(selected.index)
       .then(setDetail)
-      .catch(e => setError(e.message))
+      .catch(e => setError(tErrorMessage(e.message)))
       .finally(() => setDetailLoad(false))
   }, [selected])
 
@@ -261,7 +336,7 @@ function RacesSection() {
               className={`${styles.listItem} ${selected?.index === race.index ? styles.listItemActive : ''}`}
               onClick={() => setSelected(race)}
             >
-              <span className={styles.listItemName}>{race.name}</span>
+              <span className={styles.listItemName}>{tRace(race)}</span>
               <span className={styles.listItemArrow}>›</span>
             </button>
           ))}
@@ -278,7 +353,7 @@ function RacesSection() {
         {detailLoad && <LoadingState message="Cargando raza..." />}
         {detail && !detailLoad && (
           <div className={styles.detailContent}>
-            <h2 className={styles.detailTitle}>{detail.name}</h2>
+            <h2 className={styles.detailTitle}>{tRace(detail)}</h2>
 
             <div className={styles.infoGrid}>
               <div className={styles.infoChip}>
@@ -287,7 +362,7 @@ function RacesSection() {
               </div>
               <div className={styles.infoChip}>
                 <span className={styles.infoLabel}>Tamaño</span>
-                <span className={styles.infoValue}>{detail.size}</span>
+                <span className={styles.infoValue}>{tSimpleText(detail.size)}</span>
               </div>
               {detail.age && (
                 <div className={styles.infoChip}>
@@ -304,7 +379,7 @@ function RacesSection() {
                 <div className={styles.tagCloud}>
                   {detail.ability_bonuses.map(ab => (
                     <span key={ab.ability_score.index} className={styles.abilityTag}>
-                      {ab.ability_score.name} +{ab.bonus}
+                      {tAbility(ab.ability_score)} +{ab.bonus}
                     </span>
                   ))}
                 </div>
@@ -318,7 +393,7 @@ function RacesSection() {
                 <ul className={styles.traitList}>
                   {detail.traits.map(trait => (
                     <li key={trait.index} className={styles.traitItem}>
-                      <span className={styles.traitName}>{trait.name}</span>
+                      <span className={styles.traitName}>{tSimpleText(trait.name)}</span>
                     </li>
                   ))}
                 </ul>
@@ -330,13 +405,13 @@ function RacesSection() {
               <>
                 <h3 className={styles.subsectionTitle}>Idiomas</h3>
                 <p className={styles.languageText}>
-                  {detail.languages.map(l => l.name).join(', ')}
+                  {detail.languages.map(l => tSimpleText(l.name)).join(', ')}
                 </p>
               </>
             )}
 
             {detail.language_desc && (
-              <p className={styles.languageDesc}>{detail.language_desc}</p>
+              <p className={styles.languageDesc}>{transLangDesc || detail.language_desc}</p>
             )}
           </div>
         )}
@@ -348,7 +423,7 @@ function RacesSection() {
 // ══════════════════════════════════════════════
 // SUBCOMPONENTE: HECHIZOS
 // ══════════════════════════════════════════════
-function SpellsSection() {
+function SpellsSection({ character }) {
   const [spells, setSpells]         = useState([])
   const [schools, setSchools]       = useState([])
   const [selected, setSelected]     = useState(null)
@@ -356,6 +431,8 @@ function SpellsSection() {
   const [loading, setLoading]       = useState(true)
   const [detailLoad, setDetailLoad] = useState(false)
   const [error, setError]           = useState(null)
+  const [transDesc, setTransDesc]   = useState([])
+  const [transHigher, setTransHigher] = useState([])
 
   // Filtros
   const [search, setSearch]         = useState('')
@@ -367,7 +444,7 @@ function SpellsSection() {
     { value: '', label: 'Todas las clases' },
     { value: 'wizard',   label: 'Mago' },
     { value: 'sorcerer', label: 'Hechicero' },
-    { value: 'warlock',  label: 'Warlock' },
+      { value: 'warlock',  label: 'Brujo' },
     { value: 'cleric',   label: 'Clérigo' },
     { value: 'druid',    label: 'Druida' },
     { value: 'bard',     label: 'Bardo' },
@@ -384,7 +461,7 @@ function SpellsSection() {
       getMagicSchools()
     ])
       .then(([sp, sc]) => { setSpells(sp); setSchools(sc) })
-      .catch(e => setError(e.message))
+      .catch(e => setError(tErrorMessage(e.message)))
       .finally(() => setLoading(false))
   }, [filterClass, filterLevel])
 
@@ -400,11 +477,74 @@ function SpellsSection() {
   useEffect(() => {
     if (!selected) return
     setDetailLoad(true)
+    setTransDesc([])
+    setTransHigher([])
     getSpellDetail(selected.index)
       .then(setDetail)
-      .catch(e => setError(e.message))
+      .catch(e => setError(tErrorMessage(e.message)))
       .finally(() => setDetailLoad(false))
   }, [selected])
+
+  // Auto-traducción de descripciones largas
+  useEffect(() => {
+    if (!detail) { setTransDesc([]); setTransHigher([]); return }
+    translateArray(detail.desc || []).then(setTransDesc)
+    translateArray(detail.higher_level || []).then(setTransHigher)
+  }, [detail?.index])
+
+  const spellMath = useMemo(() => {
+    const stats = character?.stats || {}
+    const profBonus = getProficiencyBonus(character?.level || 1)
+
+    const classAbility = getCastingAbilityByClass(character?.class || '')
+    const abilityKey = classAbility || getBestMentalAbility(stats)
+    const abilityMod = getModifier(stats[abilityKey] || 10)
+
+    const spellSaveDC = 8 + profBonus + abilityMod
+    const spellAttackBonus = profBonus + abilityMod
+
+    return {
+      abilityKey,
+      abilityLabel: getAbilityLabel(abilityKey),
+      abilityMod,
+      profBonus,
+      spellSaveDC,
+      spellAttackBonus,
+      usedFallback: !classAbility
+    }
+  }, [character])
+
+  const spellUsage = useMemo(() => {
+    if (!detail) return null
+
+    const dcType = detail.dc?.dc_type?.index
+    const attackType = detail.attack_type
+
+    if (dcType) {
+      return {
+        type: 'save',
+        title: 'Este hechizo usa TIRADA DE SALVACION',
+        instruction: `El objetivo tira ${getSaveLabel(dcType)} contra tu CD de Conjuros (${spellMath.spellSaveDC}).`,
+        formula: `Tu CD = 8 + competencia (+${spellMath.profBonus}) + mod ${spellMath.abilityLabel} (${spellMath.abilityMod >= 0 ? '+' : ''}${spellMath.abilityMod}) = ${spellMath.spellSaveDC}`
+      }
+    }
+
+    if (attackType) {
+      return {
+        type: 'attack',
+        title: 'Este hechizo usa TIRADA DE ATAQUE DE CONJURO',
+        instruction: `Tu tiras 1d20 y le sumas tu bonificador de ataque de conjuros (+${spellMath.spellAttackBonus}).`,
+        formula: `Tu ataque de conjuro = competencia (+${spellMath.profBonus}) + mod ${spellMath.abilityLabel} (${spellMath.abilityMod >= 0 ? '+' : ''}${spellMath.abilityMod}) = +${spellMath.spellAttackBonus}`
+      }
+    }
+
+    return {
+      type: 'none',
+      title: 'Este hechizo NO usa ataque ni CD de salvacion',
+      instruction: 'Normalmente aplica su efecto directamente (curacion, utilidad, buff, etc.).',
+      formula: `Referencia de tu ficha: CD ${spellMath.spellSaveDC} | Ataque de conjuro +${spellMath.spellAttackBonus}`
+    }
+  }, [detail, spellMath])
 
   return (
     <div className={styles.splitLayout}>
@@ -440,7 +580,6 @@ function SpellsSection() {
             </select>
           </div>
         </div>
-
         <h3 className={styles.panelTitle}>
           Hechizos ({filteredSpells.length})
         </h3>
@@ -459,7 +598,7 @@ function SpellsSection() {
                   className={`${styles.listItem} ${selected?.index === spell.index ? styles.listItemActive : ''}`}
                   onClick={() => setSelected(spell)}
                 >
-                  <span className={styles.listItemName}>{spell.name}</span>
+                  <span className={styles.listItemName}>{tSimpleText(spell.name)}</span>
                   <span className={styles.listItemArrow}>›</span>
                 </button>
               ))
@@ -479,31 +618,67 @@ function SpellsSection() {
         {detailLoad && <LoadingState message="Cargando hechizo..." />}
         {detail && !detailLoad && (
           <div className={styles.detailContent}>
-            <h2 className={styles.detailTitle}>{detail.name}</h2>
+            <h2 className={styles.detailTitle}>{tSimpleText(detail.name)}</h2>
+
+            <div className={styles.spellMathCard}>
+              <h3 className={styles.subsectionTitle}>Tu Magia (segun tu ficha)</h3>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoChip}>
+                  <span className={styles.infoLabel}>Aptitud Magica</span>
+                  <span className={styles.infoValue}>
+                    {spellMath.abilityLabel} ({spellMath.abilityMod >= 0 ? '+' : ''}{spellMath.abilityMod})
+                  </span>
+                </div>
+                <div className={styles.infoChip}>
+                  <span className={styles.infoLabel}>Competencia</span>
+                  <span className={styles.infoValue}>+{spellMath.profBonus}</span>
+                </div>
+                <div className={styles.infoChip}>
+                  <span className={styles.infoLabel}>CD de Conjuros</span>
+                  <span className={styles.infoValue}>{spellMath.spellSaveDC}</span>
+                </div>
+                <div className={styles.infoChip}>
+                  <span className={styles.infoLabel}>Ataque de Conjuros</span>
+                  <span className={styles.infoValue}>+{spellMath.spellAttackBonus}</span>
+                </div>
+              </div>
+              {spellMath.usedFallback && (
+                <p className={styles.spellMathNote}>
+                  No se detecto una clase lanzadora clara en la ficha. Se usa automaticamente tu mejor aptitud mental (INT/SAB/CAR).
+                </p>
+              )}
+            </div>
+
+            {spellUsage && (
+              <div className={styles.spellUseCard}>
+                <h3 className={styles.subsectionTitle}>{spellUsage.title}</h3>
+                <p className={styles.descPara}>{spellUsage.instruction}</p>
+                <p className={styles.spellFormula}>{spellUsage.formula}</p>
+              </div>
+            )}
 
             {/* Info principal */}
             <div className={styles.infoGrid}>
               <div className={styles.infoChip}>
-                <span className={styles.infoLabel}>Nivel</span>
                 <span className={styles.infoValue}>
                   {detail.level === 0 ? 'Truco' : `Nivel ${detail.level}`}
                 </span>
               </div>
               <div className={styles.infoChip}>
                 <span className={styles.infoLabel}>Escuela</span>
-                <span className={styles.infoValue}>{detail.school?.name}</span>
+                <span className={styles.infoValue}>{tSchool(detail.school)}</span>
               </div>
               <div className={styles.infoChip}>
                 <span className={styles.infoLabel}>Tiempo Lanzamiento</span>
-                <span className={styles.infoValue}>{detail.casting_time}</span>
+                <span className={styles.infoValue}>{tSimpleText(detail.casting_time)}</span>
               </div>
               <div className={styles.infoChip}>
                 <span className={styles.infoLabel}>Alcance</span>
-                <span className={styles.infoValue}>{detail.range}</span>
+                <span className={styles.infoValue}>{tSimpleText(detail.range)}</span>
               </div>
               <div className={styles.infoChip}>
                 <span className={styles.infoLabel}>Duración</span>
-                <span className={styles.infoValue}>{detail.duration}</span>
+                <span className={styles.infoValue}>{tSimpleText(detail.duration)}</span>
               </div>
               {detail.concentration && (
                 <div className={`${styles.infoChip} ${styles.concentrationChip}`}>
@@ -522,10 +697,10 @@ function SpellsSection() {
               <div className={styles.componentsRow}>
                 <span className={styles.compLabel}>Componentes:</span>
                 {detail.components.map(c => (
-                  <span key={c} className={styles.compBadge}>{c}</span>
+                  <span key={c} className={styles.compBadge}>{tComponent(c)}</span>
                 ))}
                 {detail.material && (
-                  <span className={styles.materialNote}>({detail.material})</span>
+                  <span className={styles.materialNote}>({tSimpleText(detail.material)})</span>
                 )}
               </div>
             )}
@@ -533,7 +708,7 @@ function SpellsSection() {
             {/* Descripción */}
             <h3 className={styles.subsectionTitle}>Descripción</h3>
             {detail.desc?.map((line, i) => (
-              <p key={i} className={styles.descPara}>{line}</p>
+              <p key={i} className={styles.descPara}>{transDesc[i] || tSimpleText(line)}</p>
             ))}
 
             {/* A niveles superiores */}
@@ -541,7 +716,7 @@ function SpellsSection() {
               <>
                 <h3 className={styles.subsectionTitle}>A Niveles Superiores</h3>
                 {detail.higher_level.map((line, i) => (
-                  <p key={i} className={styles.descPara}>{line}</p>
+                  <p key={i} className={styles.descPara}>{transHigher[i] || tSimpleText(line)}</p>
                 ))}
               </>
             )}
@@ -552,7 +727,7 @@ function SpellsSection() {
                 <h3 className={styles.subsectionTitle}>Clases</h3>
                 <div className={styles.tagCloud}>
                   {detail.classes.map(c => (
-                    <span key={c.index} className={styles.classTag}>{c.name}</span>
+                    <span key={c.index} className={styles.classTag}>{tClass(c)}</span>
                   ))}
                 </div>
               </>
@@ -566,7 +741,7 @@ function SpellsSection() {
                   {detail.damage.damage_type && (
                     <div className={styles.infoChip}>
                       <span className={styles.infoLabel}>Tipo</span>
-                      <span className={styles.infoValue}>{detail.damage.damage_type.name}</span>
+                      <span className={styles.infoValue}>{tDamageType(detail.damage.damage_type)}</span>
                     </div>
                   )}
                   {detail.damage.damage_at_slot_level && (
@@ -606,11 +781,17 @@ function EquipmentSection() {
   const [detailLoad, setDetailLoad] = useState(false)
   const [error, setError]           = useState(null)
   const [search, setSearch]         = useState('')
+  const [transDesc, setTransDesc]   = useState([])
+
+  useEffect(() => {
+    if (!detail) { setTransDesc([]); return }
+    translateArray(detail.desc || []).then(setTransDesc)
+  }, [detail?.index])
 
   useEffect(() => {
     getEquipment()
       .then(setItems)
-      .catch(e => setError(e.message))
+      .catch(e => setError(tErrorMessage(e.message)))
       .finally(() => setLoading(false))
   }, [])
 
@@ -620,7 +801,7 @@ function EquipmentSection() {
     setDetail(null)
     getEquipmentDetail(selected.index)
       .then(setDetail)
-      .catch(e => setError(e.message))
+      .catch(e => setError(tErrorMessage(e.message)))
       .finally(() => setDetailLoad(false))
   }, [selected])
 
@@ -652,7 +833,7 @@ function EquipmentSection() {
                 className={`${styles.listItem} ${selected?.index === item.index ? styles.listItemActive : ''}`}
                 onClick={() => setSelected(item)}
               >
-                <span className={styles.listItemName}>{item.name}</span>
+                <span className={styles.listItemName}>{tSimpleText(item.name)}</span>
                 <span className={styles.listItemArrow}>›</span>
               </button>
             ))}
@@ -670,27 +851,27 @@ function EquipmentSection() {
         {detailLoad && <LoadingState message="Cargando ítem..." />}
         {detail && !detailLoad && (
           <div className={styles.detailContent}>
-            <h2 className={styles.detailTitle}>{detail.name}</h2>
+            <h2 className={styles.detailTitle}>{tSimpleText(detail.name)}</h2>
 
             <div className={styles.infoGrid}>
               {detail.equipment_category && (
                 <div className={styles.infoChip}>
                   <span className={styles.infoLabel}>Categoría</span>
-                  <span className={styles.infoValue}>{detail.equipment_category.name}</span>
+                  <span className={styles.infoValue}>{tEquipmentCategory(detail.equipment_category)}</span>
                 </div>
               )}
               {detail.cost && (
                 <div className={styles.infoChip}>
                   <span className={styles.infoLabel}>Coste</span>
                   <span className={styles.infoValue}>
-                    {detail.cost.quantity} {detail.cost.unit}
+                    {detail.cost.quantity} {tSimpleText(detail.cost.unit)}
                   </span>
                 </div>
               )}
               {detail.weight && (
                 <div className={styles.infoChip}>
                   <span className={styles.infoLabel}>Peso</span>
-                  <span className={styles.infoValue}>{detail.weight} lb.</span>
+                  <span className={styles.infoValue}>{detail.weight} lb</span>
                 </div>
               )}
               {/* Arma */}
@@ -698,7 +879,7 @@ function EquipmentSection() {
                 <div className={styles.infoChip}>
                   <span className={styles.infoLabel}>Daño</span>
                   <span className={styles.infoValue}>
-                    {detail.damage.damage_dice} {detail.damage.damage_type?.name}
+                    {detail.damage.damage_dice} {tDamageType(detail.damage.damage_type)}
                   </span>
                 </div>
               )}
@@ -734,7 +915,7 @@ function EquipmentSection() {
                 <h3 className={styles.subsectionTitle}>Propiedades</h3>
                 <div className={styles.tagCloud}>
                   {detail.properties.map(p => (
-                    <span key={p.index} className={styles.propertyTag}>{p.name}</span>
+                    <span key={p.index} className={styles.propertyTag}>{tSimpleText(p.name)}</span>
                   ))}
                 </div>
               </>
@@ -745,7 +926,7 @@ function EquipmentSection() {
               <>
                 <h3 className={styles.subsectionTitle}>Descripción</h3>
                 {detail.desc.map((d, i) => (
-                  <p key={i} className={styles.descPara}>{d}</p>
+                  <p key={i} className={styles.descPara}>{transDesc[i] || tSimpleText(d)}</p>
                 ))}
               </>
             )}
@@ -759,7 +940,7 @@ function EquipmentSection() {
 // ══════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: COMPENDIUM
 // ══════════════════════════════════════════════
-export default function Compendium() {
+export default function Compendium({ character }) {
   const [activeSection, setActiveSection] = useState('classes')
 
   return (
@@ -790,7 +971,7 @@ export default function Compendium() {
       <div className={styles.sectionContent} key={activeSection}>
         {activeSection === 'classes'   && <ClassesSection />}
         {activeSection === 'races'     && <RacesSection />}
-        {activeSection === 'spells'    && <SpellsSection />}
+        {activeSection === 'spells'    && <SpellsSection character={character} />}
         {activeSection === 'equipment' && <EquipmentSection />}
       </div>
     </div>

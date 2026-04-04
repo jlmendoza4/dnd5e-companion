@@ -7,20 +7,52 @@
  */
 
 // URL base de la API — en desarrollo usamos el proxy de Vite (/dndapi)
-// para evitar problemas CORS; en producción apunta directamente
-const BASE_URL = import.meta.env.DEV
-  ? '/dndapi/api'
-  : 'https://www.dnd5eapi.co/api'
+// para evitar problemas CORS; en producción apunta directamente.
+// dnd5eapi ha migrado parte de rutas a /api/2014, así que probamos ambas.
+const BASE_URLS = import.meta.env.DEV
+  ? ['/dndapi/api', '/dndapi/api/2014']
+  : ['https://www.dnd5eapi.co/api', 'https://www.dnd5eapi.co/api/2014']
 
 /**
  * Función base de fetch con manejo de errores centralizado
  */
 async function fetchDnD(endpoint) {
-  const res = await fetch(`${BASE_URL}${endpoint}`)
-  if (!res.ok) {
-    throw new Error(`Error DnD API [${res.status}]: ${endpoint}`)
+  const cleanedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  const errors = []
+
+  for (const baseUrl of BASE_URLS) {
+    const url = `${baseUrl}${cleanedEndpoint}`
+    try {
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json' }
+      })
+
+      if (!res.ok) {
+        errors.push(`Error DnD API [${res.status}] en ${url}`)
+        continue
+      }
+
+      const contentType = res.headers.get('content-type') || ''
+      const bodyText = await res.text()
+
+      if (!contentType.toLowerCase().includes('application/json')) {
+        const preview = bodyText.slice(0, 120).replace(/\s+/g, ' ')
+        errors.push(`Respuesta no JSON en ${url}: ${preview}`)
+        continue
+      }
+
+      try {
+        return JSON.parse(bodyText)
+      } catch {
+        const preview = bodyText.slice(0, 120).replace(/\s+/g, ' ')
+        errors.push(`JSON inválido en ${url}: ${preview}`)
+      }
+    } catch (err) {
+      errors.push(`Fallo de red en ${url}: ${err.message}`)
+    }
   }
-  return res.json()
+
+  throw new Error(`No se pudo obtener datos de dnd5eapi para ${cleanedEndpoint}. ${errors[0] || ''}`)
 }
 
 // ──────────────────────────────────────────────
@@ -59,6 +91,21 @@ export async function getClassSpells(classIndex) {
 export async function getClassFeatures(classIndex) {
   const data = await fetchDnD(`/classes/${classIndex}/features`)
   return data.results
+}
+
+/** Detalle completo de un rasgo (incluye desc[]) */
+export async function getFeatureDetail(featureIndex) {
+  return fetchDnD(`/features/${featureIndex}`)
+}
+
+/** Rasgos de subclase ganados en un nivel concreto */
+export async function getSubclassLevelFeatures(subclassIndex, level) {
+  try {
+    const data = await fetchDnD(`/subclasses/${subclassIndex}/levels/${level}`)
+    return data.features || []
+  } catch {
+    return []
+  }
 }
 
 // ──────────────────────────────────────────────

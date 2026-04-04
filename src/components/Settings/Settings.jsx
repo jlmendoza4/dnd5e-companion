@@ -8,74 +8,48 @@
  *
  * La API key se guarda en localStorage (nunca se envía a ningún servidor propio).
  */
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import styles from './Settings.module.css'
+import { parsePDFCharacterSheet, debugPDFFields } from '../../services/pdfParser'
 
-export default function Settings() {
-  const [apiKey, setApiKey]           = useState('')
-  const [showKey, setShowKey]         = useState(false)
-  const [saved, setSaved]             = useState(false)
-  const [testLoading, setTestLoading] = useState(false)
-  const [testResult, setTestResult]   = useState(null)
+export default function Settings({ onUpdate, onNavigate }) {
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [pdfResult, setPdfResult]   = useState(null)
+  const [debugFields, setDebugFields] = useState(null)
 
-  // Carga la API key guardada al montar el componente
-  useEffect(() => {
-    const savedKey = localStorage.getItem('claude_api_key') || ''
-    setApiKey(savedKey)
-  }, [])
-
-  // ── Guarda la API key en localStorage ──
-  const saveApiKey = () => {
-    const trimmed = apiKey.trim()
-    if (!trimmed) return
-
-    localStorage.setItem('claude_api_key', trimmed)
-    setSaved(true)
-    setTestResult(null)
-    setTimeout(() => setSaved(false), 2500)
-  }
-
-  // ── Elimina la API key ──
-  const clearApiKey = () => {
-    if (!confirm('¿Eliminar la API key guardada?')) return
-    localStorage.removeItem('claude_api_key')
-    setApiKey('')
-    setTestResult(null)
-  }
-
-  // ── Prueba la API key con una llamada simple ──
-  const testApiKey = async () => {
-    const key = apiKey.trim()
-    if (!key) return
-
-    setTestLoading(true)
-    setTestResult(null)
-
+  // ── Debug: muestra todos los campos del PDF ──
+  const debugPDF = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    e.target.value = ''
     try {
-      const { default: Anthropic } = await import('@anthropic-ai/sdk')
-      const client = new Anthropic({ apiKey: key, dangerouslyAllowBrowser: true })
-
-      // Llamada mínima para verificar la clave
-      await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 10,
-        messages: [{ role: 'user', content: 'Hi' }]
-      })
-      setTestResult({ ok: true, message: '✅ API key válida. ¡Todo listo!' })
+      const fields = await debugPDFFields(file)
+      setDebugFields(fields)
     } catch (err) {
-      const msg = err.message || ''
-      if (msg.includes('401') || msg.includes('auth')) {
-        setTestResult({ ok: false, message: '❌ API key inválida o no autorizada.' })
-      } else if (msg.includes('rate_limit')) {
-        setTestResult({ ok: false, message: '⏱️ Límite de uso alcanzado. La clave parece válida.' })
-      } else {
-        setTestResult({ ok: false, message: `❌ Error: ${msg}` })
-      }
-    } finally {
-      setTestLoading(false)
+      setDebugFields({ ERROR: err.message })
     }
   }
 
+  // ── Importa personaje desde PDF rellenable ──
+  const importFromPDF = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    e.target.value = ''
+
+    setPdfLoading(true)
+    setPdfResult(null)
+
+    try {
+      const characterData = await parsePDFCharacterSheet(file)
+      if (onUpdate) onUpdate(characterData)
+      setPdfResult({ ok: true, message: `✅ Ficha importada correctamente.${characterData.name ? ` Personaje: ${characterData.name}` : ''}` })
+      if (onNavigate) setTimeout(() => onNavigate('character'), 1500)
+    } catch (err) {
+      setPdfResult({ ok: false, message: `❌ ${err.message}` })
+    } finally {
+      setPdfLoading(false)
+    }
+  }
   // ── Exporta la ficha a JSON ──
   const exportCharacter = () => {
     const data = localStorage.getItem('dnd_character') || '{}'
@@ -110,83 +84,65 @@ export default function Settings() {
     <div className={styles.settings}>
       <div className={styles.header}>
         <h2 className={styles.title}>⚙️ Configuración</h2>
-        <p className={styles.subtitle}>Gestiona tu API key y tus datos</p>
+        <p className={styles.subtitle}>Gestiona tus datos</p>
       </div>
 
-      {/* ══ SECCIÓN: CLAUDE API KEY ══ */}
+      {/* ══ SECCIÓN: IMPORTAR DESDE PDF ══ */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>🤖 Claude API Key</h3>
+        <h3 className={styles.sectionTitle}>📄 Importar ficha desde PDF</h3>
         <p className={styles.sectionDesc}>
-          Necesaria para el Asistente IA. Obtén tu clave en{' '}
-          <a href="https://console.anthropic.com" target="_blank" rel="noopener">
-            console.anthropic.com
-          </a>
-          . La clave se guarda <strong>solo en tu navegador</strong> (localStorage).
+          Sube una hoja de personaje D&amp;D 5e en PDF interactivo (rellenable) y los datos
+          se leerán automáticamente. No requiere IA ni conexión a internet.
         </p>
 
-        <div className={styles.apiKeyField}>
-          <div className={styles.apiKeyInputWrapper}>
-            <input
-              type={showKey ? 'text' : 'password'}
-              className={styles.apiKeyInput}
-              value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
-              placeholder="sk-ant-api03-..."
-              spellCheck={false}
-              autoComplete="off"
-            />
-            <button
-              className={styles.toggleVisibility}
-              onClick={() => setShowKey(v => !v)}
-              title={showKey ? 'Ocultar' : 'Mostrar'}
-            >
-              {showKey ? '🙈' : '👁️'}
-            </button>
-          </div>
-
-          <div className={styles.apiKeyActions}>
-            <button
-              className="btn btn-primary"
-              onClick={saveApiKey}
-              disabled={!apiKey.trim()}
-            >
-              {saved ? '✅ Guardada' : '💾 Guardar'}
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={testApiKey}
-              disabled={!apiKey.trim() || testLoading}
-            >
-              {testLoading ? (
-                <><span className="loading-spinner" style={{ width: '0.9rem', height: '0.9rem' }} /> Probando...</>
-              ) : (
-                '🔌 Probar'
-              )}
-            </button>
-            {apiKey && (
-              <button className="btn btn-danger" onClick={clearApiKey}>
-                🗑️ Borrar
-              </button>
+        <div className={styles.pdfImport}>
+          <label className={`btn btn-primary ${styles.pdfLabel} ${pdfLoading ? styles.pdfLabelDisabled : ''}`}>
+            {pdfLoading ? (
+              <><span className="loading-spinner" style={{ width: '0.9rem', height: '0.9rem' }} /> Leyendo PDF...</>
+            ) : (
+              '📄 Seleccionar PDF de personaje'
             )}
+            <input
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={importFromPDF}
+              disabled={pdfLoading}
+              style={{ display: 'none' }}
+            />
+          </label>
+
+          <div className={styles.pdfHint}>
+            <span>💡</span>
+            <span>Solo funciona con PDF rellenables (fichas digitales interactivas). Las fichas escaneadas o impresas no son compatibles.</span>
           </div>
         </div>
 
-        {/* Resultado del test */}
-        {testResult && (
-          <div className={`${styles.testResult} ${testResult.ok ? styles.testOk : styles.testError}`}>
-            {testResult.message}
+        {pdfResult && (
+          <div className={`${styles.testResult} ${pdfResult.ok ? styles.testOk : styles.testError}`}>
+            {pdfResult.message}
           </div>
         )}
 
-        {/* Indicador de estado de la clave */}
-        <div className={styles.keyStatus}>
-          <span className={`${styles.statusDot} ${localStorage.getItem('claude_api_key') ? styles.dotGreen : styles.dotRed}`} />
-          <span>
-            {localStorage.getItem('claude_api_key')
-              ? 'API key configurada'
-              : 'Sin API key — el Asistente IA no funcionará'}
-          </span>
-        </div>
+        {/* Botón debug: muestra todos los campos reales del PDF */}
+        <details style={{ marginTop: '0.75rem' }}>
+          <summary style={{ cursor: 'pointer', fontSize: '0.8rem', opacity: 0.6 }}>
+            🔍 Ver campos del PDF (debug)
+          </summary>
+          <label className="btn btn-secondary" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
+            📂 Cargar PDF para inspeccionar
+            <input type="file" accept=".pdf" onChange={debugPDF} style={{ display: 'none' }} />
+          </label>
+          {debugFields && (
+            <pre style={{
+              marginTop: '0.5rem', padding: '0.75rem',
+              background: '#1a1a2e', borderRadius: '6px',
+              fontSize: '0.72rem', maxHeight: '300px', overflowY: 'auto',
+              whiteSpace: 'pre-wrap', wordBreak: 'break-all'
+            }}>
+              {JSON.stringify(debugFields, null, 2)}
+            </pre>
+          )}
+        </details>
       </section>
 
       {/* ══ SECCIÓN: DATOS DEL PERSONAJE ══ */}
@@ -238,13 +194,6 @@ export default function Settings() {
             </div>
           </div>
           <div className={styles.aboutCard}>
-            <span className={styles.aboutIcon}>🤖</span>
-            <div>
-              <strong>Asistente IA</strong>
-              <p>Análisis de personajes con Claude claude-sonnet-4-20250514</p>
-            </div>
-          </div>
-          <div className={styles.aboutCard}>
             <span className={styles.aboutIcon}>🎲</span>
             <div>
               <strong>Calculadora</strong>
@@ -263,7 +212,6 @@ export default function Settings() {
         <div className={styles.techStack}>
           <span className={styles.techBadge}>React 18</span>
           <span className={styles.techBadge}>Vite 5</span>
-          <span className={styles.techBadge}>@anthropic-ai/sdk</span>
           <span className={styles.techBadge}>dnd5eapi.co</span>
           <span className={styles.techBadge}>CSS Modules</span>
         </div>
@@ -271,7 +219,7 @@ export default function Settings() {
         <p className={styles.disclaimer}>
           D&amp;D 5e Companion es un proyecto de fan independiente. Dungeons &amp; Dragons es propiedad
           de Wizards of the Coast. Este proyecto no está afiliado ni avalado por Wizards of the Coast
-          ni Anthropic. Los datos del compendio se obtienen de dnd5eapi.co bajo licencia Creative
+          ni Google. Los datos del compendio se obtienen de dnd5eapi.co bajo licencia Creative
           Commons.
         </p>
       </section>

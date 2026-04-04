@@ -1,0 +1,253 @@
+/* ClassPanel.module.css */
+
+.panel {
+  background: #1a1a2e;
+  border: 1px solid #4a3f7a;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 1.5rem;
+}
+
+/* ── HEADER ── */
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #2d1b6b 0%, #1a1040 100%);
+  border: none;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.header:hover {
+  background: linear-gradient(135deg, #3a2480 0%, #231450 100%);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e8d5ff;
+  text-align: left;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.classBadge {
+  background: #4a2080;
+  color: #d4b5ff;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.subclassBadge {
+  background: #1a4a2a;
+  color: #a0e8b0;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.collapseArrow {
+  color: #9b7fd4;
+  font-size: 0.85rem;
+  margin-left: 0.25rem;
+}
+
+/* ── BODY ── */
+.body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── BLOQUES ── */
+.spellBlock,
+.featuresBlock {
+  background: #12112a;
+  border: 1px solid #352a60;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.blockTitle {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #c4a5ff;
+  letter-spacing: 0.02em;
+}
+
+.subclassTag {
+  color: #7ce8a0;
+}
+
+/* ── CONJUROS META ── */
+.spellMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.metaChip {
+  background: #2a1f50;
+  color: #cbbfea;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  border: 1px solid #4a3580;
+}
+
+.maxLevelChip {
+  background: #3b1f6a;
+  color: #e8d0ff;
+  border-color: #7b55c0;
+  font-weight: 600;
+}
+
+/* ── SLOTS GRID ── */
+.slotsLabel {
+  font-size: 0.78rem;
+  color: #9a88c0;
+  margin: 0 0 0.5rem 0;
+}
+
+.slotsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.slotChip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(160deg, #4a2080, #2a104a);
+  border: 1px solid #7b55c0;
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  min-width: 50px;
+}
+
+.slotLevel {
+  font-size: 0.7rem;
+  color: #b09add;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.slotCount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e2ccff;
+  line-height: 1.2;
+}
+
+/* ── FEATURES LIST ── */
+.featureList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.featureItem {
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1e1840;
+  border: 1px solid #2e264a;
+}
+
+.featureBtn {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.featureBtn:hover {
+  background: #2a2254;
+}
+
+.featureLvl {
+  font-size: 0.68rem;
+  color: #9b7fd4;
+  font-weight: 700;
+  background: #2d1f5a;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.featureName {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #ddd0ff;
+  font-weight: 500;
+}
+
+.featureArrow {
+  font-size: 0.7rem;
+  color: #7a6aa0;
+  flex-shrink: 0;
+}
+
+.featureDesc {
+  padding: 0.5rem 0.75rem 0.75rem 0.75rem;
+  border-top: 1px solid #2e264a;
+  background: #16143a;
+}
+
+.featureDescPara {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+  color: #bbaae0;
+  line-height: 1.55;
+}
+
+.featureDescPara:last-child {
+  margin-bottom: 0;
+}
+
+/* ── ESTADOS ── */
+.loadingMsg,
+.noData,
+.errorMsg {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.2rem;
+  margin: 0;
+}
+
+.loadingMsg {
+  color: #9b7fd4;
+}
+
+.noData {
+  color: #7a6a9a;
+}
+
+.errorMsg {
+  color: #e06060;
+}
