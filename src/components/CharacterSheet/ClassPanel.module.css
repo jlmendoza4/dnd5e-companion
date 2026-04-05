@@ -1,26 +1,26 @@
-/* ClassPanel.module.css */
+﻿/* ClassPanel.module.css */
 
 .panel {
-  background: rgba(12, 12, 28, 0.75);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: var(--bg-glass);
+  border: 1px solid rgba(96, 110, 160, 0.22);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
   margin-top: 1.5rem;
-  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(65, 76, 130, 0.12);
   transition: border-color var(--transition);
 }
 .panel:hover {
-  border-color: rgba(124, 58, 237, 0.38);
+  border-color: rgba(96, 110, 160, 0.36);
 }
 
-/* ── HEADER ── */
+/* â”€â”€ HEADER â”€â”€ */
 .header {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem 1.1rem;
-  background: linear-gradient(135deg, rgba(76, 29, 149, 0.35) 0%, rgba(12, 12, 28, 0.5) 100%);
+  background: linear-gradient(135deg, var(--panel-header-start) 0%, var(--panel-header-end) 100%);
   border: none;
   cursor: pointer;
   gap: 0.5rem;
@@ -28,14 +28,14 @@
 }
 
 .header:hover {
-  background: linear-gradient(135deg, rgba(100, 40, 190, 0.4) 0%, rgba(18, 18, 40, 0.6) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--panel-header-start) 88%, white), color-mix(in srgb, var(--panel-header-end) 88%, white));
 }
 
 .title {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #f8fbff;
   text-align: left;
   font-family: var(--font-title);
   letter-spacing: 0.04em;
@@ -49,34 +49,34 @@
 }
 
 .classBadge {
-  background: rgba(124, 58, 237, 0.18);
-  color: var(--purple-light);
-  padding: 0.2rem 0.65rem;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  padding: 0.2rem 0.83rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 600;
   text-transform: capitalize;
-  border: 1px solid rgba(124, 58, 237, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .subclassBadge {
-  background: rgba(6, 182, 212, 0.1);
-  color: var(--cyan-light);
-  padding: 0.2rem 0.65rem;
+  background: rgba(34, 211, 238, 0.16);
+  color: #dffcff;
+  padding: 0.2rem 0.83rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  border: 1px solid rgba(6, 182, 212, 0.25);
+  border: 1px solid rgba(34, 211, 238, 0.28);
 }
 
 .collapseArrow {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.82rem;
   margin-left: 0.25rem;
   transition: transform var(--transition);
 }
 
-/* ── BODY ── */
+/* â”€â”€ BODY â”€â”€ */
 .body {
   padding: 1rem;
   display: flex;
@@ -84,20 +84,20 @@
   gap: 1.25rem;
 }
 
-/* ── BLOQUES ── */
+/* â”€â”€ BLOQUES â”€â”€ */
 .spellBlock,
 .featuresBlock {
-  background: rgba(7, 7, 16, 0.5);
-  border: 1px solid rgba(124, 58, 237, 0.14);
+  background: var(--surface-2);
+  border: 1px solid rgba(96, 110, 160, 0.18);
   border-radius: var(--border-radius);
   padding: 0.9rem 1rem;
 }
 
 .blockTitle {
-  margin: 0 0 0.75rem 0;
-  font-size: 0.82rem;
+  margin: 0 0 0.82rem 0;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--purple-light);
+  color: #51608d;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-family: var(--font-title);
@@ -107,34 +107,34 @@
   color: var(--cyan-light);
 }
 
-/* ── CONJUROS META ── */
+/* â”€â”€ CONJUROS META â”€â”€ */
 .spellMeta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.82rem;
 }
 
 .metaChip {
-  background: rgba(124, 58, 237, 0.1);
+  background: var(--surface-3);
   color: var(--text-secondary);
-  padding: 0.25rem 0.7rem;
+  padding: 0.25rem 0.8rem;
   border-radius: 999px;
-  font-size: 0.78rem;
-  border: 1px solid rgba(124, 58, 237, 0.22);
+  font-size: 0.85rem;
+  border: 1px solid rgba(140, 154, 210, 0.45);
 }
 
 .maxLevelChip {
-  background: rgba(139, 92, 246, 0.18);
-  color: var(--purple-light);
-  border-color: rgba(139, 92, 246, 0.4);
+  background: #e9ecff;
+  color: #5b52c8;
+  border-color: rgba(108, 92, 231, 0.35);
   font-weight: 600;
 }
 
-/* ── SLOTS GRID ── */
+/* â”€â”€ SLOTS GRID â”€â”€ */
 .slotsLabel {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.9rem;
+  color: #6b7593;
   margin: 0 0 0.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -151,10 +151,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: linear-gradient(160deg, rgba(76, 29, 149, 0.5), rgba(18, 10, 40, 0.8));
-  border: 1px solid rgba(124, 58, 237, 0.35);
+  background: linear-gradient(160deg, #6c5ce7, #5d4fd0);
+  border: 1px solid rgba(90, 76, 196, 0.4);
   border-radius: var(--border-radius);
-  padding: 0.4rem 0.7rem;
+  padding: 0.4rem 0.8rem;
   min-width: 52px;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
@@ -164,8 +164,8 @@
 }
 
 .slotLevel {
-  font-size: 0.66rem;
-  color: var(--text-muted);
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.82);
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -174,11 +174,11 @@
 .slotCount {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--purple-light);
+  color: #ffffff;
   line-height: 1.2;
 }
 
-/* ── FEATURES LIST ── */
+/* â”€â”€ FEATURES LIST â”€â”€ */
 .featureList {
   list-style: none;
   margin: 0;
@@ -191,12 +191,12 @@
 .featureItem {
   border-radius: var(--border-radius);
   overflow: hidden;
-  background: rgba(7, 7, 16, 0.5);
-  border: 1px solid rgba(124, 58, 237, 0.14);
+  background: var(--surface-1);
+  border: 1px solid rgba(96, 110, 160, 0.16);
   transition: border-color var(--transition);
 }
 .featureItem:hover {
-  border-color: rgba(124, 58, 237, 0.3);
+  border-color: rgba(96, 110, 160, 0.3);
 }
 
 .featureBtn {
@@ -213,52 +213,52 @@
 }
 
 .featureBtn:hover {
-  background: rgba(124, 58, 237, 0.07);
+  background: var(--surface-3);
 }
 
 .featureLvl {
-  font-size: 0.65rem;
-  color: var(--purple-light);
+  font-size: 0.83rem;
+  color: #6a5fe0;
   font-weight: 700;
-  background: rgba(124, 58, 237, 0.15);
+  background: #efeaff;
   padding: 0.1rem 0.4rem;
   border-radius: 999px;
   white-space: nowrap;
   flex-shrink: 0;
-  border: 1px solid rgba(124, 58, 237, 0.25);
+  border: 1px solid rgba(124, 58, 237, 0.18);
 }
 
 .featureName {
   flex: 1;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .featureArrow {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  font-size: 0.8rem;
+  color: #7380a5;
   flex-shrink: 0;
 }
 
 .featureDesc {
-  padding: 0.5rem 0.8rem 0.75rem 0.8rem;
-  border-top: 1px solid rgba(124, 58, 237, 0.1);
-  background: rgba(4, 4, 12, 0.4);
+  padding: 0.5rem 0.8rem 0.82rem 0.8rem;
+  border-top: 1px solid rgba(96, 110, 160, 0.12);
+  background: var(--surface-2);
 }
 
 .featureDescPara {
   margin: 0 0 0.5rem 0;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .featureDescPara:last-child {
   margin-bottom: 0;
 }
 
-/* ── ESTADOS ── */
+/* â”€â”€ ESTADOS â”€â”€ */
 .loadingMsg,
 .noData,
 .errorMsg {
@@ -278,3 +278,6 @@
 .errorMsg {
   color: var(--color-danger);
 }
+
+
+

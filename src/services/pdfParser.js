@@ -15,6 +15,11 @@ function normalize(str) {
     .replace(/[^a-z0-9]/g, '')
 }
 
+function hasFieldValue(val) {
+  if (val === null || val === undefined) return false
+  return String(val).trim().length > 0
+}
+
 // ── Tabla de matching normalizado ──
 const NORM_MAP = {
   // Información básica
@@ -34,6 +39,10 @@ const NORM_MAP = {
   characterlevel:          '_level',
   background:              'background',
   trasfondo:               'background',
+  antecedentes:            'background',
+  fondo:                   'background',
+  trasfondodelpersonaje:   'background',
+  characterbackground:     'background',
   playername:              'playerName',
   nombredeljugador:        'playerName',
   race:                    'race',
@@ -95,15 +104,27 @@ const NORM_MAP = {
   puntosdegolpemaxyimos:  'maxHP',
 
   // Combate
+  ca:                     'armorClass',
   ac:                     'armorClass',
   armorclass:             'armorClass',
+  armorclas:              'armorClass',
+  classdearmadura:        'armorClass',
   clasearmadura:          'armorClass',
   clasedearmadura:        'armorClass',
+  clasearmaduratotal:     'armorClass',
   initiative:             'initiative',
+  initiativemod:          'initiative',
+  initiativebonus:        'initiative',
   iniciativa:             'initiative',
+  bonificadoriniciativa:  'initiative',
   init:                   'initiative',
   speed:                  'speed',
+  movementspeed:          'speed',
+  walkingspeed:           'speed',
+  movimiento:             'speed',
   velocidad:              'speed',
+  desplazamiento:         'speed',
+  desplazamientobase:     'speed',
   proficiencybonus:       'proficiencyBonus',
   profbonus:              'proficiencyBonus',
   bonificadorcompetencia: 'proficiencyBonus',
@@ -125,6 +146,39 @@ const NORM_MAP = {
   equipo:                 '_equipment',
   attacksandspellcasting: '_attacks',
   ataques:                '_attacks',
+}
+
+// Valores típicos de trasfondo que vienen en inglés desde PDFs oficiales
+const BACKGROUND_VALUE_MAP = {
+  acolyte: 'Acólito',
+  charlatan: 'Charlatán',
+  criminal: 'Criminal',
+  entertainer: 'Artista',
+  folkhero: 'Héroe del pueblo',
+  'folk hero': 'Héroe del pueblo',
+  gladiator: 'Gladiador',
+  guildartisan: 'Artesano gremial',
+  'guild artisan': 'Artesano gremial',
+  artisan: 'Artesano gremial',
+  hermit: 'Ermitaño',
+  noble: 'Noble',
+  outlander: 'Forastero',
+  sage: 'Sabio',
+  sailor: 'Marinero',
+  pirate: 'Pirata',
+  soldier: 'Soldado',
+  urchin: 'Huérfano callejero',
+}
+
+function normalizeBackgroundValue(val) {
+  const raw = toString(val)
+  if (!raw) return ''
+
+  const direct = BACKGROUND_VALUE_MAP[normalize(raw)]
+  if (direct) return direct
+
+  // Mantener valor original si no está en el diccionario.
+  return raw
 }
 
 // ── Carga PDF.js ──
@@ -258,6 +312,333 @@ function toString(val) {
   return String(val).trim().replace(/\s+/g, ' ')
 }
 
+function isLikelyBackgroundValue(val) {
+  const s = toString(val)
+  if (!s) return false
+
+  // El trasfondo suele ser una etiqueta corta, no párrafos.
+  if (s.length > 80) return false
+  if (/\n/.test(String(val))) return false
+
+  // Evita valores que parecen clase/nivel o estadísticas.
+  if (/\b\d{1,2}\b/.test(s) && /\b(level|nivel|clase|class|xp|pg|hp)\b/i.test(s)) {
+    return false
+  }
+
+  return true
+}
+
+function resolveBackground(normIndex) {
+  const exactKeys = [
+    'background',
+    'trasfondo',
+    'antecedentes',
+    'fondo',
+    'characterbackground',
+    'trasfondodelpersonaje',
+  ]
+
+  // 1) Prioridad a claves exactas.
+  for (const key of exactKeys) {
+    const item = normIndex[key]
+    if (item && isLikelyBackgroundValue(item.val)) {
+      return normalizeBackgroundValue(item.val)
+    }
+  }
+
+  // 2) Si no hay exacta, busca candidatas por nombre de campo.
+  const candidates = Object.entries(normIndex)
+    .filter(([k, item]) => {
+      if (!item || !hasFieldValue(item.val)) return false
+      return (
+        k.includes('background') ||
+        k.includes('trasfondo') ||
+        k.includes('antecedent') ||
+        k.includes('fondo')
+      )
+    })
+    .sort((a, b) => a[0].length - b[0].length)
+
+  for (const [, item] of candidates) {
+    if (isLikelyBackgroundValue(item.val)) {
+      return normalizeBackgroundValue(item.val)
+    }
+  }
+
+  return ''
+}
+
+function resolveNumericCombatField(normIndex, {
+  target,
+  exactKeys = [],
+  contains = [],
+  min,
+  max,
+  fallback,
+}) {
+  const candidates = []
+
+  for (const [normKey, mapped] of Object.entries(NORM_MAP)) {
+    if (mapped !== target) continue
+    const item = normIndex[normKey]
+    if (!item || !hasFieldValue(item.val)) continue
+    candidates.push(String(item.val))
+  }
+
+  for (const key of exactKeys) {
+    const item = normIndex[normalize(key)]
+    if (item && hasFieldValue(item.val)) candidates.push(String(item.val))
+  }
+
+  for (const [k, item] of Object.entries(normIndex)) {
+    if (!item || !hasFieldValue(item.val)) continue
+    if (contains.some(fragment => k.includes(fragment))) {
+      candidates.push(String(item.val))
+    }
+  }
+
+  for (const raw of candidates) {
+    const n = toInt(raw, Number.NaN)
+    if (!Number.isNaN(n) && n >= min && n <= max) {
+      return n
+    }
+  }
+
+  return fallback
+}
+
+const SKILL_ALIASES = {
+  acrobatics: ['acrobatics', 'acrobacia'],
+  animalHandling: ['animalhandling', 'animal handling', 'tratoconanimales', 'manejoanimales'],
+  arcana: ['arcana'],
+  athletics: ['athletics', 'atletismo'],
+  deception: ['deception', 'engano', 'engaño'],
+  history: ['history', 'historia'],
+  insight: ['insight', 'perspicacia'],
+  intimidation: ['intimidation', 'intimidacion', 'intimidación'],
+  investigation: ['investigation', 'investigacion', 'investigación'],
+  medicine: ['medicine', 'medicina'],
+  nature: ['nature', 'naturaleza'],
+  perception: ['perception', 'percepcion', 'percepción'],
+  performance: ['performance', 'interpretacion', 'interpretación'],
+  persuasion: ['persuasion', 'persuasion', 'persuasión'],
+  religion: ['religion', 'religion'],
+  sleightOfHand: ['sleightofhand', 'sleight of hand', 'juegodemanos'],
+  stealth: ['stealth', 'sigilo'],
+  survival: ['survival', 'supervivencia'],
+}
+
+const SKILL_TO_ABILITY = {
+  acrobatics: 'DES',
+  animalHandling: 'SAB',
+  arcana: 'INT',
+  athletics: 'FUE',
+  deception: 'CAR',
+  history: 'INT',
+  insight: 'SAB',
+  intimidation: 'CAR',
+  investigation: 'INT',
+  medicine: 'SAB',
+  nature: 'INT',
+  perception: 'SAB',
+  performance: 'CAR',
+  persuasion: 'CAR',
+  religion: 'INT',
+  sleightOfHand: 'DES',
+  stealth: 'DES',
+  survival: 'SAB',
+}
+
+const SAVE_ALIASES = {
+  FUE: ['strengthsave', 'strsave', 'fuerzasalvacion', 'salvacionfuerza', 'savingthrowstr'],
+  DES: ['dexteritysave', 'dexsave', 'destrezasalvacion', 'salvaciondestreza', 'savingthrowdex'],
+  CON: ['constitutionsave', 'consave', 'constitucionsalvacion', 'salvacionconstitucion', 'savingthrowcon'],
+  INT: ['intelligencesave', 'intsave', 'inteligenciasalvacion', 'salvacioninteligencia', 'savingthrowint'],
+  SAB: ['wisdomsave', 'wissave', 'sabiduriasalvacion', 'salvacionsabiduria', 'savingthrowwis'],
+  CAR: ['charismasave', 'chasave', 'carismasalvacion', 'salvacioncarisma', 'savingthrowcha'],
+}
+
+function isTruthyCheckboxValue(val) {
+  const s = String(val ?? '').trim().toLowerCase()
+  if (!s) return false
+
+  // Valores típicos de checkbox en AcroForm
+  if (['yes', 'on', 'true', '1', 'checked', 'si', 'sí'].includes(s)) return true
+
+  // Algunos PDFs guardan nombres de estado distintos de "Off" cuando está marcado.
+  if (s !== 'off' && s !== 'false' && s !== '0' && !/^[-+]?\d+$/.test(s)) return true
+
+  return false
+}
+
+function keyLooksLikeProficiencyMarker(normKey) {
+  return (
+    normKey.includes('prof') ||
+    normKey.includes('proficiency') ||
+    normKey.includes('compet') ||
+    normKey.includes('trained') ||
+    normKey.includes('training') ||
+    normKey.includes('checkbox') ||
+    normKey.includes('check') ||
+    normKey.includes('tick')
+  )
+}
+
+function resolveSkillProficiencies(normIndex) {
+  const out = {
+    acrobatics: false,
+    animalHandling: false,
+    arcana: false,
+    athletics: false,
+    deception: false,
+    history: false,
+    insight: false,
+    intimidation: false,
+    investigation: false,
+    medicine: false,
+    nature: false,
+    perception: false,
+    performance: false,
+    persuasion: false,
+    religion: false,
+    sleightOfHand: false,
+    stealth: false,
+    survival: false,
+  }
+
+  for (const [k, item] of Object.entries(normIndex)) {
+    if (!item) continue
+    if (!isTruthyCheckboxValue(item.val)) continue
+    if (k.includes('passive') || k.includes('pasiva')) continue
+
+    for (const [skillKey, aliases] of Object.entries(SKILL_ALIASES)) {
+      const hit = aliases.some(alias => {
+        const nk = normalize(alias)
+        return k === nk || k.includes(nk)
+      })
+
+      if (!hit) continue
+
+      // Si no hay marcador de competencia, solo aceptamos si parece checkbox explícito
+      // (valor verdadero no numérico), para evitar confundir con el modificador numérico.
+      if (keyLooksLikeProficiencyMarker(k) || !/^[-+]?\d+$/.test(String(item.val).trim())) {
+        out[skillKey] = true
+      }
+    }
+  }
+
+  return out
+}
+
+function resolveSavingThrowProficiencies(normIndex) {
+  const out = { FUE: false, DES: false, CON: false, INT: false, SAB: false, CAR: false }
+
+  for (const [k, item] of Object.entries(normIndex)) {
+    if (!item) continue
+    if (!isTruthyCheckboxValue(item.val)) continue
+
+    for (const [saveKey, aliases] of Object.entries(SAVE_ALIASES)) {
+      const hit = aliases.some(alias => {
+        const nk = normalize(alias)
+        return k === nk || k.includes(nk)
+      })
+
+      if (!hit) continue
+
+      if (keyLooksLikeProficiencyMarker(k) || !/^[-+]?\d+$/.test(String(item.val).trim())) {
+        out[saveKey] = true
+      }
+    }
+  }
+
+  return out
+}
+
+function parseSignedInt(val) {
+  const m = String(val ?? '').match(/[-+]?\d+/)
+  if (!m) return Number.NaN
+  const n = parseInt(m[0], 10)
+  return Number.isNaN(n) ? Number.NaN : n
+}
+
+function abilityMod(score) {
+  const n = parseInt(score, 10)
+  if (Number.isNaN(n)) return 0
+  return Math.floor((n - 10) / 2)
+}
+
+function resolveSkills(normIndex) {
+  const out = {
+    acrobatics: 0,
+    animalHandling: 0,
+    arcana: 0,
+    athletics: 0,
+    deception: 0,
+    history: 0,
+    insight: 0,
+    intimidation: 0,
+    investigation: 0,
+    medicine: 0,
+    nature: 0,
+    perception: 0,
+    performance: 0,
+    persuasion: 0,
+    religion: 0,
+    sleightOfHand: 0,
+    stealth: 0,
+    survival: 0,
+  }
+
+  for (const [skillKey, aliases] of Object.entries(SKILL_ALIASES)) {
+    const candidates = []
+
+    for (const [k, item] of Object.entries(normIndex)) {
+      if (!item || !hasFieldValue(item.val)) continue
+      if (k.includes('passive') || k.includes('pasiva')) continue
+
+      if (aliases.some(alias => k === normalize(alias) || k.includes(normalize(alias)))) {
+        candidates.push(String(item.val))
+      }
+    }
+
+    for (const raw of candidates) {
+      const n = parseSignedInt(raw)
+      if (!Number.isNaN(n) && n >= -20 && n <= 30) {
+        out[skillKey] = n
+        break
+      }
+    }
+  }
+
+  return out
+}
+
+function inferSkillProficiencies(skills, stats, profBonus) {
+  const out = {}
+
+  for (const [skillKey, ability] of Object.entries(SKILL_TO_ABILITY)) {
+    const skillVal = parseInt((skills || {})[skillKey] ?? 0, 10)
+    const base = abilityMod((stats || {})[ability] ?? 10)
+    const delta = skillVal - base
+    out[skillKey] = (delta === profBonus || delta === profBonus * 2)
+  }
+
+  return out
+}
+
+function inferSavingThrowProficiencies(stats, profBonus) {
+  const out = { FUE: false, DES: false, CON: false, INT: false, SAB: false, CAR: false }
+
+  for (const ability of Object.keys(out)) {
+    const saveBase = abilityMod((stats || {})[ability] ?? 10)
+    const saveVal = saveBase
+    const delta = saveVal - saveBase
+    out[ability] = (delta === profBonus || delta === profBonus * 2)
+  }
+
+  return out
+}
+
 // ── Punto de entrada principal ──
 export async function parsePDFCharacterSheet(file) {
   const arrayBuffer = await file.arrayBuffer()
@@ -275,7 +656,18 @@ export async function parsePDFCharacterSheet(file) {
   const normIndex = {}
   for (const [key, val] of Object.entries(rawFields)) {
     const nk = normalize(key)
-    if (!normIndex[nk] || key.length < normIndex[nk].origKey.length) {
+    if (!normIndex[nk]) {
+      normIndex[nk] = { val, origKey: key }
+      continue
+    }
+
+    // Si hay colisión, prioriza el valor no vacío.
+    // Si ambos (o ninguno) tienen valor, conserva el nombre más corto.
+    const prev = normIndex[nk]
+    const prevHas = hasFieldValue(prev.val)
+    const currHas = hasFieldValue(val)
+
+    if ((currHas && !prevHas) || (currHas === prevHas && key.length < prev.origKey.length)) {
       normIndex[nk] = { val, origKey: key }
     }
   }
@@ -312,7 +704,7 @@ export async function parsePDFCharacterSheet(file) {
   const name        = toString(findField('name', 'charactername', 'nombrepersonaje'))
   const classLevel  = toString(findField('_classLevel', 'classlevel', 'clasenivel'))
   const race        = toString(findField('race', 'raza'))
-  const background  = toString(findField('background', 'trasfondo'))
+  const background  = resolveBackground(normIndex) || normalizeBackgroundValue(findField('background', 'trasfondo', 'antecedentes', 'fondo'))
   const alignment   = toString(findField('alignment', 'alineamiento'))
 
   const charLevelData = parseClassLevel(classLevel)
@@ -337,12 +729,58 @@ export async function parsePDFCharacterSheet(file) {
     CAR: pickStat(normIndex, '_CAR'),
   }
 
+  const skills = resolveSkills(normIndex)
+
+  const importedProfBonus = toInt(findField('proficiencyBonus', 'profbonus', 'bonificadorcompetencia'), 0)
+  const effectiveProfBonus = importedProfBonus > 0 ? importedProfBonus : (Math.ceil(level / 4) + 1)
+
+  const skillProfsByCheckbox = resolveSkillProficiencies(normIndex)
+  const skillProfsByInference = inferSkillProficiencies(skills, stats, effectiveProfBonus)
+  const skillProficiencies = {}
+  for (const skillKey of Object.keys(SKILL_ALIASES)) {
+    skillProficiencies[skillKey] = !!(skillProfsByCheckbox[skillKey] || skillProfsByInference[skillKey])
+  }
+
+  const saveProfsByCheckbox = resolveSavingThrowProficiencies(normIndex)
+  const saveProfsByInference = inferSavingThrowProficiencies(stats, effectiveProfBonus)
+  const savingThrowProficiencies = {
+    FUE: !!(saveProfsByCheckbox.FUE || saveProfsByInference.FUE),
+    DES: !!(saveProfsByCheckbox.DES || saveProfsByInference.DES),
+    CON: !!(saveProfsByCheckbox.CON || saveProfsByInference.CON),
+    INT: !!(saveProfsByCheckbox.INT || saveProfsByInference.INT),
+    SAB: !!(saveProfsByCheckbox.SAB || saveProfsByInference.SAB),
+    CAR: !!(saveProfsByCheckbox.CAR || saveProfsByInference.CAR),
+  }
+
   // ── Combate ──
   const maxHP      = toInt(findField('maxHP', 'hpmax', 'pgmax'), 0)
   const currentHP  = toInt(findField('currentHP', 'hpcurrent', 'pgactuales'), 0)
-  const armorClass = toInt(findField('armorClass', 'clasearmadura'), 10)
-  const initiative = toInt(findField('initiative', 'iniciativa'), 0)
-  const speed      = toInt(findField('speed', 'velocidad'), 30)
+  const armorClass = resolveNumericCombatField(normIndex, {
+    target: 'armorClass',
+    exactKeys: ['ac', 'ca', 'armor class', 'clase de armadura'],
+    contains: ['armorclass', 'clasearmadura', 'clasedearmadura', 'ac', 'ca'],
+    min: 1,
+    max: 40,
+    fallback: 10,
+  })
+
+  const initiative = resolveNumericCombatField(normIndex, {
+    target: 'initiative',
+    exactKeys: ['initiative', 'iniciativa', 'init', 'initiative bonus'],
+    contains: ['initiative', 'iniciativa', 'init'],
+    min: -20,
+    max: 20,
+    fallback: 0,
+  })
+
+  const speed = resolveNumericCombatField(normIndex, {
+    target: 'speed',
+    exactKeys: ['speed', 'velocidad', 'movement speed', 'walking speed', 'desplazamiento'],
+    contains: ['speed', 'velocidad', 'movement', 'walking', 'desplazamiento', 'movimiento'],
+    min: 5,
+    max: 120,
+    fallback: 30,
+  })
 
   // ── Equipo y rasgos ──
   const equipment = toArray(findField('_equipment', 'equipo'))
@@ -360,6 +798,9 @@ export async function parsePDFCharacterSheet(file) {
     background,
     alignment,
     stats,
+    skills,
+    skillProficiencies,
+    savingThrowProficiencies,
     currentHP,
     maxHP,
     armorClass,

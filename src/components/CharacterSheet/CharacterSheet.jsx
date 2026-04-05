@@ -64,6 +64,61 @@ const STATS_CONFIG = [
   { key: 'CAR', label: 'Carisma',      short: 'CAR', color: '#ec4899', icon: '✨' }
 ]
 
+const SKILLS_CONFIG = [
+  { key: 'acrobatics', label: 'Acrobacia', stat: 'DES' },
+  { key: 'animalHandling', label: 'Trato con animales', stat: 'SAB' },
+  { key: 'arcana', label: 'Arcana', stat: 'INT' },
+  { key: 'athletics', label: 'Atletismo', stat: 'FUE' },
+  { key: 'deception', label: 'Engaño', stat: 'CAR' },
+  { key: 'history', label: 'Historia', stat: 'INT' },
+  { key: 'insight', label: 'Perspicacia', stat: 'SAB' },
+  { key: 'intimidation', label: 'Intimidación', stat: 'CAR' },
+  { key: 'investigation', label: 'Investigación', stat: 'INT' },
+  { key: 'medicine', label: 'Medicina', stat: 'SAB' },
+  { key: 'nature', label: 'Naturaleza', stat: 'INT' },
+  { key: 'perception', label: 'Percepción', stat: 'SAB' },
+  { key: 'performance', label: 'Interpretación', stat: 'CAR' },
+  { key: 'persuasion', label: 'Persuasión', stat: 'CAR' },
+  { key: 'religion', label: 'Religión', stat: 'INT' },
+  { key: 'sleightOfHand', label: 'Juego de manos', stat: 'DES' },
+  { key: 'stealth', label: 'Sigilo', stat: 'DES' },
+  { key: 'survival', label: 'Supervivencia', stat: 'SAB' }
+]
+
+const SAVE_CONFIG = [
+  { key: 'FUE', label: 'Fuerza' },
+  { key: 'DES', label: 'Destreza' },
+  { key: 'CON', label: 'Constitución' },
+  { key: 'INT', label: 'Inteligencia' },
+  { key: 'SAB', label: 'Sabiduría' },
+  { key: 'CAR', label: 'Carisma' }
+]
+
+const EMPTY_SKILLS = {
+  acrobatics: 0,
+  animalHandling: 0,
+  arcana: 0,
+  athletics: 0,
+  deception: 0,
+  history: 0,
+  insight: 0,
+  intimidation: 0,
+  investigation: 0,
+  medicine: 0,
+  nature: 0,
+  perception: 0,
+  performance: 0,
+  persuasion: 0,
+  religion: 0,
+  sleightOfHand: 0,
+  stealth: 0,
+  survival: 0
+}
+
+const EMPTY_SKILL_PROFS = Object.fromEntries(Object.keys(EMPTY_SKILLS).map(k => [k, false]))
+const EMPTY_SAVES = { FUE: 0, DES: 0, CON: 0, INT: 0, SAB: 0, CAR: 0 }
+const EMPTY_SAVE_PROFS = { FUE: false, DES: false, CON: false, INT: false, SAB: false, CAR: false }
+
 // ── Calcula el bonificador de competencia según el nivel ──
 function getProficiencyBonus(level) {
   return Math.ceil(level / 4) + 1
@@ -83,6 +138,46 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
     onUpdate({ stats: { ...character.stats, [statKey]: numVal } })
   }
 
+  const handleSkill = (skillKey, value) => {
+    const rawSkills = { ...EMPTY_SKILLS, ...(character.skills || {}) }
+    const numVal = Math.max(-20, Math.min(30, parseInt(value) || 0))
+    onUpdate({ skills: { ...rawSkills, [skillKey]: numVal } })
+  }
+
+  const toggleSkillProficiency = (skillKey) => {
+    const rawProfs = { ...EMPTY_SKILL_PROFS, ...(character.skillProficiencies || {}) }
+    const rawSkills = { ...EMPTY_SKILLS, ...(character.skills || {}) }
+    const wasProficient = !!rawProfs[skillKey]
+    const delta = wasProficient ? -profBonus : profBonus
+
+    const nextValue = Math.max(-20, Math.min(30, (rawSkills[skillKey] ?? 0) + delta))
+
+    onUpdate({
+      skillProficiencies: { ...rawProfs, [skillKey]: !wasProficient },
+      skills: { ...rawSkills, [skillKey]: nextValue }
+    })
+  }
+
+  const handleSavingThrow = (saveKey, value) => {
+    const raw = { ...EMPTY_SAVES, ...(character.savingThrows || {}) }
+    const numVal = Math.max(-20, Math.min(30, parseInt(value) || 0))
+    onUpdate({ savingThrows: { ...raw, [saveKey]: numVal } })
+  }
+
+  const toggleSavingThrowProficiency = (saveKey) => {
+    const rawProfs = { ...EMPTY_SAVE_PROFS, ...(character.savingThrowProficiencies || {}) }
+    const rawSaves = { ...EMPTY_SAVES, ...(character.savingThrows || {}) }
+    const wasProficient = !!rawProfs[saveKey]
+    const delta = wasProficient ? -profBonus : profBonus
+
+    const nextValue = Math.max(-20, Math.min(30, (rawSaves[saveKey] ?? 0) + delta))
+
+    onUpdate({
+      savingThrowProficiencies: { ...rawProfs, [saveKey]: !wasProficient },
+      savingThrows: { ...rawSaves, [saveKey]: nextValue }
+    })
+  }
+
   // ── Añadir equipo ──
   const addEquipment = () => {
     const trimmed = newEquipment.trim()
@@ -97,6 +192,10 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
   }
 
   const profBonus = getProficiencyBonus(character.level)
+  const skillValues = { ...EMPTY_SKILLS, ...(character.skills || {}) }
+  const skillProficiencies = { ...EMPTY_SKILL_PROFS, ...(character.skillProficiencies || {}) }
+  const savingThrows = { ...EMPTY_SAVES, ...(character.savingThrows || {}) }
+  const savingThrowProficiencies = { ...EMPTY_SAVE_PROFS, ...(character.savingThrowProficiencies || {}) }
 
   return (
     <>
@@ -268,7 +367,76 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
         </div>
       </section>
 
-      {/* ══ SECCIÓN 3: COMBATE ══ */}
+      {/* ══ SECCIÓN 3: TIRADAS DE SALVACIÓN ══ */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>🧿 Tiradas de Salvación</h3>
+        <div className={styles.skillsTable}>
+          {SAVE_CONFIG.map(save => (
+            <div key={save.key} className={styles.skillRow}>
+              <div className={styles.skillMeta}>
+                <span className={styles.skillName}>{save.label}</span>
+                <span className={styles.skillStat}>{save.key}</span>
+              </div>
+
+              <button
+                type="button"
+                className={`${styles.proficiencyBtn} ${savingThrowProficiencies[save.key] ? styles.proficiencyBtnActive : ''}`}
+                onClick={() => toggleSavingThrowProficiency(save.key)}
+                title="Alternar competencia"
+              >
+                {savingThrowProficiencies[save.key] ? '✅ Comp.' : '⭕ Sin comp.'}
+              </button>
+
+              <input
+                type="number"
+                className={styles.skillInput}
+                value={savingThrows[save.key]}
+                min={-20}
+                max={30}
+                onChange={e => handleSavingThrow(save.key, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ SECCIÓN 4: HABILIDADES ══ */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>🎯 Habilidades</h3>
+        <div className={styles.skillsTable}>
+          {SKILLS_CONFIG.map(skill => {
+            const value = skillValues[skill.key] ?? 0
+            return (
+              <div key={skill.key} className={styles.skillRow}>
+                <div className={styles.skillMeta}>
+                  <span className={styles.skillName}>{skill.label}</span>
+                  <span className={styles.skillStat}>{skill.stat}</span>
+                </div>
+
+                <button
+                  type="button"
+                  className={`${styles.proficiencyBtn} ${skillProficiencies[skill.key] ? styles.proficiencyBtnActive : ''}`}
+                  onClick={() => toggleSkillProficiency(skill.key)}
+                  title="Alternar competencia"
+                >
+                  {skillProficiencies[skill.key] ? '✅ Comp.' : '⭕ Sin comp.'}
+                </button>
+
+                <input
+                  type="number"
+                  className={styles.skillInput}
+                  value={value}
+                  min={-20}
+                  max={30}
+                  onChange={e => handleSkill(skill.key, e.target.value)}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* ══ SECCIÓN 5: COMBATE ══ */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>⚔️ Combate</h3>
         <div className={styles.combatGrid}>
@@ -335,12 +503,12 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
         </div>
       </section>
 
-      {/* ══ SECCIÓN 4: HECHIZOS ══ */}
+      {/* ══ SECCIÓN 6: HECHIZOS ══ */}
       <section className={styles.section}>
         <SpellBook character={character} onUpdate={onUpdate} />
       </section>
 
-      {/* ══ SECCIÓN 5: EQUIPO ══ */}
+      {/* ══ SECCIÓN 7: EQUIPO ══ */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>🎒 Equipo</h3>
         <div className={styles.listSection}>
@@ -376,7 +544,7 @@ export default function CharacterSheet({ character, onUpdate, onReset }) {
         </div>
       </section>
 
-      {/* ══ SECCIÓN 6: RASGOS Y NOTAS ══ */}
+      {/* ══ SECCIÓN 8: RASGOS Y NOTAS ══ */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>📝 Rasgos, Características y Notas</h3>
         <textarea

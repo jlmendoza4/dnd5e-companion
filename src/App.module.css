@@ -1,5 +1,5 @@
-/* ============================================================
-   App.module.css — Layout principal de la aplicación
+﻿/* ============================================================
+   App.module.css â€” Layout principal de la aplicaciÃ³n
    ============================================================ */
 
 .app {
@@ -8,9 +8,9 @@
   min-height: 100vh;
 }
 
-/* ── HEADER ── */
+/* â”€â”€ HEADER â”€â”€ */
 .header {
-  background: rgba(7, 7, 16, 0.85);
+  background: var(--bg-glass);
   border-bottom: 1px solid rgba(124, 58, 237, 0.25);
   padding: 1rem 1.5rem;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 60px rgba(124, 58, 237, 0.05);
@@ -33,7 +33,7 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.82rem;
 }
 
 .logoIcon {
@@ -45,10 +45,7 @@
   font-size: 1.75rem;
   margin: 0;
   line-height: 1.1;
-  background: linear-gradient(135deg, #ffffff 0%, var(--purple-light) 60%, var(--cyan-light) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--heading-color);
 }
 
 .logoSubtitle {
@@ -59,13 +56,49 @@
   letter-spacing: 0.04em;
 }
 
+.headerSide {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.themeToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-color);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-sm);
+}
+
+.themeToggle:hover {
+  border-color: var(--border-bright);
+  background: var(--bg-glass-hover);
+}
+
+.themeToggleIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.themeToggleLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 /* Badge del personaje activo */
 .characterBadge {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.1rem;
-  background: rgba(124, 58, 237, 0.08);
+  background: var(--surface-2);
   border: 1px solid rgba(124, 58, 237, 0.3);
   border-radius: var(--border-radius-lg);
   padding: 0.5rem 1rem;
@@ -79,7 +112,7 @@
 }
 
 .characterLevel {
-  font-size: 0.65rem;
+  font-size: 0.83rem;
   color: var(--purple-light);
   font-family: var(--font-title);
   text-transform: uppercase;
@@ -94,14 +127,14 @@
 }
 
 .characterClass {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   font-style: italic;
 }
 
-/* ── NAVEGACIÓN ── */
+/* â”€â”€ NAVEGACIÃ“N â”€â”€ */
 .nav {
-  background: rgba(7, 7, 16, 0.7);
+  background: var(--bg-glass);
   border-bottom: 1px solid rgba(124, 58, 237, 0.12);
   display: flex;
   overflow-x: auto;
@@ -150,7 +183,7 @@
   font-weight: 600;
 }
 
-/* ── CONTENIDO PRINCIPAL ── */
+/* â”€â”€ CONTENIDO PRINCIPAL â”€â”€ */
 .main {
   flex: 1;
   padding: 1.5rem;
@@ -163,22 +196,22 @@
   width: 100%;
 }
 
-/* ── FOOTER ── */
+/* â”€â”€ FOOTER â”€â”€ */
 .footer {
-  background: rgba(7, 7, 16, 0.6);
+  background: var(--bg-glass);
   border-top: 1px solid rgba(124, 58, 237, 0.1);
-  padding: 0.75rem 1.5rem;
+  padding: 0.82rem 1.5rem;
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   font-style: italic;
   backdrop-filter: blur(8px);
 }
 
-/* ── RESPONSIVE ── */
+/* â”€â”€ RESPONSIVE â”€â”€ */
 @media (max-width: 768px) {
   .header {
-    padding: 0.75rem 1rem;
+    padding: 0.82rem 1rem;
   }
 
   .logoTitle {
@@ -189,12 +222,20 @@
     align-items: center;
   }
 
+  .headerSide {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .main {
     padding: 1rem;
   }
 
   .navTab {
-    padding: 0.75rem 0.9rem;
-    font-size: 0.78rem;
+    padding: 0.82rem 0.9rem;
+    font-size: 0.85rem;
   }
 }
+
+
+

@@ -1,5 +1,5 @@
-/* ============================================================
-   DamageCalculator.module.css — Calculadora de Daño
+﻿/* ============================================================
+   DamageCalculator.module.css â€” Calculadora de DaÃ±o
    ============================================================ */
 
 .calculator {
@@ -8,7 +8,7 @@
   gap: 1.5rem;
 }
 
-/* ── HEADER ── */
+/* â”€â”€ HEADER â”€â”€ */
 .header {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-gold);
@@ -25,11 +25,11 @@
 
 .apiError {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--color-warning);
 }
 
-/* ── LAYOUT DE DOS COLUMNAS ── */
+/* â”€â”€ LAYOUT DE DOS COLUMNAS â”€â”€ */
 .layout {
   display: grid;
   grid-template-columns: 360px 1fr;
@@ -37,7 +37,7 @@
   align-items: start;
 }
 
-/* ── PANEL DE CONFIGURACIÓN ── */
+/* â”€â”€ PANEL DE CONFIGURACIÃ“N â”€â”€ */
 .configPanel {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -59,13 +59,13 @@
   background: rgba(124, 58, 237, 0.08);
   border: 1px solid rgba(124, 58, 237, 0.3);
   color: var(--purple-light);
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.82rem;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-family: var(--font-title);
 }
 
-/* Categoría */
+/* CategorÃ­a */
 .categorySelector {
   display: flex;
   border: 1px solid var(--border-color);
@@ -75,7 +75,7 @@
 
 .catBtn {
   flex: 1;
-  padding: 0.6rem;
+  padding: 0.82rem;
   background: var(--bg-medium);
   border: none;
   color: var(--text-secondary);
@@ -97,7 +97,7 @@
   gap: 0.4rem;
 }
 .fieldLabel {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
   font-family: var(--font-title);
   text-transform: uppercase;
@@ -117,12 +117,12 @@
 }
 .select:focus { border-color: var(--purple-bright); }
 
-/* Detalle del ítem */
+/* Detalle del Ã­tem */
 .itemDetail {
   background: var(--bg-medium);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  padding: 0.75rem;
+  padding: 0.82rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -146,7 +146,7 @@
 .spellGuideTitle {
   font-family: var(--font-title);
   color: var(--purple-light);
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 0.25rem;
@@ -160,7 +160,7 @@
 
 .spellGuideFormula {
   color: var(--cyan-light);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-family: var(--font-title);
 }
 
@@ -194,7 +194,7 @@
   background: var(--bg-medium);
   border: none;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   text-align: center;
   transition: all var(--transition);
 }
@@ -205,7 +205,7 @@
   font-weight: 700;
 }
 
-/* Botón de tirar */
+/* BotÃ³n de tirar */
 .rollBtn {
   width: 100%;
   padding: 1rem;
@@ -235,14 +235,14 @@
   filter: grayscale(0.15);
 }
 
-/* ── PANEL DE RESULTADOS ── */
+/* â”€â”€ PANEL DE RESULTADOS â”€â”€ */
 .resultsPanel {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* Resultado vacío */
+/* Resultado vacÃ­o */
 .emptyResult {
   background: var(--bg-card);
   border: 2px dashed var(--border-color);
@@ -282,7 +282,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.82rem;
   border-bottom: 1px solid var(--border-color);
 }
 .rollItemName {
@@ -293,7 +293,7 @@
 .critBadge {
   background: linear-gradient(135deg, #854d0e, #eab308);
   color: white;
-  padding: 0.2rem 0.75rem;
+  padding: 0.2rem 0.82rem;
   border-radius: 999px;
   font-family: var(--font-title);
   font-size: 0.85rem;
@@ -302,7 +302,7 @@
 .failBadge {
   background: rgba(220, 38, 38, 0.3);
   color: var(--color-hp-light);
-  padding: 0.2rem 0.75rem;
+  padding: 0.2rem 0.82rem;
   border-radius: 999px;
   font-size: 0.85rem;
 }
@@ -314,7 +314,7 @@
 .rollSection:last-child { margin-bottom: 0; }
 .rollSectionLabel {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   font-family: var(--font-title);
   text-transform: uppercase;
@@ -350,12 +350,12 @@
   font-size: 1.3rem;
   font-weight: 700;
   font-family: var(--font-title);
-  color: var(--text-white);
+  color: var(--text-primary);
   line-height: 1;
 }
 .dieResult[data-size="large"] .dieValue { font-size: 1.8rem; }
 .dieName {
-  font-size: 0.6rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
 }
 
@@ -371,17 +371,17 @@
   background: rgba(124, 58, 237, 0.1);
   border: 1px solid rgba(124, 58, 237, 0.35);
   border-radius: var(--border-radius);
-  padding: 0.3rem 0.6rem;
+  padding: 0.3rem 0.82rem;
   color: var(--purple-light);
   font-family: var(--font-title);
 }
-.bonusLabel { font-size: 0.6rem; color: var(--text-muted); }
+.bonusLabel { font-size: 0.82rem; color: var(--text-muted); }
 
 .totalRoll {
   font-size: 2rem;
   font-weight: 700;
   font-family: var(--font-title);
-  color: var(--text-white);
+  color: var(--text-primary);
   background: rgba(124, 58, 237, 0.12);
   border: 2px solid rgba(124, 58, 237, 0.4);
   border-radius: var(--border-radius);
@@ -401,9 +401,9 @@
   border-radius: var(--border-radius);
   padding: 0.2rem 0.8rem;
 }
-.dmgType { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-ui); }
+.dmgType { font-size: 0.83rem; color: var(--text-muted); font-family: var(--font-ui); }
 
-/* CD de salvación */
+/* CD de salvaciÃ³n */
 .saveDCDisplay {
   display: flex;
   align-items: baseline;
@@ -424,7 +424,7 @@
   font-style: italic;
 }
 
-/* ── HISTORIAL ── */
+/* â”€â”€ HISTORIAL â”€â”€ */
 .history {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -435,7 +435,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.82rem 1rem;
   background: var(--bg-medium);
   border-bottom: 1px solid var(--border-color);
 }
@@ -458,7 +458,7 @@
 .historyAtk { color: var(--purple-light); font-family: var(--font-title); }
 .historyDmg { color: var(--color-hp-light); font-family: var(--font-title); font-weight: 700; }
 
-/* ── RESPONSIVE ── */
+/* â”€â”€ RESPONSIVE â”€â”€ */
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
 }
@@ -467,3 +467,6 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
+
+
+

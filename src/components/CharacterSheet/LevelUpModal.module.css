@@ -1,8 +1,8 @@
-/* ============================================================
-   LevelUpModal.module.css — Modal de subida de nivel
+﻿/* ============================================================
+   LevelUpModal.module.css â€” Modal de subida de nivel
    ============================================================ */
 
-/* ── FONDO OSCURO ── */
+/* â”€â”€ FONDO OSCURO â”€â”€ */
 .overlay {
   position: fixed;
   inset: 0;
@@ -21,17 +21,17 @@
   to   { opacity: 1; }
 }
 
-/* ── CONTENEDOR DEL MODAL ── */
+/* â”€â”€ CONTENEDOR DEL MODAL â”€â”€ */
 .modal {
-  background: rgba(10, 10, 22, 0.92);
-  border: 1px solid rgba(124, 58, 237, 0.35);
+  background: var(--bg-glass);
+  border: 1px solid rgba(124, 58, 237, 0.28);
   border-radius: var(--border-radius-lg, 16px);
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 60px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 20px 46px rgba(54, 65, 120, 0.2), 0 0 40px rgba(124, 58, 237, 0.1);
   animation: slideUp 0.2s ease;
   overflow: hidden;
   backdrop-filter: blur(20px);
@@ -42,7 +42,7 @@
   to   { transform: translateY(0);    opacity: 1; }
 }
 
-/* ── CABECERA ── */
+/* â”€â”€ CABECERA â”€â”€ */
 .header {
   display: flex;
   align-items: center;
@@ -69,7 +69,7 @@
 }
 
 .levelArrow {
-  font-size: 0.65rem;
+  font-size: 0.83rem;
   margin-bottom: -0.1rem;
 }
 
@@ -115,7 +115,7 @@
   background: rgba(255,255,255,0.08);
 }
 
-/* ── CUERPO (scrollable) ── */
+/* â”€â”€ CUERPO (scrollable) â”€â”€ */
 .body {
   overflow-y: auto;
   padding: 1.25rem 1.5rem;
@@ -124,9 +124,9 @@
   gap: 1rem;
 }
 
-/* ── SECCIONES ── */
+/* â”€â”€ SECCIONES â”€â”€ */
 .section {
-  background: rgba(7, 7, 16, 0.5);
+  background: var(--surface-2);
   border: 1px solid rgba(124, 58, 237, 0.18);
   border-radius: var(--border-radius, 10px);
   padding: 1rem 1.25rem;
@@ -137,18 +137,18 @@
   font-size: 0.82rem;
   color: var(--purple-light, #a78bfa);
   font-family: var(--font-title, serif);
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.82rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(124, 58, 237, 0.15);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-/* ── PUNTOS DE GOLPE ── */
+/* â”€â”€ PUNTOS DE GOLPE â”€â”€ */
 .hpFormula {
   font-size: 1rem;
   color: var(--text-secondary);
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.82rem;
 }
 
 .hpFormulaOp {
@@ -159,14 +159,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.82rem;
 }
 
 .hpOption {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.75rem;
+  gap: 0.82rem;
+  padding: 0.5rem 0.82rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   cursor: pointer;
@@ -200,17 +200,18 @@
 }
 
 .hpOptionNote {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
 }
 
 .customHpInput {
   width: 5rem;
   padding: 0.25rem 0.4rem;
-  background: rgba(4, 4, 12, 0.8);
+  background: var(--surface-3);
   border: 1px solid rgba(124, 58, 237, 0.4);
   border-radius: 6px;
-  color: var(--text-white);
+  color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
   font-size: 0.9rem;
   text-align: center;
   outline: none;
@@ -219,7 +220,7 @@
 .hpResult {
   font-size: 0.95rem;
   color: var(--text-secondary);
-  padding: 0.4rem 0.6rem;
+  padding: 0.4rem 0.82rem;
   background: rgba(74, 222, 128, 0.06);
   border-radius: 4px;
   border: 1px solid rgba(74, 222, 128, 0.2);
@@ -236,11 +237,11 @@
   font-size: 0.85rem;
 }
 
-/* ── BONIFICADOR DE COMPETENCIA ── */
+/* â”€â”€ BONIFICADOR DE COMPETENCIA â”€â”€ */
 .profRow {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.82rem;
   font-family: var(--font-title);
   font-size: 1.1rem;
   margin: 0;
@@ -269,7 +270,7 @@
   font-style: italic;
 }
 
-/* ── ASI ── */
+/* â”€â”€ ASI â”€â”€ */
 .asiSection {
   border-color: rgba(139, 92, 246, 0.4);
   background: rgba(124, 58, 237, 0.06);
@@ -282,7 +283,7 @@
   margin: 0;
 }
 
-/* ── RASGOS DE CLASE ── */
+/* â”€â”€ RASGOS DE CLASE â”€â”€ */
 .noClass,
 .loadingMsg,
 .errorMsg,
@@ -331,7 +332,7 @@
 
 .featureDot {
   color: var(--purple-light);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   margin-top: 0.25rem;
   flex-shrink: 0;
 }
@@ -344,7 +345,7 @@
 }
 
 .featureToggle {
-  font-size: 0.65rem;
+  font-size: 0.83rem;
   color: var(--text-muted);
   margin-top: 0.25rem;
   flex-shrink: 0;
@@ -352,9 +353,9 @@
 
 .featureDesc {
   margin: 0.25rem 0 0.5rem 1.2rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0.82rem 0.82rem;
   border-left: 2px solid rgba(124, 58, 237, 0.4);
-  background: rgba(124, 58, 237, 0.04);
+  background: var(--surface-3);
   border-radius: 0 6px 6px 0;
 }
 
@@ -365,9 +366,9 @@
   margin: 0 0 0.4rem;
 }
 
-/* ── SUBCLASE ── */
+/* â”€â”€ SUBCLASE â”€â”€ */
 .subclassHeader {
-  margin: 0.75rem 0 0.4rem;
+  margin: 0.82rem 0 0.4rem;
 }
 
 .subclassBadge {
@@ -375,11 +376,11 @@
   background: rgba(168, 85, 247, 0.15);
   border: 1px solid rgba(168, 85, 247, 0.4);
   color: #c084fc;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-family: var(--font-title);
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.82rem;
   border-radius: 999px;
 }
 
@@ -394,12 +395,12 @@
   border-radius: 0 4px 4px 0;
 }
 
-/* ── CONJUROS ── */
+/* â”€â”€ CONJUROS â”€â”€ */
 .spellKnown {
   display: flex;
   gap: 1.25rem;
   flex-wrap: wrap;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.82rem;
 }
 
 .spellKnownItem {
@@ -426,12 +427,12 @@
   background: rgba(168, 85, 247, 0.15);
   border: 1px solid rgba(168, 85, 247, 0.4);
   border-radius: 6px;
-  padding: 0.35rem 0.65rem;
+  padding: 0.35rem 0.83rem;
   min-width: 3rem;
 }
 
 .slotLevel {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
 }
 
@@ -442,7 +443,7 @@
   font-family: var(--font-title);
 }
 
-/* ── NIVEL MÁXIMO ── */
+/* â”€â”€ NIVEL MÃXIMO â”€â”€ */
 .maxLvlMsg {
   padding: 1.5rem;
   text-align: center;
@@ -450,29 +451,29 @@
   font-size: 0.95rem;
 }
 
-/* ── BOTONES ── */
+/* â”€â”€ BOTONES â”€â”€ */
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 0.82rem;
   padding: 1rem 1.5rem;
   border-top: 1px solid rgba(124, 58, 237, 0.15);
-  background: rgba(4, 4, 12, 0.5);
+  background: rgba(242, 246, 255, 0.86);
   flex-shrink: 0;
   backdrop-filter: blur(4px);
 }
 
-/* ── RESPONSIVE ── */
+/* â”€â”€ RESPONSIVE â”€â”€ */
 @media (max-width: 560px) {
   .header {
     padding: 1rem;
-    gap: 0.75rem;
+    gap: 0.82rem;
   }
   .body {
     padding: 1rem;
   }
   .actions {
-    padding: 0.75rem 1rem;
+    padding: 0.82rem 1rem;
     flex-direction: column-reverse;
   }
   .actions button {
@@ -486,3 +487,6 @@
     font-size: 1.3rem;
   }
 }
+
+
+

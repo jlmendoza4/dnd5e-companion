@@ -16,6 +16,8 @@ import Compendium from './components/Compendium/Compendium'
 import Settings from './components/Settings/Settings'
 import styles from './App.module.css'
 
+const THEME_STORAGE_KEY = 'dnd_theme'
+
 // Tabs de navegación principal
 const TABS = [
   { id: 'character', label: 'Ficha', icon: '📜' },
@@ -34,6 +36,55 @@ const DEFAULT_CHARACTER = {
   background: '',
   alignment: '',
   stats: { FUE: 10, DES: 10, CON: 10, INT: 10, SAB: 10, CAR: 10 },
+  savingThrows: { FUE: 0, DES: 0, CON: 0, INT: 0, SAB: 0, CAR: 0 },
+  savingThrowProficiencies: {
+    FUE: false,
+    DES: false,
+    CON: false,
+    INT: false,
+    SAB: false,
+    CAR: false
+  },
+  skills: {
+    acrobatics: 0,
+    animalHandling: 0,
+    arcana: 0,
+    athletics: 0,
+    deception: 0,
+    history: 0,
+    insight: 0,
+    intimidation: 0,
+    investigation: 0,
+    medicine: 0,
+    nature: 0,
+    perception: 0,
+    performance: 0,
+    persuasion: 0,
+    religion: 0,
+    sleightOfHand: 0,
+    stealth: 0,
+    survival: 0
+  },
+  skillProficiencies: {
+    acrobatics: false,
+    animalHandling: false,
+    arcana: false,
+    athletics: false,
+    deception: false,
+    history: false,
+    insight: false,
+    intimidation: false,
+    investigation: false,
+    medicine: false,
+    nature: false,
+    perception: false,
+    performance: false,
+    persuasion: false,
+    religion: false,
+    sleightOfHand: false,
+    stealth: false,
+    survival: false
+  },
   currentHP: 8,
   maxHP: 8,
   armorClass: 10,
@@ -46,6 +97,13 @@ const DEFAULT_CHARACTER = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('character')
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem(THEME_STORAGE_KEY) || 'light'
+    } catch {
+      return 'light'
+    }
+  })
   const [character, setCharacter] = useState(() => {
     // Carga el personaje guardado en localStorage al iniciar
     try {
@@ -61,6 +119,12 @@ export default function App() {
     localStorage.setItem('dnd_character', JSON.stringify(character))
   }, [character])
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    document.documentElement.style.colorScheme = theme
+    localStorage.setItem(THEME_STORAGE_KEY, theme)
+  }, [theme])
+
   // Actualización parcial del personaje (merge con estado anterior)
   const updateCharacter = useCallback((updates) => {
     setCharacter(prev => ({ ...prev, ...updates }))
@@ -71,6 +135,10 @@ export default function App() {
     if (confirm('¿Seguro que quieres borrar toda la ficha?')) {
       setCharacter(DEFAULT_CHARACTER)
     }
+  }, [])
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
   }, [])
 
   return (
@@ -85,16 +153,21 @@ export default function App() {
               <p className={styles.logoSubtitle}>Tu asistente definitivo de Dungeons &amp; Dragons</p>
             </div>
           </div>
-          {/* Muestra el nombre del personaje si está definido */}
-          {character.name && (
-            <div className={styles.characterBadge}>
-              <span className={styles.characterLevel}>Nv. {character.level}</span>
-              <span className={styles.characterName}>{character.name}</span>
-              <span className={styles.characterClass}>
-                {character.race} · {character.class}
-              </span>
-            </div>
-          )}
+          <div className={styles.headerSide}>
+            <button className={styles.themeToggle} onClick={toggleTheme} type="button" title="Cambiar tema">
+              <span className={styles.themeToggleIcon}>{theme === 'dark' ? '🌙' : '☀️'}</span>
+              <span className={styles.themeToggleLabel}>{theme === 'dark' ? 'Modo oscuro' : 'Modo claro'}</span>
+            </button>
+            {character.name && (
+              <div className={styles.characterBadge}>
+                <span className={styles.characterLevel}>Nv. {character.level}</span>
+                <span className={styles.characterName}>{character.name}</span>
+                <span className={styles.characterClass}>
+                  {character.race} · {character.class}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -133,6 +206,8 @@ export default function App() {
             <Settings
               onUpdate={updateCharacter}
               onNavigate={setActiveTab}
+              theme={theme}
+              onToggleTheme={toggleTheme}
             />
           )}
         </div>

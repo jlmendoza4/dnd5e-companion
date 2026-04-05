@@ -1,40 +1,43 @@
-/* ============================================================
-   ESTILOS GLOBALES — D&D 5e Companion
-   Tema oscuro moderno — purple neon + glassmorphism
-   ============================================================ */
+﻿/* ============================================================
+  ESTILOS GLOBALES â€” D&D 5e Companion
+  Tema claro moderno â€” glassmorphism legible
+  ============================================================ */
 
 /* Variables CSS */
 :root {
-  /* Fondos oscuros profundos */
-  --bg-darkest: #04040c;
-  --bg-dark: #070710;
-  --bg-medium: #0c0c1e;
-  --bg-light: #121228;
-  --bg-card: rgba(12, 12, 28, 0.85);
-  --bg-card-hover: rgba(18, 18, 40, 0.95);
-  --bg-glass: rgba(255, 255, 255, 0.03);
-  --bg-glass-hover: rgba(255, 255, 255, 0.06);
+  /* Fondos claros */
+  --bg-darkest: #eef3ff;
+  --bg-dark: #f7f9ff;
+  --bg-medium: #ffffff;
+  --bg-light: #f2f5ff;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: rgba(255, 255, 255, 0.98);
+  --bg-glass: rgba(255, 255, 255, 0.65);
+  --bg-glass-hover: rgba(255, 255, 255, 0.85);
+  --surface-1: rgba(255, 255, 255, 0.95);
+  --surface-2: rgba(255, 255, 255, 0.84);
+  --surface-3: rgba(242, 246, 255, 0.9);
 
-  /* Púrpura eléctrico — color principal */
+  /* PÃºrpura elÃ©ctrico â€” color principal */
   --purple: #7c3aed;
   --purple-light: #a78bfa;
   --purple-bright: #8b5cf6;
   --purple-dim: #4c1d95;
 
-  /* Cian — acento secundario */
+  /* Cian â€” acento secundario */
   --cyan: #06b6d4;
   --cyan-light: #22d3ee;
   --cyan-dark: #0891b2;
 
-  /* Oro — sabor D&D */
+  /* Oro â€” sabor D&D */
   --gold: #f59e0b;
   --gold-light: #fbbf24;
   --gold-dark: #d97706;
 
   /* Texto */
-  --text-primary: #ede9ff;
-  --text-secondary: #9d9ab8;
-  --text-muted: #555575;
+  --text-primary: #1f2740;
+  --text-secondary: #4a5678;
+  --text-muted: #6f7a98;
   --text-white: #ffffff;
 
   /* Estado */
@@ -48,8 +51,8 @@
   --color-danger: #ef4444;
 
   /* Bordes */
-  --border-color: rgba(124, 58, 237, 0.18);
-  --border-bright: rgba(124, 58, 237, 0.45);
+  --border-color: rgba(124, 58, 237, 0.2);
+  --border-bright: rgba(124, 58, 237, 0.5);
   --border-gold: rgba(245, 158, 11, 0.4);
   --border-cyan: rgba(6, 182, 212, 0.4);
   --border-radius: 10px;
@@ -57,14 +60,17 @@
   --border-radius-xl: 24px;
 
   /* Sombras */
-  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 6px 28px rgba(0, 0, 0, 0.65);
-  --shadow-lg: 0 12px 56px rgba(0, 0, 0, 0.75);
+  --shadow-sm: 0 4px 14px rgba(65, 76, 130, 0.08);
+  --shadow-md: 0 10px 28px rgba(65, 76, 130, 0.12);
+  --shadow-lg: 0 18px 56px rgba(65, 76, 130, 0.16);
   --shadow-purple: 0 0 28px rgba(124, 58, 237, 0.35);
   --shadow-gold: 0 0 28px rgba(245, 158, 11, 0.25);
   --shadow-cyan: 0 0 28px rgba(6, 182, 212, 0.25);
+  --heading-color: #2a3560;
+  --panel-header-start: #46507d;
+  --panel-header-end: #59638f;
 
-  /* Tipografías */
+  /* TipografÃ­as */
   --font-title: 'Cinzel', serif;
   --font-body: 'Crimson Text', serif;
   --font-ui: system-ui, -apple-system, sans-serif;
@@ -72,6 +78,36 @@
   /* Transiciones */
   --transition: 0.18s ease;
   --transition-slow: 0.35s ease;
+}
+
+:root[data-theme='dark'] {
+  --bg-darkest: #09111f;
+  --bg-dark: #10192c;
+  --bg-medium: #16213a;
+  --bg-light: #1c2a49;
+  --bg-card: rgba(10, 17, 31, 0.86);
+  --bg-card-hover: rgba(15, 24, 43, 0.96);
+  --bg-glass: rgba(12, 18, 34, 0.76);
+  --bg-glass-hover: rgba(18, 27, 49, 0.9);
+  --surface-1: rgba(24, 36, 63, 0.96);
+  --surface-2: rgba(19, 30, 53, 0.88);
+  --surface-3: rgba(21, 33, 58, 0.94);
+
+  --text-primary: #edf3ff;
+  --text-secondary: #c0cae5;
+  --text-muted: #8e9bbb;
+
+  --border-color: rgba(167, 139, 250, 0.24);
+  --border-bright: rgba(167, 139, 250, 0.52);
+  --border-gold: rgba(245, 158, 11, 0.32);
+  --border-cyan: rgba(34, 211, 238, 0.32);
+
+  --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 16px 36px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.42);
+  --heading-color: #f4f7ff;
+  --panel-header-start: #2a3558;
+  --panel-header-end: #36466f;
 }
 
 /* Reset y base */
@@ -94,9 +130,16 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   background-image:
-    radial-gradient(ellipse at 15% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 45%),
-    radial-gradient(ellipse at 85% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 50%, rgba(76, 29, 149, 0.06) 0%, transparent 65%);
+    radial-gradient(ellipse at 10% 15%, rgba(124, 58, 237, 0.12) 0%, transparent 42%),
+    radial-gradient(ellipse at 90% 85%, rgba(6, 182, 212, 0.1) 0%, transparent 45%),
+    linear-gradient(180deg, #f5f8ff 0%, #ecf2ff 100%);
+}
+
+:root[data-theme='dark'] body {
+  background-image:
+    radial-gradient(ellipse at 12% 18%, rgba(124, 58, 237, 0.18) 0%, transparent 40%),
+    radial-gradient(ellipse at 88% 82%, rgba(6, 182, 212, 0.14) 0%, transparent 42%),
+    linear-gradient(180deg, #0b1324 0%, #111a2f 100%);
 }
 
 /* Estilos de scrollbar personalizados */
@@ -115,16 +158,12 @@ body {
   background: linear-gradient(180deg, var(--purple-light), var(--cyan));
 }
 
-/* Tipografías */
+/* TipografÃ­as */
 h1, h2, h3 {
   font-family: var(--font-title);
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: var(--text-primary);
-  background: linear-gradient(135deg, #fff 0%, var(--purple-light) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--heading-color);
 }
 
 h4, h5, h6 {
@@ -150,9 +189,11 @@ button {
 
 input, select, textarea {
   font-family: var(--font-body);
-  background: rgba(12, 12, 28, 0.7);
+  background: var(--surface-1);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
+  caret-color: var(--text-primary);
   border-radius: var(--border-radius);
   padding: 0.55rem 0.85rem;
   transition: border-color var(--transition), box-shadow var(--transition);
@@ -174,7 +215,7 @@ select option {
   color: var(--text-primary);
 }
 
-/* Botón base */
+/* BotÃ³n base */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -201,13 +242,13 @@ select option {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-2);
   color: var(--text-primary);
   border-color: var(--border-color);
   backdrop-filter: blur(4px);
 }
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--bg-glass-hover);
   border-color: var(--border-bright);
   box-shadow: var(--shadow-purple);
 }
@@ -257,9 +298,9 @@ select option {
 /* Badge */
 .badge {
   display: inline-block;
-  padding: 0.2rem 0.65rem;
+  padding: 0.2rem 0.83rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-family: var(--font-ui);
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -280,10 +321,10 @@ select option {
   to { transform: rotate(360deg); }
 }
 
-/* Markdown rendering básico */
+/* Markdown rendering bÃ¡sico */
 .markdown h1, .markdown h2, .markdown h3 { margin-top: 1.5rem; margin-bottom: 0.5rem; }
-.markdown p { margin-bottom: 0.75rem; }
-.markdown ul, .markdown ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+.markdown p { margin-bottom: 0.82rem; }
+.markdown ul, .markdown ol { margin: 0.5rem 0 0.82rem 1.5rem; }
 .markdown li { margin-bottom: 0.25rem; }
 .markdown strong { color: var(--purple-light); }
 .markdown code {
@@ -297,11 +338,11 @@ select option {
 .markdown table {
   width: 100%;
   border-collapse: collapse;
-  margin: 0.75rem 0;
+  margin: 0.82rem 0;
 }
 .markdown th {
   background: rgba(124, 58, 237, 0.1);
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.82rem;
   text-align: left;
   border: 1px solid var(--border-color);
   color: var(--purple-light);
@@ -310,7 +351,7 @@ select option {
   letter-spacing: 0.05em;
 }
 .markdown td {
-  padding: 0.4rem 0.75rem;
+  padding: 0.4rem 0.82rem;
   border: 1px solid var(--border-color);
   font-size: 0.9rem;
 }
@@ -334,3 +375,6 @@ select option {
 @media (max-width: 768px) {
   body { font-size: 0.95rem; }
 }
+
+
+

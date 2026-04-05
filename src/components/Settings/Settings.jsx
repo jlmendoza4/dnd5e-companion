@@ -8,14 +8,15 @@
  *
  * La API key se guarda en localStorage (nunca se envía a ningún servidor propio).
  */
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import styles from './Settings.module.css'
 import { parsePDFCharacterSheet, debugPDFFields } from '../../services/pdfParser'
 
-export default function Settings({ onUpdate, onNavigate }) {
+export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme }) {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfResult, setPdfResult]   = useState(null)
   const [debugFields, setDebugFields] = useState(null)
+  const themeToggleId = useId()
 
   // ── Debug: muestra todos los campos del PDF ──
   const debugPDF = async (e) => {
@@ -87,6 +88,31 @@ export default function Settings({ onUpdate, onNavigate }) {
         <p className={styles.subtitle}>Gestiona tus datos</p>
       </div>
 
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>🎨 Apariencia</h3>
+        <div className={styles.themeCard}>
+          <div>
+            <p className={styles.themeTitle}>Tema de la aplicación</p>
+            <p className={styles.themeDesc}>
+              Alterna entre un entorno claro y un modo oscuro con mayor contraste para jugar de noche.
+            </p>
+          </div>
+          <label htmlFor={themeToggleId} className={styles.themeSwitchRow}>
+            <span className={styles.themeModeLabel}>{theme === 'dark' ? 'Modo oscuro' : 'Modo claro'}</span>
+            <button
+              id={themeToggleId}
+              type="button"
+              className={`${styles.themeSwitch} ${theme === 'dark' ? styles.themeSwitchActive : ''}`}
+              onClick={onToggleTheme}
+              aria-pressed={theme === 'dark'}
+              title="Cambiar tema"
+            >
+              <span className={styles.themeSwitchThumb} />
+            </button>
+          </label>
+        </div>
+      </section>
+
       {/* ══ SECCIÓN: IMPORTAR DESDE PDF ══ */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>📄 Importar ficha desde PDF</h3>
@@ -133,12 +159,7 @@ export default function Settings({ onUpdate, onNavigate }) {
             <input type="file" accept=".pdf" onChange={debugPDF} style={{ display: 'none' }} />
           </label>
           {debugFields && (
-            <pre style={{
-              marginTop: '0.5rem', padding: '0.75rem',
-              background: '#1a1a2e', borderRadius: '6px',
-              fontSize: '0.72rem', maxHeight: '300px', overflowY: 'auto',
-              whiteSpace: 'pre-wrap', wordBreak: 'break-all'
-            }}>
+            <pre className={styles.debugOutput}>
               {JSON.stringify(debugFields, null, 2)}
             </pre>
           )}

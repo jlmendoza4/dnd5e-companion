@@ -1,14 +1,10 @@
 ﻿/* SpellBook.module.css */
 
-.section {
-  /* envuelve todo el bloque de hechizos */
-}
-
 .sectionTitle {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--purple-light);
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.82rem 0;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-family: var(--font-title);
@@ -19,8 +15,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: rgba(7, 7, 16, 0.6);
+  padding: 0.82rem 1rem;
+  background: var(--bg-glass);
   border: 1px solid rgba(124, 58, 237, 0.18);
   border-radius: var(--border-radius);
   margin-bottom: 0.9rem;
@@ -31,8 +27,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.3rem 0.7rem;
-  background: rgba(12, 12, 28, 0.7);
+  padding: 0.3rem 0.8rem;
+  background: var(--surface-2);
   border-radius: var(--border-radius);
   border: 1px solid rgba(124, 58, 237, 0.15);
   min-width: 90px;
@@ -45,7 +41,7 @@
 }
 
 .statLabel {
-  font-size: 0.62rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -83,7 +79,7 @@
   font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.82rem;
   transition: all var(--transition);
 }
 
@@ -99,30 +95,30 @@
 
 .pickerClass {
   font-weight: 400;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
 }
 
 /* PICKER */
 .picker {
-  background: rgba(7, 7, 16, 0.7);
+  background: var(--bg-glass);
   border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: var(--border-radius);
-  padding: 0.75rem;
+  padding: 0.82rem;
   margin-bottom: 0.85rem;
   backdrop-filter: blur(4px);
 }
 
 .pickerSearch {
   width: 100%;
-  background: rgba(12, 12, 28, 0.8);
+  background: var(--surface-2);
   border: 1px solid rgba(124, 58, 237, 0.25);
   border-radius: var(--border-radius);
   color: var(--text-primary);
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.82rem;
   font-size: 0.86rem;
   outline: none;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.82rem;
   box-sizing: border-box;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
@@ -147,8 +143,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.35rem;
-  padding: 0.45rem 0.65rem;
-  background: rgba(12, 12, 28, 0.7);
+  padding: 0.45rem 0.83rem;
+  background: var(--surface-2);
   border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: var(--border-radius);
   cursor: pointer;
@@ -177,7 +173,7 @@
 }
 
 .pickerNameOriginal {
-  font-size: 0.65rem;
+  font-size: 0.83rem;
   color: var(--text-muted);
   font-weight: 400;
   line-height: 1.2;
@@ -197,7 +193,7 @@
 }
 
 .pickerHint {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   margin: 0.5rem 0 0;
   text-align: center;
@@ -210,10 +206,8 @@
   gap: 1rem;
 }
 
-.levelGroup {}
-
 .levelHeader {
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -228,7 +222,7 @@
 .spellRow {
   border-radius: var(--border-radius);
   overflow: hidden;
-  background: rgba(7, 7, 16, 0.5);
+  background: var(--bg-glass);
   border: 1px solid rgba(124, 58, 237, 0.14);
   transition: border-color var(--transition);
 }
@@ -246,7 +240,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.35rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.82rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -263,7 +257,7 @@
 }
 
 .spellArrow {
-  font-size: 0.65rem;
+  font-size: 0.83rem;
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -276,7 +270,7 @@
 }
 
 .spellSchool {
-  font-size: 0.66rem;
+  font-size: 0.84rem;
   padding: 0.1rem 0.5rem;
   background: rgba(124, 58, 237, 0.1);
   border-radius: 999px;
@@ -285,7 +279,7 @@
 }
 
 .spellTag {
-  font-size: 0.63rem;
+  font-size: 0.82rem;
   padding: 0.1rem 0.4rem;
   background: rgba(6, 182, 212, 0.08);
   border-radius: 999px;
@@ -296,7 +290,7 @@
 }
 
 .dmgPreview {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: #f9a875;
   padding: 0.1rem 0.45rem;
@@ -306,14 +300,14 @@
 }
 
 .loadingDot {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   animation: pulse 1s infinite;
 }
 
 @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
 
 .removeBtn {
-  padding: 0 0.7rem;
+  padding: 0 0.8rem;
   background: transparent;
   border: none;
   border-left: 1px solid rgba(124, 58, 237, 0.15);
@@ -328,23 +322,23 @@
 
 /* DETALLES EXPANDIDOS */
 .spellDetail {
-  padding: 0.7rem 0.9rem;
+  padding: 0.8rem 0.9rem;
   border-top: 1px solid rgba(124, 58, 237, 0.12);
-  background: rgba(4, 4, 12, 0.5);
+  background: rgba(242, 246, 255, 0.86);
 }
 
 .detailGrid {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.83rem;
 }
 
 .chip {
   display: flex;
   flex-direction: column;
-  padding: 0.3rem 0.65rem;
-  background: rgba(7, 7, 16, 0.7);
+  padding: 0.3rem 0.83rem;
+  background: var(--surface-2);
   border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: var(--border-radius);
   min-width: 110px;
@@ -383,14 +377,14 @@
   color: var(--purple-light);
 }
 
-.chipWide .chipLabel { margin-bottom: 0; font-size: 0.65rem; }
-.chipWide .chipValue { font-size: 0.78rem; font-weight: 400; color: var(--text-secondary); }
+.chipWide .chipLabel { margin-bottom: 0; font-size: 0.83rem; }
+.chipWide .chipValue { font-size: 0.85rem; font-weight: 400; color: var(--text-secondary); }
 
 .spellDesc {
-  background: rgba(4, 4, 12, 0.6);
+  background: var(--surface-3);
   border-radius: var(--border-radius);
   border: 1px solid rgba(124, 58, 237, 0.1);
-  padding: 0.6rem 0.75rem;
+  padding: 0.82rem 0.82rem;
   margin-bottom: 0.5rem;
 }
 
@@ -404,9 +398,9 @@
 .descPara:last-child { margin-bottom: 0; }
 
 .higherLevel {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  padding: 0.4rem 0.65rem;
+  padding: 0.4rem 0.83rem;
   background: rgba(124, 58, 237, 0.07);
   border-left: 2px solid rgba(124, 58, 237, 0.45);
   border-radius: 0 var(--border-radius) var(--border-radius) 0;
@@ -426,3 +420,6 @@
   padding: 0.5rem 0;
   margin: 0;
 }
+
+
+
