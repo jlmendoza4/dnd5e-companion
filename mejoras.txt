@@ -1,0 +1,9 @@
+tirar dados 2 veces o varios dependiendo de las mejoras que tengo
+
+añadir cuando es filo llama verde o atronador
+
+espacio para apuntar cosas de las sesiones
+
+expansiones coger solo la informacion de la clase actual y subclase
+
+historial de tiradas y borrar tiradas

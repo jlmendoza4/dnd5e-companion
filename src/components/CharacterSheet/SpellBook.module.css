@@ -324,7 +324,7 @@
 .spellDetail {
   padding: 0.8rem 0.9rem;
   border-top: 1px solid rgba(124, 58, 237, 0.12);
-  background: rgba(242, 246, 255, 0.86);
+  background: var(--surface-1);
 }
 
 .detailGrid {
@@ -352,8 +352,8 @@
 }
 
 .chipHi {
-  background: rgba(76, 29, 149, 0.2);
-  border-color: rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.14);
+  border-color: rgba(124, 58, 237, 0.45);
 }
 
 .chipLabel {
@@ -390,7 +390,7 @@
 
 .descPara {
   font-size: 0.82rem;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   line-height: 1.60;
   margin: 0 0 0.45rem 0;
 }
@@ -399,11 +399,45 @@
 
 .higherLevel {
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   padding: 0.4rem 0.83rem;
   background: rgba(124, 58, 237, 0.07);
   border-left: 2px solid rgba(124, 58, 237, 0.45);
   border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+:root[data-theme='dark'] .spellDetail {
+  border-top-color: rgba(167, 139, 250, 0.24);
+  background: rgba(14, 22, 40, 0.95);
+}
+
+:root[data-theme='dark'] .chip {
+  background: rgba(17, 27, 48, 0.94);
+  border-color: rgba(167, 139, 250, 0.22);
+}
+
+:root[data-theme='dark'] .chipHi {
+  background: rgba(124, 58, 237, 0.2);
+  border-color: rgba(167, 139, 250, 0.5);
+}
+
+:root[data-theme='dark'] .chipLabel {
+  color: #aebadd;
+}
+
+:root[data-theme='dark'] .chipValue,
+:root[data-theme='dark'] .chipWide .chipValue {
+  color: #edf3ff;
+}
+
+:root[data-theme='dark'] .spellDesc {
+  background: rgba(17, 27, 49, 0.94);
+  border-color: rgba(167, 139, 250, 0.24);
+}
+
+:root[data-theme='dark'] .descPara,
+:root[data-theme='dark'] .higherLevel {
+  color: #edf3ff;
 }
 
 /* MENSAJES */

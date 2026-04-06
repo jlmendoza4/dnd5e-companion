@@ -11,12 +11,40 @@
 import { useId, useState } from 'react'
 import styles from './Settings.module.css'
 import { parsePDFCharacterSheet, debugPDFFields } from '../../services/pdfParser'
+import {
+  getAIKey,
+  saveAIKey,
+  getAIEndpoint,
+  saveAIEndpoint,
+  getAIModel,
+  saveAIModel,
+} from '../../services/aiService'
 
 export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme }) {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfResult, setPdfResult]   = useState(null)
   const [debugFields, setDebugFields] = useState(null)
   const themeToggleId = useId()
+
+  // ── IA ──
+  const [aiKey, setAiKey]                 = useState(() => getAIKey())
+  const [aiEndpoint, setAiEndpoint]       = useState(() => getAIEndpoint())
+  const [aiModel, setAiModel]             = useState(() => getAIModel())
+  const [showAiKey, setShowAiKey]         = useState(false)
+  const [aiKeySaved, setAiKeySaved]       = useState(false)
+
+  const saveAiConfig = () => {
+    saveAIKey(aiKey)
+    saveAIEndpoint(aiEndpoint)
+    saveAIModel(aiModel)
+    setAiKeySaved(true)
+    setTimeout(() => setAiKeySaved(false), 2000)
+  }
+
+  const applyGemmaPreset = () => {
+    setAiEndpoint('https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent')
+    setAiModel('gemma-4-31b-it')
+  }
 
   // ── Debug: muestra todos los campos del PDF ──
   const debugPDF = async (e) => {
@@ -110,6 +138,98 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
               <span className={styles.themeSwitchThumb} />
             </button>
           </label>
+        </div>
+      </section>
+
+      {/* ══ SECCIÓN: MODELO IA ══ */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>🤖 Modelo IA</h3>
+        <p className={styles.sectionDesc}>
+          Configura endpoint, modelo y API key para activar el{' '}
+          <strong>Consejero IA</strong>: recomendaciones de hechizos, equipo, subidas de nivel
+          y estrategias personalizadas para tu personaje.
+        </p>
+
+        <div className={styles.apiKeyField}>
+          <label className={styles.fieldLabel}>Endpoint API</label>
+          <input
+            className={styles.apiKeyInput}
+            type="text"
+            value={aiEndpoint}
+            onChange={e => setAiEndpoint(e.target.value)}
+            placeholder="https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent"
+            autoComplete="off"
+            spellCheck={false}
+          />
+
+          <label className={styles.fieldLabel}>Modelo</label>
+          <input
+            className={styles.apiKeyInput}
+            type="text"
+            value={aiModel}
+            onChange={e => setAiModel(e.target.value)}
+            placeholder="gemma-4-31b-it"
+            autoComplete="off"
+            spellCheck={false}
+          />
+
+          <div className={styles.apiKeyActions}>
+            <button className="btn btn-secondary" type="button" onClick={applyGemmaPreset}>
+              🧩 Preset Google Gemma 4
+            </button>
+          </div>
+
+          <p className={styles.sectionDesc} style={{ marginTop: '0.4rem' }}>
+            Si usas el preset de Google Gemma puedes dejar el valor por defecto. Si usas otro proveedor
+            (por ejemplo Gemma 4), pon aquí su endpoint y modelo exactos.
+            Claves de Google AI en{' '}
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
+            aistudio.google.com
+          </a>.
+          </p>
+
+          <div className={styles.apiKeyInputWrapper}>
+            <input
+              className={styles.apiKeyInput}
+              type={showAiKey ? 'text' : 'password'}
+              value={aiKey}
+              onChange={e => setAiKey(e.target.value)}
+              placeholder="sk-... o AIza..."
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <button
+              type="button"
+              className={styles.toggleVisibility}
+              onClick={() => setShowAiKey(v => !v)}
+              title={showAiKey ? 'Ocultar' : 'Mostrar'}
+            >
+              {showAiKey ? '🙈' : '👁️'}
+            </button>
+          </div>
+          <div className={styles.apiKeyActions}>
+            <button className="btn btn-primary" onClick={saveAiConfig} type="button">
+              💾 Guardar configuración IA
+            </button>
+            {aiKey && (
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={() => { saveAIKey(''); setAiKey('') }}
+              >
+                🗑️ Borrar clave
+              </button>
+            )}
+          </div>
+          {aiKeySaved && (
+            <div className={`${styles.testResult} ${styles.testOk}`}>
+              ✅ Configuración IA guardada correctamente.
+            </div>
+          )}
+          <div className={styles.keyStatus}>
+            <span className={`${styles.statusDot} ${aiKey ? styles.dotGreen : styles.dotRed}`} />
+            {aiKey ? 'API key configurada' : 'Sin API key — el Consejero IA estará desactivado'}
+          </div>
         </div>
       </section>
 

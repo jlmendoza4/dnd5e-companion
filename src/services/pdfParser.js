@@ -639,6 +639,55 @@ function inferSavingThrowProficiencies(stats, profBonus) {
   return out
 }
 
+/**
+ * Lee los valores numéricos de tirada de salvación directamente del PDF.
+ * Si no hay campo explícito, devuelve NaN para ese stat (se calculará después).
+ */
+function resolveSavingThrows(normIndex) {
+  const out = { FUE: Number.NaN, DES: Number.NaN, CON: Number.NaN, INT: Number.NaN, SAB: Number.NaN, CAR: Number.NaN }
+
+  for (const [saveKey, aliases] of Object.entries(SAVE_ALIASES)) {
+    const candidates = []
+
+    for (const [k, item] of Object.entries(normIndex)) {
+      if (!item || !hasFieldValue(item.val)) continue
+      if (aliases.some(alias => k === normalize(alias) || k.includes(normalize(alias)))) {
+        candidates.push(String(item.val))
+      }
+    }
+
+    for (const raw of candidates) {
+      const n = parseSignedInt(raw)
+      if (!Number.isNaN(n) && n >= -20 && n <= 30) {
+        out[saveKey] = n
+        break
+      }
+    }
+  }
+
+  return out
+}
+
+/**
+ * Calcula los valores finales de tirada de salvación.
+ * Prioriza valores explícitos del PDF; si no hay, calcula:
+ *   mod(stat) + (proficiente ? profBonus : 0)
+ */
+function buildSavingThrows(rawSaves, stats, profs, profBonus) {
+  const out = { FUE: 0, DES: 0, CON: 0, INT: 0, SAB: 0, CAR: 0 }
+
+  for (const ability of Object.keys(out)) {
+    if (!Number.isNaN(rawSaves[ability])) {
+      out[ability] = rawSaves[ability]
+    } else {
+      const base = abilityMod((stats || {})[ability] ?? 10)
+      out[ability] = base + (profs[ability] ? profBonus : 0)
+    }
+  }
+
+  return out
+}
+
 // ── Punto de entrada principal ──
 export async function parsePDFCharacterSheet(file) {
   const arrayBuffer = await file.arrayBuffer()
@@ -752,6 +801,9 @@ export async function parsePDFCharacterSheet(file) {
     CAR: !!(saveProfsByCheckbox.CAR || saveProfsByInference.CAR),
   }
 
+  const rawSaves     = resolveSavingThrows(normIndex)
+  const savingThrows = buildSavingThrows(rawSaves, stats, savingThrowProficiencies, effectiveProfBonus)
+
   // ── Combate ──
   const maxHP      = toInt(findField('maxHP', 'hpmax', 'pgmax'), 0)
   const currentHP  = toInt(findField('currentHP', 'hpcurrent', 'pgactuales'), 0)
@@ -800,6 +852,7 @@ export async function parsePDFCharacterSheet(file) {
     stats,
     skills,
     skillProficiencies,
+    savingThrows,
     savingThrowProficiencies,
     currentHP,
     maxHP,

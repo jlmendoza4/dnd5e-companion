@@ -14,6 +14,8 @@ import CharacterSheet from './components/CharacterSheet/CharacterSheet'
 import DamageCalculator from './components/DamageCalculator/DamageCalculator'
 import Compendium from './components/Compendium/Compendium'
 import Settings from './components/Settings/Settings'
+import AIAdvisor from './components/AIAdvisor/AIAdvisor'
+import SessionNotes from './components/SessionNotes/SessionNotes'
 import styles from './App.module.css'
 
 const THEME_STORAGE_KEY = 'dnd_theme'
@@ -23,6 +25,8 @@ const TABS = [
   { id: 'character', label: 'Ficha', icon: '📜' },
   { id: 'damage',    label: 'Calculadora', icon: '🎲' },
   { id: 'compendium',label: 'Compendio', icon: '📚' },
+  { id: 'notes', label: 'Notas', icon: '📝' },
+  { id: 'ai',        label: 'Consejero IA', icon: '🤖' },
   { id: 'settings',  label: 'Config', icon: '⚙️' }
 ]
 
@@ -90,6 +94,23 @@ const DEFAULT_CHARACTER = {
   armorClass: 10,
   initiative: 0,
   speed: 30,
+  attacksPerAction: 1,
+  attacksPerActionPresetFor: '',
+  attacksPerActionCustomized: false,
+  spellSlots: {
+    1: { max: 0, current: 0 },
+    2: { max: 0, current: 0 },
+    3: { max: 0, current: 0 },
+    4: { max: 0, current: 0 },
+    5: { max: 0, current: 0 },
+    6: { max: 0, current: 0 },
+    7: { max: 0, current: 0 },
+    8: { max: 0, current: 0 },
+    9: { max: 0, current: 0 }
+  },
+  spellSlotsPresetFor: '',
+  spellSlotsCustomized: false,
+  sessionNotes: '',
   spells: [],
   equipment: [],
   traits: ''
@@ -197,10 +218,16 @@ export default function App() {
             />
           )}
           {activeTab === 'damage' && (
-            <DamageCalculator character={character} />
+            <DamageCalculator character={character} onUpdate={updateCharacter} />
           )}
           {activeTab === 'compendium' && (
             <Compendium character={character} />
+          )}
+          {activeTab === 'notes' && (
+            <SessionNotes character={character} onUpdate={updateCharacter} />
+          )}
+          {activeTab === 'ai' && (
+            <AIAdvisor character={character} />
           )}
           {activeTab === 'settings' && (
             <Settings

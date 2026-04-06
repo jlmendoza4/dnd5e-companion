@@ -117,6 +117,95 @@
 }
 .select:focus { border-color: var(--purple-bright); }
 
+.searchInput {
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: var(--purple-bright);
+}
+
+.slotManager {
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.slotManagerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slotResetBtn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 0.15rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+.slotResetBtn:hover {
+  border-color: var(--purple-bright);
+  color: var(--purple-light);
+}
+
+.slotGrid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.slotRow {
+  display: grid;
+  grid-template-columns: 42px 1fr 26px 1fr 26px;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.slotLevel {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-family: var(--font-title);
+}
+
+.slotInput {
+  width: 100%;
+  padding: 0.25rem 0.35rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.slotStepBtn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 0.15rem 0;
+  font-size: 0.85rem;
+}
+
+.slotStepBtn:hover {
+  border-color: var(--purple-bright);
+  color: var(--purple-light);
+}
+
 /* Detalle del Ã­tem */
 .itemDetail {
   background: var(--bg-medium);
@@ -136,6 +225,27 @@
 .itemLabel { color: var(--text-muted); }
 .itemValue { color: var(--text-primary); font-weight: 600; }
 .saveHighlight { color: var(--color-mp-light); }
+
+.spellDesc {
+  margin-top: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  background: rgba(255,255,255,0.04);
+  border-left: 2px solid var(--purple-bright);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-height: 9rem;
+  overflow-y: auto;
+}
+
+.spellDesc p {
+  margin: 0 0 0.35rem;
+}
+
+.spellDesc p:last-child {
+  margin-bottom: 0;
+}
 
 .spellGuideBox {
   margin-top: 0.5rem;
@@ -376,6 +486,12 @@
   font-family: var(--font-title);
 }
 .bonusLabel { font-size: 0.82rem; color: var(--text-muted); }
+.bonusBreakdown {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+  white-space: nowrap;
+}
 
 .totalRoll {
   font-size: 2rem;
@@ -422,6 +538,7 @@
   font-size: 0.85rem;
   margin-top: 0.5rem;
   font-style: italic;
+  white-space: pre-wrap;
 }
 
 /* â”€â”€ HISTORIAL â”€â”€ */
@@ -443,7 +560,7 @@
 .historyList { display: flex; flex-direction: column; }
 .historyItem {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--border-color);
@@ -458,6 +575,23 @@
 .historyAtk { color: var(--purple-light); font-family: var(--font-title); }
 .historyDmg { color: var(--color-hp-light); font-family: var(--font-title); font-weight: 700; }
 
+.historyDeleteBtn {
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  line-height: 1;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+}
+
+.historyDeleteBtn:hover {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
 /* â”€â”€ RESPONSIVE â”€â”€ */
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
@@ -470,3 +604,362 @@
 
 
 
+
+
+/* ============================================================
+   SKILL & SAVE DICE ROLLER
+   ============================================================ */
+
+.skillDiceSection {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+.skillDiceSectionHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+  letter-spacing: 0.02em;
+}
+.skillDiceSectionHeader:hover { background: rgba(124, 58, 237, 0.07); }
+
+.skillDiceChevron {
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+  color: var(--text-muted);
+}
+.skillDiceChevronOpen { transform: rotate(180deg); }
+
+.skillDicePanel {
+  padding: 0.75rem 0.9rem 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skillRollModeBar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.skillRollModeBtn {
+  flex: 1;
+  padding: 0.38rem 0.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background: var(--bg-medium);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  transition: all var(--transition);
+}
+.skillRollModeBtn:hover { border-color: var(--border-bright); color: var(--text-primary); }
+.skillRollModeBtnActive {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(109, 40, 217, 0.3));
+  border-color: var(--purple-bright);
+  color: var(--text-primary);
+}
+
+.skillRollTabs {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.skillRollTabBtn {
+  flex: 1;
+  padding: 0.38rem 0.6rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.skillRollTabBtn:hover { color: var(--text-primary); border-color: var(--border-bright); }
+.skillRollTabBtnActive {
+  border-color: var(--border-gold);
+  color: var(--gold);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.skillRollList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 0.35rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.skillRollItem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.38rem 0.55rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background: var(--bg-medium);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition);
+  min-width: 0;
+}
+.skillRollItem:hover:not(:disabled) {
+  border-color: var(--purple-bright);
+  background: rgba(124, 58, 237, 0.1);
+  transform: translateY(-1px);
+}
+.skillRollItem:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.skillRollItemStat {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 26px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.skillRollItemLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+.skillRollItemMod {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.skillRollResultBox {
+  border-radius: var(--border-radius);
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  background: rgba(124, 58, 237, 0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+  animation: skillFadeIn 0.25s ease;
+}
+.skillRollResultBoxCrit {
+  border-color: rgba(234, 179, 8, 0.55);
+  background: rgba(234, 179, 8, 0.08);
+}
+.skillRollResultBoxFail {
+  border-color: rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.07);
+}
+
+@keyframes skillFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.skillRollingAnim {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  animation: skillPulseAnim 0.7s infinite alternate;
+}
+@keyframes skillPulseAnim {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+.skillRollResultLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.skillRollResultMode {
+  font-size: 0.73rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+
+.skillRollResultDice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.skillDieChosen {
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--border-radius);
+  background: rgba(124, 58, 237, 0.18);
+  border: 1px solid var(--purple-bright);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.skillDieDropped {
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--border-radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+.skillDieVs { font-size: 0.7rem; color: var(--text-muted); }
+.skillDieMod { font-size: 0.85rem; color: var(--gold); font-weight: 700; }
+
+.skillRollResultTotal {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display, var(--font-ui));
+}
+
+.skillRollBadgeCrit {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+  color: #000;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.skillRollBadgeFail {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.75);
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.skillHistory {
+  margin-top: 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--bg-medium);
+  padding: 0.5rem;
+}
+
+.skillHistoryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.skillHistoryTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-family: var(--font-title);
+}
+
+.skillHistoryClearBtn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.72rem;
+}
+
+.skillHistoryClearBtn:hover {
+  border-color: var(--purple-bright);
+  color: var(--purple-light);
+}
+
+.skillHistoryList {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.skillHistoryItem {
+  display: grid;
+  grid-template-columns: 1fr auto auto 28px;
+  gap: 0.4rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.34rem 0;
+}
+
+.skillHistoryItem:last-child {
+  border-bottom: none;
+}
+
+.skillHistoryName {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.skillHistoryMeta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.skillHistoryTotal {
+  font-size: 0.82rem;
+  color: var(--gold);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.skillHistoryDeleteBtn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border-radius: 6px;
+  width: 24px;
+  height: 22px;
+  line-height: 1;
+  padding: 0;
+}
+
+.skillHistoryDeleteBtn:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}

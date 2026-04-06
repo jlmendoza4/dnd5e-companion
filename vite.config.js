@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 // Configuración de Vite para la app D&D 5e
 export default defineConfig({
   plugins: [react()],
+  base: './',
   // Proxy para evitar problemas CORS con la API de D&D en desarrollo
   server: {
     proxy: {

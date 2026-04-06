@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron:build": "vite build && electron-builder --win --x64"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -17,6 +19,31 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^41.1.1",
+    "electron-builder": "^26.8.1",
     "vite": "^5.4.10"
+  },
+  "main": "electron/main.js",
+  "electron:build": "vite build && electron-builder --win --x64",
+  "build": {
+    "appId": "com.dnd5e.companion",
+    "productName": "D&D 5e Companion",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

@@ -9,8 +9,8 @@
  */
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { getSpells, getSpellDetail } from '../../services/dndApi'
-import { translateText, translateArray } from '../../services/autoTranslate'
-import { tSimpleText } from '../../services/dndTranslations'
+import { translateArray } from '../../services/autoTranslate'
+import { tSimpleText, tSpellName } from '../../services/dndTranslations'
 import { getLocalSpellsByClass, getLocalSpellDetail, SPELL_SEARCH_ALIASES } from '../../services/localSpells'
 import styles from './SpellBook.module.css'
 
@@ -66,6 +66,15 @@ function resolveModifierText(text, mod) {
     .replace(/spellcasting modifier/gi, signed)
     .replace(/\bmodifier\b/gi, signed)
 }
+
+function toSpanishScalingText(text) {
+  if (!text) return ''
+  return String(text)
+    .replace(/Secondary target/gi, 'Objetivo secundario')
+    .replace(/On move/gi, 'Si se mueve')
+    .replace(/On hit/gi, 'Al impactar')
+    .replace(/Target/gi, 'Objetivo')
+}
 function getCurrentScalingDamage(scalingMap, characterLevel, mod) {
   if (!scalingMap) return null
   const tiers = Object.keys(scalingMap)
@@ -77,10 +86,35 @@ function getCurrentScalingDamage(scalingMap, characterLevel, mod) {
   for (const tier of tiers) {
     if (characterLevel >= tier) activeTier = tier
   }
+  const tierIndex = tiers.indexOf(activeTier)
+  const nextTier = tiers[tierIndex + 1]
+  const endLevel = nextTier ? nextTier - 1 : 20
   return {
     tier: activeTier,
-    text: resolveModifierText(scalingMap[String(activeTier)], mod)
+    endLevel,
+    text: toSpanishScalingText(resolveModifierText(scalingMap[String(activeTier)], mod))
   }
+}
+
+function formatCharacterLevelScaling(scalingMap, mod) {
+  if (!scalingMap) return ''
+
+  const tiers = Object.keys(scalingMap)
+    .map(n => Number(n))
+    .filter(n => !Number.isNaN(n))
+    .sort((a, b) => a - b)
+
+  if (tiers.length === 0) return ''
+
+  return tiers
+    .map((tier, idx) => {
+      const nextTier = tiers[idx + 1]
+      const endLevel = nextTier ? nextTier - 1 : 20
+      const levelLabel = tier === endLevel ? `Nv.${tier}` : `Nv.${tier}-${endLevel}`
+      const text = toSpanishScalingText(resolveModifierText(scalingMap[String(tier)], mod))
+      return `${levelLabel}: ${text}`
+    })
+    .join(' · ')
 }
 function dedupeByName(spells) {
   const seen = new Set()
@@ -96,8 +130,23 @@ function dedupeByName(spells) {
 
 // Normaliza una entrada de hechizo guardada (puede ser string legacy u obj)
 function normEntry(s) {
-  if (s && typeof s === 'object') return s
-  return { index: null, name: String(s) }
+  if (s && typeof s === 'object') {
+    return { ...s, name: tSpellName(s.name || '') }
+  }
+  return { index: null, name: tSpellName(String(s || '')) }
+}
+
+function canonicalNameForEntry(entry) {
+  if (!entry) return 'Hechizo'
+
+  // Para hechizos locales custom, prioriza el nombre ES definido en localSpells.
+  if (entry.index && String(entry.index).startsWith('custom:')) {
+    const local = getLocalSpellsByClass('').find((s) => s.index === entry.index)
+    if (local?.esName) return local.esName
+  }
+
+  const name = String(entry.name || '')
+  return tSpellName(name) || name || 'Hechizo'
 }
 
 const LEVEL_HEADERS = {
@@ -139,7 +188,7 @@ function SpellRow({ entry, detail, isOpen, isLoading, translatedDesc, saveCD, at
           title={canExpand ? '' : 'Hechizo añadido manualmente, sin datos de API'}
         >
           {canExpand && <span className={styles.spellArrow}>{isOpen ? '▲' : '▼'}</span>}
-          <span className={styles.spellName}>{entry.name}</span>
+          <span className={styles.spellName}>{detail?.translatedName || tSpellName(entry.name)}</span>
           {school && <span className={styles.spellSchool}>{SCHOOLS[school] || school}</span>}
           {detail?.ritual && <span className={styles.spellTag}>Ritual</span>}
           {detail?.concentration && <span className={styles.spellTag}>Conc.</span>}
@@ -174,15 +223,14 @@ function SpellRow({ entry, detail, isOpen, isLoading, translatedDesc, saveCD, at
             {detail.damage?.damage_at_character_level && (
               <Chip
                 label="Daño escalonado por nivel de personaje"
-                value={Object.entries(detail.damage.damage_at_character_level)
-                  .map(([l, d]) => `Nv.${l}: ${resolveModifierText(d, spellMod)}`).join(' · ')}
+                value={formatCharacterLevelScaling(detail.damage.damage_at_character_level, spellMod)}
                 wide
               />
             )}
             {currentScaling && (
               <Chip
                 label={`Tu daño actual (Nv.${characterLevel})`}
-                value={`Escalado Nv.${currentScaling.tier}: ${currentScaling.text}`}
+                value={`Usas el tramo Nv.${currentScaling.tier}-${currentScaling.endLevel}: ${currentScaling.text}`}
                 wide
                 highlight
               />
@@ -255,6 +303,33 @@ export default function SpellBook({ character, onUpdate }) {
   // Hechizos conocidos normalizados [{index, name}]
   const knownSpells = useMemo(() => (character.spells || []).map(normEntry), [character.spells])
 
+  // ── Migración automática: persistir nombres canónicos ES en hechizos guardados ──
+  useEffect(() => {
+    const raw = Array.isArray(character.spells) ? character.spells : []
+    if (raw.length === 0) return
+
+    const normalizedRaw = raw.map(normEntry)
+    const migrated = normalizedRaw.map((entry) => ({
+      ...entry,
+      name: canonicalNameForEntry(entry)
+    }))
+
+    const dedup = new Map()
+    for (const entry of migrated) {
+      const key = entry.index || `name:${normalize(entry.name)}`
+      dedup.set(key, entry)
+    }
+    const deduped = Array.from(dedup.values())
+
+    const hadLegacyRows = raw.some((s) => !s || typeof s !== 'object')
+    const changedNames = normalizedRaw.some((entry, i) => entry.name !== deduped[i]?.name)
+    const changedLength = deduped.length !== normalizedRaw.length
+
+    if (hadLegacyRows || changedNames || changedLength) {
+      onUpdate({ spells: deduped })
+    }
+  }, [character.spells, onUpdate])
+
   // Caché de detalles de la API { [spellIndex]: detailObject }
   const [detailCache, setDetailCache] = useState({})
   // Qué hechizos están cargando detalle (Set de índices)
@@ -269,7 +344,6 @@ export default function SpellBook({ character, onUpdate }) {
   const [allSpells, setAllSpells]     = useState([])   // [{index, name}]
   const [spellsLoading, setSpellsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [pickerNames, setPickerNames] = useState({}) // { [index]: nombreTraducido }
 
   // ── Cargar lista de hechizos para el picker ──
   useEffect(() => {
@@ -310,46 +384,15 @@ export default function SpellBook({ character, onUpdate }) {
     return allSpells
       .filter(s => {
         const original = normalize(s.name)
-        const esLocal = normalize(s.esName || '')
+        const canonicalEs = normalize(s.esName || tSpellName(s.name) || '')
         const aliases = (s.aliases || []).map(normalize)
         const simpleEs = normalize(tSimpleText(s.name))
-        const translated = normalize(pickerNames[s.index] || '')
         const mapped = mappedTerms.some(term => original.includes(term))
         const aliasMatch = aliases.some(a => a.includes(q) || q.includes(a))
-        return original.includes(q) || esLocal.includes(q) || simpleEs.includes(q) || translated.includes(q) || aliasMatch || mapped
+        return original.includes(q) || canonicalEs.includes(q) || simpleEs.includes(q) || aliasMatch || mapped
       })
       .slice(0, 100)
-  }, [allSpells, searchQuery, pickerNames])
-
-  // ── Traduce nombres visibles del picker (perezoso, en lote) ──
-  useEffect(() => {
-    if (!pickerOpen || spellsLoading || filteredSpells.length === 0) return
-
-    let cancelled = false
-    const pending = filteredSpells
-      .slice(0, 40)
-      .filter(s => !pickerNames[s.index])
-
-    if (pending.length === 0) return
-
-    Promise.all(
-      pending.map(async (s) => {
-        try {
-          const name = await translateText(s.name)
-          return { index: s.index, name }
-        } catch {
-          return { index: s.index, name: tSimpleText(s.name) }
-        }
-      })
-    ).then((rows) => {
-      if (cancelled) return
-      const patch = {}
-      for (const r of rows) patch[r.index] = r.name
-      setPickerNames(prev => ({ ...prev, ...patch }))
-    })
-
-    return () => { cancelled = true }
-  }, [pickerOpen, spellsLoading, filteredSpells, pickerNames])
+  }, [allSpells, searchQuery])
 
   // ── Carga detalle de un hechizo (único) ──
   const loadDetail = useCallback(async (index) => {
@@ -360,7 +403,7 @@ export default function SpellBook({ character, onUpdate }) {
         ? getLocalSpellDetail(index)
         : await getSpellDetail(index)
       if (!d) throw new Error('No detail')
-      const translatedName = await translateText(d.name)
+      const translatedName = tSpellName(d.name)
       setDetailCache(prev => ({ ...prev, [index]: { ...d, translatedName } }))
     } catch { /* silencioso */ } finally {
       setLoadingSet(prev => { const s = new Set(prev); s.delete(index); return s })
@@ -412,13 +455,14 @@ export default function SpellBook({ character, onUpdate }) {
         ? getLocalSpellDetail(spellRef.index)
         : await getSpellDetail(spellRef.index)
       if (!d) throw new Error('No detail')
-      const name = await translateText(d.name)
+      const name = tSpellName(d.name)
       setDetailCache(prev => ({ ...prev, [spellRef.index]: { ...d, translatedName: name } }))
       const updated = [...knownSpells, { index: spellRef.index, name }]
       onUpdate({ spells: updated })
     } catch {
       // Fallback sin traducción
-      const updated = [...knownSpells, { index: spellRef.index, name: tSimpleText(spellRef.name) }]
+      const fallbackName = spellRef.esName || tSpellName(spellRef.name) || tSimpleText(spellRef.name)
+      const updated = [...knownSpells, { index: spellRef.index, name: fallbackName }]
       onUpdate({ spells: updated })
     }
   }, [knownSpells, onUpdate])
@@ -508,7 +552,7 @@ export default function SpellBook({ character, onUpdate }) {
             <div className={styles.pickerGrid}>
               {filteredSpells.map(s => {
                 const added = knownSet.has(s.index)
-                const translated = pickerNames[s.index] || tSimpleText(s.name)
+                const translated = s.esName || tSpellName(s.name) || tSimpleText(s.name)
                 const showOriginal = normalize(translated) !== normalize(s.name)
                 return (
                   <button
