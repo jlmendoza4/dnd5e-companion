@@ -1,0 +1,139 @@
+.toolkit {
+  margin-top: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1rem;
+  background: var(--bg-card);
+}
+
+.title {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+  color: var(--gold);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.8rem;
+}
+
+.card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--bg-medium);
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--purple-light);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.rowMini {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.input,
+.textarea,
+.inputSmall {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
+.input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+}
+
+.inputSmall {
+  width: 74px;
+  padding: 0.3rem 0.45rem;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 64px;
+  padding: 0.45rem 0.55rem;
+  resize: vertical;
+}
+
+.targets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.target {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.35rem 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.target strong {
+  color: var(--text-primary);
+  margin-right: 0.35rem;
+}
+
+.targetCursed {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25);
+}
+
+.note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.3rem 0.45rem;
+}
+
+.metric strong {
+  color: var(--gold);
+}
+
+.metric em {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.timeline {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--surface-2);
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}

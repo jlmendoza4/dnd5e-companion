@@ -519,6 +519,37 @@
 }
 .dmgType { font-size: 0.83rem; color: var(--text-muted); font-family: var(--font-ui); }
 
+.dmgExtraRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+/* Filo de llamas / blade cantrip — naranja fuego */
+.dmgExtraFire {
+  color: #fb923c !important;
+  background: rgba(251, 146, 60, 0.12) !important;
+  border-color: #ea580c !important;
+  font-size: 1.6rem !important;
+}
+
+/* Velo espiritual — violeta/necrotic */
+.dmgExtraShroud {
+  color: #c084fc !important;
+  background: rgba(192, 132, 252, 0.12) !important;
+  border-color: #a855f7 !important;
+  font-size: 1.6rem !important;
+}
+
+/* Total combinado — dorado */
+.dmgExtraTotal {
+  color: var(--gold) !important;
+  background: rgba(212, 175, 55, 0.1) !important;
+  border-color: var(--gold) !important;
+  font-size: 2.2rem !important;
+}
+
 /* CD de salvaciÃ³n */
 .saveDCDisplay {
   display: flex;

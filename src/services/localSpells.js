@@ -99,6 +99,42 @@ const LOCAL_SPELLS = [
         dc_success: 'none'
       }
     }
+  },
+  {
+    index: 'custom:spirit-shroud',
+    name: 'Spirit Shroud',
+    esName: 'Velo espiritual',
+    aliases: ['velo espiritual', 'spirit shroud', 'manto espiritual', 'sudario espiritual'],
+    classes: ['warlock', 'wizard', 'cleric', 'paladin'],
+    detail: {
+      index: 'custom:spirit-shroud',
+      name: 'Spirit Shroud',
+      level: 3,
+      school: { name: 'Necromancy' },
+      casting_time: '1 bonus action',
+      range: 'Self',
+      duration: 'Concentration, up to 1 minute',
+      components: ['V', 'S'],
+      concentration: true,
+      desc: [
+        'Invocas espiritus que te rodean durante la duracion del conjuro.',
+        'Hasta el final de tu turno, los ataques que impactes a criaturas dentro de 10 pies infligen 1d8 de daño adicional (frio, necrotico o radiante, a tu eleccion al lanzar).',
+        'Las criaturas afectadas no pueden recuperar puntos de golpe hasta el inicio de tu siguiente turno.',
+        'La velocidad de cualquier criatura afectada por este daño se reduce en 10 pies hasta el inicio de tu siguiente turno.'
+      ],
+      damage: {
+        damage_type: { name: 'Cold / Necrotic / Radiant' },
+        damage_at_slot_level: {
+          3: '1d8',
+          4: '2d8',
+          5: '3d8',
+          6: '4d8',
+          7: '5d8',
+          8: '6d8',
+          9: '7d8'
+        }
+      }
+    }
   }
 ]
 
@@ -107,6 +143,9 @@ export const SPELL_SEARCH_ALIASES = {
   'filo de llamas verdes': ['green-flame blade'],
   'filo atronador': ['booming blade'],
   'hambre de hadar': ['hunger of hadar'],
+  'velo espiritual': ['spirit shroud'],
+  'sudario espiritual': ['spirit shroud'],
+  'manto espiritual': ['spirit shroud'],
   'hadar': ['hunger of hadar'],
   'hoja atronadora': ['booming blade'],
   'mano de mago': ['mage hand'],

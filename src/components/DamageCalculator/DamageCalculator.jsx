@@ -31,6 +31,7 @@ import { getWeapons, getSpells, getEquipmentDetail, getSpellDetail } from '../..
 import { getLocalSpellsByClass, getLocalSpellDetail } from '../../services/localSpells'
 import { translateArray } from '../../services/autoTranslate'
 import { tSpellName, tDamageType, tSimpleText } from '../../services/dndTranslations'
+import HexbladeToolkit from '../HexbladeToolkit/HexbladeToolkit'
 import styles from './DamageCalculator.module.css'
 
 // ── Armas predefinidas para acceso rápido (sin necesidad de API) ──
@@ -64,6 +65,8 @@ const QUICK_SPELLS = [
 ]
 
 const SPELL_SLOT_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+const SPIRIT_SHROUD_MIN_SLOT = 3
+const SPIRIT_SHROUD_DAMAGE_TYPES = ['necrotico', 'frio', 'radiante']
 
 const EMPTY_SPELL_SLOTS = {
   1: { max: 0, current: 0 },
@@ -232,6 +235,17 @@ function normalizeSpellSlots(rawSlots) {
   }
 
   return out
+}
+
+function isSpiritShroudSpell(item) {
+  const index = String(item?.index || '').toLowerCase()
+  const name = normalizeSpellText(item?.name || '')
+  return index === 'custom:spirit-shroud' || name === 'spirit shroud' || name === 'velo espiritual'
+}
+
+function getSpiritShroudDiceBySlot(slotLevel) {
+  const level = Math.max(SPIRIT_SHROUD_MIN_SLOT, Number(slotLevel) || SPIRIT_SHROUD_MIN_SLOT)
+  return `${level - 2}d8`
 }
 
 function getBladeDiceByLevel(characterLevel) {
@@ -411,6 +425,9 @@ export default function DamageCalculator({ character, onUpdate }) {
   const [selectedItem, setSelectedItem] = useState(QUICK_WEAPONS[2]) // Espada larga por defecto
   const [spellSearch, setSpellSearch] = useState('')
   const [isProficient, setIsProficient] = useState(true)
+  const [spiritShroudActive, setSpiritShroudActive] = useState(false)
+  const [spiritShroudSlotLevel, setSpiritShroudSlotLevel] = useState(String(SPIRIT_SHROUD_MIN_SLOT))
+  const [spiritShroudDamageType, setSpiritShroudDamageType] = useState(SPIRIT_SHROUD_DAMAGE_TYPES[0])
   const [advantage, setAdvantage]     = useState('normal') // 'normal'|'advantage'|'disadvantage'
   const [rollHistory, setRollHistory] = useState([])
   const [lastRollBatch, setLastRollBatch] = useState([])
@@ -481,6 +498,10 @@ export default function DamageCalculator({ character, onUpdate }) {
   const skillHistoryStorageKey = useMemo(() => getSkillHistoryStorageKey(character), [character])
   const attackHistoryStorageKey = useMemo(() => getAttackHistoryStorageKey(character), [character])
   const spellSlots = useMemo(() => normalizeSpellSlots(character.spellSlots), [character.spellSlots])
+  const spiritShroudSlotOptions = useMemo(
+    () => SPELL_SLOT_LEVELS.filter((slotLevel) => slotLevel >= SPIRIT_SHROUD_MIN_SLOT && (spellSlots[String(slotLevel)]?.max || 0) > 0),
+    [spellSlots]
+  )
   const spellSlotPresetSignature = `${classIndex || 'none'}:${level}`
   const attackPresetSignature = `${normalizeClassName(character.class)}:${normalizeClassName(character.subclass)}:${level}`
   const attacksReason = useMemo(
@@ -681,6 +702,19 @@ export default function DamageCalculator({ character, onUpdate }) {
     })
   }, [category, selectedItem?.index, selectedItem?.level])
 
+  useEffect(() => {
+    if (!spiritShroudSlotOptions.length) {
+      setSpiritShroudSlotLevel(String(SPIRIT_SHROUD_MIN_SLOT))
+      return
+    }
+
+    setSpiritShroudSlotLevel((prev) => {
+      const prevNum = Number(prev)
+      if (spiritShroudSlotOptions.includes(prevNum)) return String(prevNum)
+      return String(spiritShroudSlotOptions[0])
+    })
+  }, [spiritShroudSlotOptions])
+
   const patchSpellSlots = useCallback((nextSlots) => {
     if (typeof onUpdate !== 'function') return
     onUpdate({
@@ -716,6 +750,42 @@ export default function DamageCalculator({ character, onUpdate }) {
     patchSpellSlots(next)
     setSpellError(null)
   }, [patchSpellSlots, spellSlots])
+
+  const spendSpellSlot = useCallback((slotLevel, errorPrefix = '') => {
+    const slotKey = String(slotLevel)
+    const available = spellSlots[slotKey]?.current || 0
+    if (available <= 0) {
+      setSpellError(`${errorPrefix}No te quedan espacios de nivel ${slotLevel}.`)
+      return false
+    }
+
+    if (typeof onUpdate === 'function') {
+      const nextSlots = normalizeSpellSlots(spellSlots)
+      nextSlots[slotKey] = {
+        ...nextSlots[slotKey],
+        current: Math.max(0, (nextSlots[slotKey].current || 0) - 1),
+      }
+      onUpdate({
+        spellSlots: nextSlots,
+        spellSlotsCustomized: true,
+      })
+    }
+
+    return true
+  }, [onUpdate, spellSlots])
+
+  const castSpiritShroud = useCallback(() => {
+    const slotNum = Number(spiritShroudSlotLevel)
+    if (!Number.isFinite(slotNum) || slotNum < SPIRIT_SHROUD_MIN_SLOT || slotNum > 9) {
+      setSpellError(`Velo espiritual requiere un espacio de nivel ${SPIRIT_SHROUD_MIN_SLOT} o superior.`)
+      return
+    }
+
+    if (!spendSpellSlot(slotNum, 'Velo espiritual: ')) return
+
+    setSpiritShroudActive(true)
+    setSpellError(null)
+  }, [spiritShroudSlotLevel, spendSpellSlot])
 
   // ── Detecta si el personaje es Brujo del Filo Maléfico (usa CAR para armas) ──
   const isHexblade = (() => {
@@ -891,9 +961,22 @@ export default function DamageCalculator({ character, onUpdate }) {
     }
 
     const isSpell = category === 'spell'
+    const isSelectedSpiritShroud = isSpell && isSpiritShroudSpell(selectedItem)
     const baseSpellLevel = Number(selectedItem.level || 0)
     const selectedSlotNum = Number(castSlotLevel || baseSpellLevel || 0)
     const shouldSpendSlot = isSpell && baseSpellLevel > 0
+
+    if (isSelectedSpiritShroud) {
+      if (!selectedSlotNum || selectedSlotNum < SPIRIT_SHROUD_MIN_SLOT || selectedSlotNum > 9) {
+        setSpellError(`Velo espiritual requiere un espacio valido de nivel ${SPIRIT_SHROUD_MIN_SLOT} o superior.`)
+        return
+      }
+      if (!spendSpellSlot(selectedSlotNum, 'Velo espiritual: ')) return
+      setSpiritShroudActive(true)
+      setSpiritShroudSlotLevel(String(selectedSlotNum))
+      setSpellError(null)
+      return
+    }
 
     if (shouldSpendSlot) {
       if (!selectedSlotNum || selectedSlotNum < baseSpellLevel || selectedSlotNum > 9) {
@@ -914,7 +997,6 @@ export default function DamageCalculator({ character, onUpdate }) {
     const usesAttackRoll = category === 'weapon' || usesSpellAttack
     const attackIterations = category === 'weapon' ? Math.max(1, Number(attacksPerAction) || 1) : 1
 
-    // Modificador total de ataque
     let totalAtkBonus = 0
     let atkBonusBreakdown = ''
     if (category === 'weapon') {
@@ -934,23 +1016,23 @@ export default function DamageCalculator({ character, onUpdate }) {
       parts.push(`+${profBonus} comp.`)
       atkBonusBreakdown = parts.join(' ')
     }
+
     const generatedRolls = []
 
     for (let attackIndex = 0; attackIndex < attackIterations; attackIndex += 1) {
-      const d20Roll    = usesAttackRoll ? rollDie(20) : null
-      const d20Roll2   = usesAttackRoll && advantage !== 'normal' ? rollDie(20) : null
+      const d20Roll = usesAttackRoll ? rollDie(20) : null
+      const d20Roll2 = usesAttackRoll && advantage !== 'normal' ? rollDie(20) : null
 
       let finalD20 = d20Roll
-      if (usesAttackRoll && advantage === 'advantage')    finalD20 = Math.max(d20Roll, d20Roll2)
+      if (usesAttackRoll && advantage === 'advantage') finalD20 = Math.max(d20Roll, d20Roll2)
       if (usesAttackRoll && advantage === 'disadvantage') finalD20 = Math.min(d20Roll, d20Roll2)
 
-      const isCriticalHit  = usesAttackRoll && finalD20 === 20
+      const isCriticalHit = usesAttackRoll && finalD20 === 20
       const isCriticalFail = usesAttackRoll && finalD20 === 1
       const finalAtkRoll = usesAttackRoll ? finalD20 + totalAtkBonus : null
 
-      // Tirada de daño (doble dados en crítico)
       const dmgResult = rollDice(selectedItem.dmgDice, isCriticalHit)
-      const dmgMod    = selectedItem.noRoll
+      const dmgMod = selectedItem.noRoll
         ? (selectedItem.bonus || 0)
         : (category === 'weapon' ? getWeaponMod() : 0)
       const extrasParts = []
@@ -982,8 +1064,18 @@ export default function DamageCalculator({ character, onUpdate }) {
         }
       }
 
+      let spiritShroudBonus = 0
+      let spiritShroudDice = null
+      const spiritShroudApplies = spiritShroudActive && usesAttackRoll && (category === 'weapon' || usesSpellAttack)
+      if (spiritShroudApplies) {
+        spiritShroudDice = getSpiritShroudDiceBySlot(spiritShroudSlotLevel)
+        const spiritShroudRoll = rollDice(spiritShroudDice, isCriticalHit)
+        spiritShroudBonus = spiritShroudRoll.total
+        extrasParts.push(`Velo espiritual: +${spiritShroudBonus} ${spiritShroudDamageType} (${spiritShroudRoll.notation || spiritShroudDice})`)
+      }
+
       const baseDmg = dmgResult.total + dmgMod
-      const totalDmg  = baseDmg + bladePrimaryBonus
+      const totalDmg = baseDmg + bladePrimaryBonus + spiritShroudBonus
 
       generatedRolls.push({
         id: Date.now() + attackIndex,
@@ -1006,10 +1098,13 @@ export default function DamageCalculator({ character, onUpdate }) {
         baseDmg,
         bladePrimaryBonus,
         bladePrimaryType,
+        spiritShroudBonus,
+        spiritShroudType: spiritShroudDamageType,
+        spiritShroudDice,
         totalDmg,
         dmgType: selectedItem.dmgType,
         saveDC: usesSave ? spellSaveDC : null,
-        saveType: saveType,
+        saveType,
         extras: extrasParts.join(' | '),
         slotSpentLevel: shouldSpendSlot ? selectedSlotNum : null,
         diceNotation: dmgResult.notation || selectedItem.dmgDice,
@@ -1017,19 +1112,10 @@ export default function DamageCalculator({ character, onUpdate }) {
     }
 
     setLastRollBatch(generatedRolls)
-    setRollHistory(prev => [...generatedRolls.slice().reverse(), ...prev].slice(0, 30)) // Máximo 30 entradas
+    setRollHistory((prev) => [...generatedRolls.slice().reverse(), ...prev].slice(0, 30))
 
-    if (shouldSpendSlot && typeof onUpdate === 'function') {
-      const slotKey = String(selectedSlotNum)
-      const nextSlots = normalizeSpellSlots(spellSlots)
-      nextSlots[slotKey] = {
-        ...nextSlots[slotKey],
-        current: Math.max(0, (nextSlots[slotKey].current || 0) - 1)
-      }
-      onUpdate({
-        spellSlots: nextSlots,
-        spellSlotsCustomized: true,
-      })
+    if (shouldSpendSlot && !isSelectedSpiritShroud) {
+      if (!spendSpellSlot(selectedSlotNum)) return
     }
 
     setSpellError(null)
@@ -1038,7 +1124,6 @@ export default function DamageCalculator({ character, onUpdate }) {
     category,
     castSlotLevel,
     spellSlots,
-    onUpdate,
     level,
     spellAbilityKey,
     spellAbilityMod,
@@ -1050,6 +1135,10 @@ export default function DamageCalculator({ character, onUpdate }) {
     profBonus,
     spellAttackBonus,
     spellSaveDC,
+    spiritShroudActive,
+    spiritShroudDamageType,
+    spiritShroudSlotLevel,
+    spendSpellSlot,
   ])
 
   const baseItems = category === 'weapon'
@@ -1298,6 +1387,64 @@ export default function DamageCalculator({ character, onUpdate }) {
             </div>
           )}
 
+          {category === 'weapon' && (
+            <div className={styles.slotManager}>
+              <div className={styles.slotManagerHeader}>
+                <span className={styles.fieldLabel}>Velo espiritual (TCE)</span>
+                {spiritShroudActive && (
+                  <button
+                    className={styles.slotResetBtn}
+                    type="button"
+                    onClick={() => setSpiritShroudActive(false)}
+                  >
+                    Desactivar
+                  </button>
+                )}
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>Slot al lanzar</label>
+                <select
+                  className={styles.select}
+                  value={spiritShroudSlotLevel}
+                  onChange={(e) => setSpiritShroudSlotLevel(e.target.value)}
+                >
+                  {(spiritShroudSlotOptions.length > 0 ? spiritShroudSlotOptions : SPELL_SLOT_LEVELS.filter((l) => l >= SPIRIT_SHROUD_MIN_SLOT)).map((slotLevel) => {
+                    const key = String(slotLevel)
+                    const row = spellSlots[key]
+                    return (
+                      <option key={slotLevel} value={slotLevel}>
+                        Nivel {slotLevel} ({row.current}/{row.max})
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>Tipo de daño extra</label>
+                <select
+                  className={styles.select}
+                  value={spiritShroudDamageType}
+                  onChange={(e) => setSpiritShroudDamageType(e.target.value)}
+                >
+                  {SPIRIT_SHROUD_DAMAGE_TYPES.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button className={styles.slotResetBtn} type="button" onClick={castSpiritShroud}>
+                Lanzar Velo espiritual (-1 slot)
+              </button>
+              <p className={styles.apiHint}>
+                {spiritShroudActive
+                  ? `Activo: +${getSpiritShroudDiceBySlot(spiritShroudSlotLevel)} ${spiritShroudDamageType} en cada impacto con tirada de ataque.`
+                  : 'Inactivo. Lánzalo para añadir daño extra a tus ataques.'}
+              </p>
+            </div>
+          )}
+
           {category === 'spell' && Number(selectedItem?.level || 0) > 0 && (
             <div className={styles.field}>
               <label className={styles.fieldLabel}>Espacio a gastar</label>
@@ -1522,6 +1669,8 @@ export default function DamageCalculator({ character, onUpdate }) {
                   {/* Daño */}
                   <div className={styles.rollSection}>
                     <span className={styles.rollSectionLabel}>Daño</span>
+
+                    {/* Bloque de daño base */}
                     <div className={styles.rollBreakdown}>
                       <div className={styles.diceGroup}>
                         {lastRoll.dmgRolls.map((r, i) => (
@@ -1540,16 +1689,44 @@ export default function DamageCalculator({ character, onUpdate }) {
                       )}
                       <span className={styles.rollOp}>=</span>
                       <div className={styles.totalDmg}>
-                        <span>{lastRoll.baseDmg ?? lastRoll.totalDmg}</span>
+                        <span>{lastRoll.baseDmg}</span>
                         <span className={styles.dmgType}>{lastRoll.dmgType}</span>
                       </div>
                     </div>
+
+                    {/* Bloque de daño filo (blade cantrip) */}
                     {lastRoll.bladePrimaryBonus > 0 && (
-                      <p className={styles.extrasNote}>
-                        Daño extra en impacto: +{lastRoll.bladePrimaryBonus} {lastRoll.bladePrimaryType}
-                        {' '}→ Total objetivo principal: {lastRoll.totalDmg}
-                      </p>
+                      <div className={styles.dmgExtraRow}>
+                        <span className={styles.rollOp}>+</span>
+                        <div className={`${styles.totalDmg} ${styles.dmgExtraFire}`}>
+                          <span>{lastRoll.bladePrimaryBonus}</span>
+                          <span className={styles.dmgType}>{lastRoll.bladePrimaryType}</span>
+                        </div>
+                      </div>
                     )}
+
+                    {/* Bloque de daño Velo espiritual */}
+                    {lastRoll.spiritShroudBonus > 0 && (
+                      <div className={styles.dmgExtraRow}>
+                        <span className={styles.rollOp}>+</span>
+                        <div className={`${styles.totalDmg} ${styles.dmgExtraShroud}`}>
+                          <span>{lastRoll.spiritShroudBonus}</span>
+                          <span className={styles.dmgType}>{lastRoll.spiritShroudType} ({lastRoll.spiritShroudDice})</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Total combinado */}
+                    {(lastRoll.bladePrimaryBonus > 0 || lastRoll.spiritShroudBonus > 0) && (
+                      <div className={styles.dmgExtraRow}>
+                        <span className={styles.rollOp}>=</span>
+                        <div className={`${styles.totalDmg} ${styles.dmgExtraTotal}`}>
+                          <span>{lastRoll.totalDmg}</span>
+                          <span className={styles.dmgType}>total</span>
+                        </div>
+                      </div>
+                    )}
+
                     {lastRoll.extras && (
                       <p className={styles.extrasNote}>{lastRoll.extras}</p>
                     )}
@@ -1791,6 +1968,14 @@ export default function DamageCalculator({ character, onUpdate }) {
           </div>
         )}
       </div>
+
+      <HexbladeToolkit
+        character={character}
+        selectedItem={selectedItem}
+        weaponMod={getWeaponMod()}
+        spellAttackBonus={spellAttackBonus}
+        rollHistory={rollHistory}
+      />
     </div>
   )
 }

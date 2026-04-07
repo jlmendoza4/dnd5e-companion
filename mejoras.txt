@@ -41,3 +41,33 @@ PENDIENTE DE PULIDO
 
 - limpiar warnings de eslint restantes en hooks y variables no usadas
 - valorar mover tambien el historial de calculadora y caches a una capa de estado mas alta si se quiere seguir refactorizando
+
+ROADMAP BRUJO DEL FILO MALEFICO (3 FASES)
+
+FASE 1 - impacto inmediato en partida (rapido)
+
+- rastreador de Maldicion del Filo Malefico por objetivo (duracion, critico 19-20, bonus daño y curacion)
+- modo turno rapido con botones: accion, bonus, reaccion, concentracion
+- calculo de daño por turno comparando: arma + maldicion, Eldritch Blast, Booming Blade, Green-Flame Blade
+- registro de concentracion activa y recordatorios de tiradas de concentracion
+
+FASE 2 - ventaja tactica real (media)
+
+- simulador de encuentros (tiradas masivas) contra CA y perfiles de enemigos frecuentes
+- recomendaciones automaticas por turno segun distancia, ventaja/desventaja y recursos
+- control de economia de descanso corto para slots de pacto y habilidades por descanso
+- panel de resistencias/inmunidades detectadas durante combate para sugerir tipo de daño
+
+FASE 3 - modo competitivo de campana (avanzada)
+
+- planificador de progreso de build (invocaciones, dotes, hechizos y multiclass opcional)
+- asistente IA tactico especifico de Hexblade con contexto completo de combate
+- biblioteca de combos guardados (burst, control, supervivencia) ejecutables en 1 clic
+- timeline de combate y analitica post-encuentro (daño hecho, daño recibido, recursos gastados)
+
+MVP RECOMENDADO (orden de implementacion)
+
+- 1) rastreador de Maldicion + concentracion
+- 2) calculadora comparativa de opciones por turno
+- 3) economia de descansos cortos
+- 4) recomendaciones tacticas automaticas
