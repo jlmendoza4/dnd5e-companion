@@ -4,80 +4,105 @@
  * Permite configurar endpoint, modelo y API key desde la app.
  */
 
+import {
+  STORAGE_KEYS,
+  getDesktopSettingsBridge,
+  readStoredString,
+  removeStoredValue,
+  writeStoredString,
+} from './storage'
+
 const DEFAULT_AI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent'
 const DEFAULT_AI_MODEL = 'gemma-4-31b-it'
-const STORAGE_AI_KEY = 'dnd_ai_key'
-const STORAGE_API_URL = 'dnd_ai_api_url'
-const STORAGE_MODEL = 'dnd_ai_model'
 
-/** Lee la API key de IA del almacenamiento local. */
-export function getAIKey() {
-  try {
-    return localStorage.getItem(STORAGE_AI_KEY) || ''
-  } catch {
-    return ''
+let aiConfigCache = {
+  apiKey: '',
+  endpoint: DEFAULT_AI_API_URL,
+  model: DEFAULT_AI_MODEL,
+  loaded: false,
+}
+
+function normalizeAIConfig(config) {
+  const next = config && typeof config === 'object' ? config : {}
+  return {
+    apiKey: String(next.apiKey || '').trim(),
+    endpoint: String(next.endpoint || DEFAULT_AI_API_URL).trim() || DEFAULT_AI_API_URL,
+    model: String(next.model || DEFAULT_AI_MODEL).trim() || DEFAULT_AI_MODEL,
   }
 }
 
-/** Guarda la API key de IA en el almacenamiento local. */
-export function saveAIKey(key) {
-  try {
-    const clean = String(key || '').trim()
-    if (clean) {
-      localStorage.setItem(STORAGE_AI_KEY, clean)
-    } else {
-      localStorage.removeItem(STORAGE_AI_KEY)
+export function getCachedAIConfig() {
+  return {
+    apiKey: aiConfigCache.apiKey,
+    endpoint: aiConfigCache.endpoint,
+    model: aiConfigCache.model,
+  }
+}
+
+export async function loadAIConfig({ force = false } = {}) {
+  if (aiConfigCache.loaded && !force) {
+    return getCachedAIConfig()
+  }
+
+  const bridge = getDesktopSettingsBridge()
+  let nextConfig
+
+  if (bridge?.loadAIConfig) {
+    try {
+      nextConfig = normalizeAIConfig(await bridge.loadAIConfig())
+    } catch {
+      nextConfig = normalizeAIConfig({})
     }
-  } catch {
-    // ignore
+  } else {
+    nextConfig = normalizeAIConfig({
+      apiKey: readStoredString(STORAGE_KEYS.aiKey, ''),
+      endpoint: readStoredString(STORAGE_KEYS.aiEndpoint, DEFAULT_AI_API_URL),
+      model: readStoredString(STORAGE_KEYS.aiModel, DEFAULT_AI_MODEL),
+    })
   }
+
+  aiConfigCache = { ...nextConfig, loaded: true }
+  return nextConfig
 }
 
-export function getAIEndpoint() {
-  try {
-    return localStorage.getItem(STORAGE_API_URL) || DEFAULT_AI_API_URL
-  } catch {
-    return DEFAULT_AI_API_URL
+export async function saveAIConfig(config) {
+  const nextConfig = normalizeAIConfig(config)
+  const bridge = getDesktopSettingsBridge()
+
+  if (bridge?.saveAIConfig) {
+    await bridge.saveAIConfig(nextConfig)
+  } else {
+    writeStoredString(STORAGE_KEYS.aiKey, nextConfig.apiKey)
+    writeStoredString(STORAGE_KEYS.aiEndpoint, nextConfig.endpoint)
+    writeStoredString(STORAGE_KEYS.aiModel, nextConfig.model)
   }
+
+  aiConfigCache = { ...nextConfig, loaded: true }
+  return nextConfig
 }
 
-export function saveAIEndpoint(url) {
-  try {
-    const clean = String(url || '').trim()
-    if (clean) {
-      localStorage.setItem(STORAGE_API_URL, clean)
-    } else {
-      localStorage.removeItem(STORAGE_API_URL)
-    }
-  } catch {
-    // ignore
+export async function clearAIKey() {
+  const currentConfig = await loadAIConfig()
+  const bridge = getDesktopSettingsBridge()
+
+  if (bridge?.clearAIKey) {
+    await bridge.clearAIKey()
+  } else {
+    removeStoredValue(STORAGE_KEYS.aiKey)
   }
+
+  aiConfigCache = {
+    ...currentConfig,
+    apiKey: '',
+    loaded: true,
+  }
+
+  return getCachedAIConfig()
 }
 
-export function getAIModel() {
-  try {
-    return localStorage.getItem(STORAGE_MODEL) || DEFAULT_AI_MODEL
-  } catch {
-    return DEFAULT_AI_MODEL
-  }
-}
-
-export function saveAIModel(model) {
-  try {
-    const clean = String(model || '').trim()
-    if (clean) {
-      localStorage.setItem(STORAGE_MODEL, clean)
-    } else {
-      localStorage.removeItem(STORAGE_MODEL)
-    }
-  } catch {
-    // ignore
-  }
-}
-
-export function getAIProviderLabel() {
-  const endpoint = getAIEndpoint()
-  const model = getAIModel()
+export function getAIProviderLabel(config = getCachedAIConfig()) {
+  const endpoint = config.endpoint || DEFAULT_AI_API_URL
+  const model = config.model || DEFAULT_AI_MODEL
   if (endpoint.includes('chat/completions')) return `OpenAI-compatible (${model})`
   if (endpoint.includes('generativelanguage.googleapis.com')) return `Google AI (${model})`
   return `IA personalizada (${model})`
@@ -193,8 +218,7 @@ export async function askAI(apiKey, messages) {
     )
   }
 
-  const endpoint = getAIEndpoint()
-  const model = getAIModel()
+  const { endpoint, model } = await loadAIConfig()
 
   if (isGoogleGenerateContentEndpoint(endpoint)) {
     const hasKeyInUrl = /[?&]key=/.test(endpoint)

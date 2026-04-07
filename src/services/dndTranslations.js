@@ -696,7 +696,6 @@ const TOKEN_TRANSLATIONS = {
   slots: 'espacios',
   cantrip: 'truco',
   cantrips: 'trucos',
-  reaction: 'reacción',
   hit: 'impacto',
   miss: 'fallo',
   succeed: 'superar',

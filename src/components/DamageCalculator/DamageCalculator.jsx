@@ -13,6 +13,19 @@
  * - Simulador de críticos
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import {
+  getProficiencyBonus,
+  getSpellcastingAbilityKey,
+  normalizeClassName,
+  resolveClassIndex,
+} from '../../services/dndRules'
+import {
+  STORAGE_KEYS,
+  readStoredJSON,
+  readStoredString,
+  writeStoredJSON,
+  writeStoredString,
+} from '../../services/storage'
 import { getModifier } from '../../services/dndUtils'
 import { getWeapons, getSpells, getEquipmentDetail, getSpellDetail } from '../../services/dndApi'
 import { getLocalSpellsByClass, getLocalSpellDetail } from '../../services/localSpells'
@@ -64,11 +77,6 @@ const EMPTY_SPELL_SLOTS = {
   9: { max: 0, current: 0 },
 }
 
-// ── Calcula el bonificador de competencia ──
-function getProfBonus(level) {
-  return Math.ceil(level / 4) + 1
-}
-
 // ── Habilidades y salvaciones para tiradas rápidas ──
 const SKILL_ROLL_LIST = [
   { key: 'acrobatics',    label: 'Acrobacia',          stat: 'DES' },
@@ -99,60 +107,6 @@ const SAVE_ROLL_LIST = [
   { key: 'SAB', label: 'Sabiduría' },
   { key: 'CAR', label: 'Carisma' },
 ]
-
-function normalizeClassName(name = '') {
-  return String(name)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-}
-
-function getSpellcastingAbilityKey(className = '', stats = {}) {
-  const c = normalizeClassName(className)
-
-  if (c === 'mago' || c === 'wizard' || c === 'artificer') return 'INT'
-  if (c === 'clerigo' || c === 'druida' || c === 'explorador' || c === 'cleric' || c === 'druid' || c === 'ranger') return 'SAB'
-  if (c === 'bardo' || c === 'paladin' || c === 'hechicero' || c === 'sorcerer' || c === 'warlock' || c === 'brujo') return 'CAR'
-
-  // Si no hay clase lanzadora clara, usar la mejor mental.
-  const mental = ['INT', 'SAB', 'CAR']
-  return mental.reduce((best, key) => {
-    const bestVal = Number(stats[best] || 10)
-    const keyVal = Number(stats[key] || 10)
-    return keyVal > bestVal ? key : best
-  }, 'INT')
-}
-
-function getClassIndexForApi(className = '') {
-  const c = normalizeClassName(className)
-  const map = {
-    barbaro: 'barbarian',
-    barbarian: 'barbarian',
-    bardo: 'bard',
-    bard: 'bard',
-    clerigo: 'cleric',
-    cleric: 'cleric',
-    druida: 'druid',
-    druid: 'druid',
-    explorador: 'ranger',
-    ranger: 'ranger',
-    guerrero: 'fighter',
-    fighter: 'fighter',
-    mago: 'wizard',
-    wizard: 'wizard',
-    monje: 'monk',
-    monk: 'monk',
-    paladin: 'paladin',
-    picaro: 'rogue',
-    rogue: 'rogue',
-    hechicero: 'sorcerer',
-    sorcerer: 'sorcerer',
-    warlock: 'warlock',
-    brujo: 'warlock'
-  }
-  return map[c] || ''
-}
 
 function getFirstDamageDice(detail) {
   if (!detail?.damage) return null
@@ -469,12 +423,8 @@ export default function DamageCalculator({ character, onUpdate }) {
   const [weaponBladeCantrip, setWeaponBladeCantrip] = useState('none')
   const [castSlotLevel, setCastSlotLevel] = useState('')
   const [spellScope, setSpellScope] = useState(() => {
-    try {
-      const saved = localStorage.getItem('dnd_spell_scope')
-      return ['class', 'all', 'learned'].includes(saved) ? saved : 'class'
-    } catch {
-      return 'class'
-    }
+    const saved = readStoredString(STORAGE_KEYS.spellScope, 'class')
+    return ['class', 'all', 'learned'].includes(saved) ? saved : 'class'
   }) // 'class' | 'all' | 'learned'
 
   // ── Estado tiradas de habilidad/salvación ──
@@ -520,14 +470,14 @@ export default function DamageCalculator({ character, onUpdate }) {
   // Estadísticas del personaje
   const stats = character.stats || {}
   const level = character.level || 1
-  const profBonus = getProfBonus(level)
+  const profBonus = getProficiencyBonus(level)
 
   const spellAbilityKey = getSpellcastingAbilityKey(character.class, stats)
   const spellAbilityMod = getModifier(stats[spellAbilityKey] || 10)
   const spellSaveDC = 8 + profBonus + spellAbilityMod
   const spellAttackBonus = profBonus + spellAbilityMod
 
-  const classIndex = getClassIndexForApi(character.class)
+  const classIndex = resolveClassIndex(character.class) || ''
   const skillHistoryStorageKey = useMemo(() => getSkillHistoryStorageKey(character), [character])
   const attackHistoryStorageKey = useMemo(() => getAttackHistoryStorageKey(character), [character])
   const spellSlots = useMemo(() => normalizeSpellSlots(character.spellSlots), [character.spellSlots])
@@ -593,27 +543,21 @@ export default function DamageCalculator({ character, onUpdate }) {
     const LEGACY_ATTACK_HISTORY_KEY = 'dnd_attack_roll_history'
 
     try {
-      const rawForCharacter = localStorage.getItem(attackHistoryStorageKey)
-      if (rawForCharacter) {
-        const parsed = JSON.parse(rawForCharacter)
-        if (Array.isArray(parsed)) {
-          setRollHistory(parsed.slice(0, 30))
-          attackHistoryHydratedKeyRef.current = attackHistoryStorageKey
-          return
-        }
+      const parsed = readStoredJSON(attackHistoryStorageKey, null)
+      if (Array.isArray(parsed)) {
+        setRollHistory(parsed.slice(0, 30))
+        attackHistoryHydratedKeyRef.current = attackHistoryStorageKey
+        return
       }
 
       // Migracion suave desde clave global anterior.
-      const legacyRaw = localStorage.getItem(LEGACY_ATTACK_HISTORY_KEY)
-      if (legacyRaw) {
-        const legacyParsed = JSON.parse(legacyRaw)
-        if (Array.isArray(legacyParsed)) {
-          const normalized = legacyParsed.slice(0, 30)
-          setRollHistory(normalized)
-          localStorage.setItem(attackHistoryStorageKey, JSON.stringify(normalized))
-          attackHistoryHydratedKeyRef.current = attackHistoryStorageKey
-          return
-        }
+      const legacyParsed = readStoredJSON(LEGACY_ATTACK_HISTORY_KEY, null)
+      if (Array.isArray(legacyParsed)) {
+        const normalized = legacyParsed.slice(0, 30)
+        setRollHistory(normalized)
+        writeStoredJSON(attackHistoryStorageKey, normalized)
+        attackHistoryHydratedKeyRef.current = attackHistoryStorageKey
+        return
       }
 
       setRollHistory([])
@@ -626,44 +570,30 @@ export default function DamageCalculator({ character, onUpdate }) {
 
   useEffect(() => {
     if (attackHistoryHydratedKeyRef.current !== attackHistoryStorageKey) return
-    try {
-      localStorage.setItem(attackHistoryStorageKey, JSON.stringify(rollHistory.slice(0, 30)))
-    } catch {
-      // Ignorar errores de almacenamiento (modo privado, etc.)
-    }
+    writeStoredJSON(attackHistoryStorageKey, rollHistory.slice(0, 30))
   }, [rollHistory, attackHistoryStorageKey])
 
   useEffect(() => {
-    try {
-      localStorage.setItem('dnd_spell_scope', spellScope)
-    } catch {
-      // Ignorar errores de almacenamiento (modo privado, etc.)
-    }
+    writeStoredString(STORAGE_KEYS.spellScope, spellScope)
   }, [spellScope])
 
   useEffect(() => {
     const LEGACY_SKILL_HISTORY_KEY = 'dnd_skill_roll_history'
 
     try {
-      const rawForCharacter = localStorage.getItem(skillHistoryStorageKey)
-      if (rawForCharacter) {
-        const parsed = JSON.parse(rawForCharacter)
-        if (Array.isArray(parsed)) {
-          setSkillRollHistory(parsed.slice(0, 30))
-          return
-        }
+      const parsed = readStoredJSON(skillHistoryStorageKey, null)
+      if (Array.isArray(parsed)) {
+        setSkillRollHistory(parsed.slice(0, 30))
+        return
       }
 
       // Migracion suave desde clave global anterior.
-      const legacyRaw = localStorage.getItem(LEGACY_SKILL_HISTORY_KEY)
-      if (legacyRaw) {
-        const legacyParsed = JSON.parse(legacyRaw)
-        if (Array.isArray(legacyParsed)) {
-          const normalized = legacyParsed.slice(0, 30)
-          setSkillRollHistory(normalized)
-          localStorage.setItem(skillHistoryStorageKey, JSON.stringify(normalized))
-          return
-        }
+      const legacyParsed = readStoredJSON(LEGACY_SKILL_HISTORY_KEY, null)
+      if (Array.isArray(legacyParsed)) {
+        const normalized = legacyParsed.slice(0, 30)
+        setSkillRollHistory(normalized)
+        writeStoredJSON(skillHistoryStorageKey, normalized)
+        return
       }
 
       setSkillRollHistory([])
@@ -673,11 +603,7 @@ export default function DamageCalculator({ character, onUpdate }) {
   }, [skillHistoryStorageKey])
 
   useEffect(() => {
-    try {
-      localStorage.setItem(skillHistoryStorageKey, JSON.stringify(skillRollHistory.slice(0, 30)))
-    } catch {
-      // Ignorar errores de almacenamiento (modo privado, etc.)
-    }
+    writeStoredJSON(skillHistoryStorageKey, skillRollHistory.slice(0, 30))
   }, [skillRollHistory, skillHistoryStorageKey])
 
   useEffect(() => {

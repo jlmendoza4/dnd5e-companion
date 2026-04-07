@@ -13,11 +13,39 @@ const BASE_URLS = import.meta.env.DEV
   ? ['/dndapi/api', '/dndapi/api/2014']
   : ['https://www.dnd5eapi.co/api', 'https://www.dnd5eapi.co/api/2014']
 
+const DND_API_CACHE_TTL_MS = 1000 * 60 * 5
+const responseCache = new Map()
+const inFlightRequests = new Map()
+
+function getCachedResponse(endpoint) {
+  const cached = responseCache.get(endpoint)
+  if (!cached) return null
+  if (Date.now() - cached.updatedAt > DND_API_CACHE_TTL_MS) {
+    responseCache.delete(endpoint)
+    return null
+  }
+  return cached.data
+}
+
+function setCachedResponse(endpoint, data) {
+  responseCache.set(endpoint, {
+    data,
+    updatedAt: Date.now(),
+  })
+}
+
 /**
  * Función base de fetch con manejo de errores centralizado
  */
 async function fetchDnD(endpoint) {
   const cleanedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  const cached = getCachedResponse(cleanedEndpoint)
+  if (cached) return cached
+
+  const runningRequest = inFlightRequests.get(cleanedEndpoint)
+  if (runningRequest) return runningRequest
+
+  const requestPromise = (async () => {
   const errors = []
 
   for (const baseUrl of BASE_URLS) {
@@ -42,7 +70,9 @@ async function fetchDnD(endpoint) {
       }
 
       try {
-        return JSON.parse(bodyText)
+        const parsed = JSON.parse(bodyText)
+        setCachedResponse(cleanedEndpoint, parsed)
+        return parsed
       } catch {
         const preview = bodyText.slice(0, 120).replace(/\s+/g, ' ')
         errors.push(`JSON inválido en ${url}: ${preview}`)
@@ -53,6 +83,15 @@ async function fetchDnD(endpoint) {
   }
 
   throw new Error(`No se pudo obtener datos de dnd5eapi para ${cleanedEndpoint}. ${errors[0] || ''}`)
+  })()
+
+  inFlightRequests.set(cleanedEndpoint, requestPromise)
+
+  try {
+    return await requestPromise
+  } finally {
+    inFlightRequests.delete(cleanedEndpoint)
+  }
 }
 
 // ──────────────────────────────────────────────

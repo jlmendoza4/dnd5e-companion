@@ -15,83 +15,11 @@
  */
 import { useState, useEffect } from 'react'
 import { getClassLevels, getFeatureDetail, getSubclassLevelFeatures } from '../../services/dndApi'
+import { getProficiencyBonus, resolveClassIndex, resolveSubclassIndex } from '../../services/dndRules'
 import { tSimpleText } from '../../services/dndTranslations'
 import { translateText, translateArray } from '../../services/autoTranslate'
 import { getLocalSubclassFeatures, resolveLocalSubclassKey } from '../../services/subclassData'
 import styles from './LevelUpModal.module.css'
-
-// ── Mapeo nombre español → índice de la API (clase) ──────────────────
-const CLASS_INDEX = {
-  bárbaro:    'barbarian', barbaro: 'barbarian',
-  bardo:      'bard',
-  clérigo:    'cleric',   clerigo: 'cleric',
-  druida:     'druid',
-  explorador: 'ranger',
-  guerrero:   'fighter',
-  hechicero:  'sorcerer',
-  mago:       'wizard',
-  monje:      'monk',
-  paladín:    'paladin',  paladin: 'paladin',
-  pícaro:     'rogue',    picaro: 'rogue',
-  warlock:    'warlock',  brujo: 'warlock'
-}
-
-// ── Mapeo nombre español/inglés → índice de subclase (API) ───────
-// Solo subclases del SRD que tiene dnd5eapi.co
-const SUBCLASS_INDEX = {
-  // Bárbaro
-  berserker: 'berserker',
-  'guerrero tottem': 'totem-warrior', 'totem warrior': 'totem-warrior', 'totem-warrior': 'totem-warrior',
-  // Bardo
-  'lore': 'lore', 'conocimiento del bardo': 'lore',
-  'valor': 'valor',
-  // Clérigo
-  'life': 'life', 'vida': 'life',
-  'light': 'light', 'luz': 'light',
-  'nature': 'nature', 'naturaleza': 'nature',
-  'tempest': 'tempest', 'tempestad': 'tempest',
-  'trickery': 'trickery', 'engaño': 'trickery',
-  'war': 'war', 'guerra': 'war',
-  'knowledge': 'knowledge', 'conocimiento': 'knowledge',
-  // Druida
-  'land': 'land', 'tierra': 'land',
-  'moon': 'moon', 'luna': 'moon',
-  // Guerrero
-  'champion': 'champion', 'campeón': 'champion', 'campeon': 'champion',
-  'battle master': 'battle-master', 'maestro de batalla': 'battle-master', 'battle-master': 'battle-master',
-  'eldritch knight': 'eldritch-knight', 'caballero sobrenatural': 'eldritch-knight', 'eldritch-knight': 'eldritch-knight',
-  // Monje
-  'open hand': 'open-hand', 'mano abierta': 'open-hand', 'open-hand': 'open-hand',
-   'shadow': 'shadow', 'sombra': 'shadow',
-  'four elements': 'four-elements', 'cuatro elementos': 'four-elements', 'four-elements': 'four-elements',
-  // Paladín
-  'devotion': 'devotion', 'devoción': 'devotion', 'devocion': 'devotion',
-  'ancients': 'ancients', 'ancestros': 'ancients',
-  'vengeance': 'vengeance', 'venganza': 'vengeance',
-  // Explorador
-  'hunter': 'hunter', 'cazador': 'hunter',
-  'beast master': 'beast-master', 'maestro de bestias': 'beast-master', 'beast-master': 'beast-master',
-  // Pícaro
-  'thief': 'thief', 'ladrón': 'thief', 'ladron': 'thief',
-  'assassin': 'assassin', 'asesino': 'assassin',
-  'arcane trickster': 'arcane-trickster', 'embaucador arcano': 'arcane-trickster', 'arcane-trickster': 'arcane-trickster',
-  // Hechicero
-  'draconic': 'draconic', 'dracónico': 'draconic', 'draconico': 'draconic',
-  'wild magic': 'wild-magic', 'magia salvaje': 'wild-magic', 'wild-magic': 'wild-magic',
-  // Brujo/Warlock
-  'fiend': 'fiend', 'demonio': 'fiend', 'diablo': 'fiend', 'the fiend': 'fiend',
-  'archfey': 'the-archfey', 'hada ancestral': 'the-archfey', 'the archfey': 'the-archfey', 'archi-hada': 'the-archfey',
-  'great old one': 'the-great-old-one', 'gran antiguo': 'the-great-old-one', 'the great old one': 'the-great-old-one',
-  // Mago (escuelas)
-  'evocation': 'evocation', 'evocación': 'evocation', 'evocacion': 'evocation',
-  'abjuration': 'abjuration', 'abjuración': 'abjuration', 'abjuracion': 'abjuration',
-  'conjuration': 'conjuration', 'conjuración': 'conjuration', 'conjuracion': 'conjuration',
-  'divination': 'divination', 'adivinación': 'divination', 'adivinacion': 'divination',
-  'enchantment': 'enchantment', 'encantamiento': 'enchantment',
-  'illusion': 'illusion', 'ilusión': 'illusion', 'ilusion': 'illusion',
-  'necromancy': 'necromancy', 'nigromancía': 'necromancy', 'nigromantica': 'necromancy', 'nigromancia': 'necromancy',
-  'transmutation': 'transmutation', 'transmutación': 'transmutation', 'transmutacion': 'transmutation',
-}
 
 // ── Dado de golpe por clase ───────────────────────────────────
 const HIT_DIE = {
@@ -118,47 +46,6 @@ const ASI_LEVELS = {
 
 // ── Nombres en español de los niveles de conjuro ─────────────
 const SLOT_LABELS = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º']
-
-function getProfBonus(level) {
-  return Math.ceil(level / 4) + 1
-}
-
-/** Normaliza el nombre de clase del personaje al índice de la API */
-function resolveClassIndex(className) {
-  const norm = String(className || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-
-  if (CLASS_INDEX[norm]) return CLASS_INDEX[norm]
-
-  for (const [key, val] of Object.entries(CLASS_INDEX)) {
-    const normKey = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    if (norm.includes(normKey)) return val
-  }
-  return null
-}
-
-/** Normaliza el nombre de subclase al índice de la API */
-function resolveSubclassIndex(subclassName) {
-  if (!subclassName) return null
-  const norm = String(subclassName)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-
-  if (SUBCLASS_INDEX[norm]) return SUBCLASS_INDEX[norm]
-
-  for (const [key, val] of Object.entries(SUBCLASS_INDEX)) {
-    const normKey = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    if (norm.includes(normKey) || normKey.includes(norm)) return val
-  }
-  // Intento genérico: normaliza a kebab-case y lo prueba directamente
-  const kebab = norm.replace(/\s+/g, '-')
-  return kebab || null
-}
 
 function FeatureList({ features, expanded, setExpanded }) {
   return (
@@ -198,8 +85,8 @@ export default function LevelUpModal({ character, onConfirm, onCancel }) {
   const avgHpGain   = Math.max(1, Math.floor(hitDie / 2) + 1 + conMod)
   const maxHpGain   = Math.max(1, hitDie + conMod)
 
-  const oldProf     = getProfBonus(character.level || 1)
-  const newProf     = getProfBonus(newLevel)
+  const oldProf     = getProficiencyBonus(character.level || 1)
+  const newProf     = getProficiencyBonus(newLevel)
   const profChanged = newProf > oldProf
 
   const isAsi = classIndex ? (ASI_LEVELS[classIndex] || []).includes(newLevel) : false

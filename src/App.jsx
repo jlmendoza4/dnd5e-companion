@@ -16,9 +16,18 @@ import Compendium from './components/Compendium/Compendium'
 import Settings from './components/Settings/Settings'
 import AIAdvisor from './components/AIAdvisor/AIAdvisor'
 import SessionNotes from './components/SessionNotes/SessionNotes'
+import ConfirmDialog from './components/Common/ConfirmDialog'
+import {
+  DEFAULT_CHARACTER,
+  clearCharacterStorage,
+  exportCharacterData,
+  importCharacterData,
+  loadCharacter,
+  loadTheme,
+  saveCharacter,
+  saveTheme,
+} from './services/storage'
 import styles from './App.module.css'
-
-const THEME_STORAGE_KEY = 'dnd_theme'
 
 // Tabs de navegación principal
 const TABS = [
@@ -30,120 +39,21 @@ const TABS = [
   { id: 'settings',  label: 'Config', icon: '⚙️' }
 ]
 
-// Estado inicial del personaje — se sobreescribe con localStorage si existe
-const DEFAULT_CHARACTER = {
-  name: '',
-  class: '',
-  subclass: '',
-  race: '',
-  level: 1,
-  background: '',
-  alignment: '',
-  stats: { FUE: 10, DES: 10, CON: 10, INT: 10, SAB: 10, CAR: 10 },
-  savingThrows: { FUE: 0, DES: 0, CON: 0, INT: 0, SAB: 0, CAR: 0 },
-  savingThrowProficiencies: {
-    FUE: false,
-    DES: false,
-    CON: false,
-    INT: false,
-    SAB: false,
-    CAR: false
-  },
-  skills: {
-    acrobatics: 0,
-    animalHandling: 0,
-    arcana: 0,
-    athletics: 0,
-    deception: 0,
-    history: 0,
-    insight: 0,
-    intimidation: 0,
-    investigation: 0,
-    medicine: 0,
-    nature: 0,
-    perception: 0,
-    performance: 0,
-    persuasion: 0,
-    religion: 0,
-    sleightOfHand: 0,
-    stealth: 0,
-    survival: 0
-  },
-  skillProficiencies: {
-    acrobatics: false,
-    animalHandling: false,
-    arcana: false,
-    athletics: false,
-    deception: false,
-    history: false,
-    insight: false,
-    intimidation: false,
-    investigation: false,
-    medicine: false,
-    nature: false,
-    perception: false,
-    performance: false,
-    persuasion: false,
-    religion: false,
-    sleightOfHand: false,
-    stealth: false,
-    survival: false
-  },
-  currentHP: 8,
-  maxHP: 8,
-  armorClass: 10,
-  initiative: 0,
-  speed: 30,
-  attacksPerAction: 1,
-  attacksPerActionPresetFor: '',
-  attacksPerActionCustomized: false,
-  spellSlots: {
-    1: { max: 0, current: 0 },
-    2: { max: 0, current: 0 },
-    3: { max: 0, current: 0 },
-    4: { max: 0, current: 0 },
-    5: { max: 0, current: 0 },
-    6: { max: 0, current: 0 },
-    7: { max: 0, current: 0 },
-    8: { max: 0, current: 0 },
-    9: { max: 0, current: 0 }
-  },
-  spellSlotsPresetFor: '',
-  spellSlotsCustomized: false,
-  sessionNotes: '',
-  spells: [],
-  equipment: [],
-  traits: ''
-}
-
 export default function App() {
   const [activeTab, setActiveTab] = useState('character')
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem(THEME_STORAGE_KEY) || 'light'
-    } catch {
-      return 'light'
-    }
-  })
-  const [character, setCharacter] = useState(() => {
-    // Carga el personaje guardado en localStorage al iniciar
-    try {
-      const saved = localStorage.getItem('dnd_character')
-      return saved ? { ...DEFAULT_CHARACTER, ...JSON.parse(saved) } : DEFAULT_CHARACTER
-    } catch {
-      return DEFAULT_CHARACTER
-    }
-  })
+  const [theme, setTheme] = useState(() => loadTheme())
+  const [character, setCharacter] = useState(() => loadCharacter())
+  const [showResetDialog, setShowResetDialog] = useState(false)
 
   // Guarda el personaje en localStorage cada vez que cambia
   useEffect(() => {
-    localStorage.setItem('dnd_character', JSON.stringify(character))
+    saveCharacter(character)
   }, [character])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     document.documentElement.style.colorScheme = theme
-    localStorage.setItem(THEME_STORAGE_KEY, theme)
+    saveTheme(theme)
   }, [theme])
 
   // Actualización parcial del personaje (merge con estado anterior)
@@ -151,12 +61,26 @@ export default function App() {
     setCharacter(prev => ({ ...prev, ...updates }))
   }, [])
 
+  const importCharacter = useCallback((nextCharacter) => {
+    setCharacter(importCharacterData(nextCharacter))
+  }, [])
+
+  const exportCharacter = useCallback(() => exportCharacterData(character), [character])
+
+  const clearCharacter = useCallback(() => {
+    clearCharacterStorage()
+    setCharacter(DEFAULT_CHARACTER)
+  }, [])
+
   // Resetea el personaje al estado inicial
   const resetCharacter = useCallback(() => {
-    if (confirm('¿Seguro que quieres borrar toda la ficha?')) {
-      setCharacter(DEFAULT_CHARACTER)
-    }
+    setShowResetDialog(true)
   }, [])
+
+  const confirmResetCharacter = useCallback(() => {
+    clearCharacter()
+    setShowResetDialog(false)
+  }, [clearCharacter])
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark')
@@ -231,8 +155,12 @@ export default function App() {
           )}
           {activeTab === 'settings' && (
             <Settings
+              character={character}
               onUpdate={updateCharacter}
               onNavigate={setActiveTab}
+              onImportCharacter={importCharacter}
+              onExportCharacter={exportCharacter}
+              onClearCharacter={clearCharacter}
               theme={theme}
               onToggleTheme={toggleTheme}
             />
@@ -247,6 +175,17 @@ export default function App() {
           <a href="https://www.dnd5eapi.co" target="_blank" rel="noopener">dnd5eapi.co</a>
         </p>
       </footer>
+
+      <ConfirmDialog
+        open={showResetDialog}
+        title="Borrar ficha"
+        message="Se eliminarán los datos actuales del personaje y se restaurará la ficha base."
+        confirmLabel="Borrar ficha"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={confirmResetCharacter}
+        onCancel={() => setShowResetDialog(false)}
+      />
     </div>
   )
 }

@@ -8,35 +8,62 @@
  *
  * La API key se guarda en localStorage (nunca se envía a ningún servidor propio).
  */
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
+import ConfirmDialog from '../Common/ConfirmDialog'
 import styles from './Settings.module.css'
 import { parsePDFCharacterSheet, debugPDFFields } from '../../services/pdfParser'
 import {
-  getAIKey,
-  saveAIKey,
-  getAIEndpoint,
-  saveAIEndpoint,
-  getAIModel,
-  saveAIModel,
+  clearAIKey,
+  loadAIConfig,
+  saveAIConfig,
 } from '../../services/aiService'
 
-export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme }) {
+export default function Settings({
+  character,
+  onUpdate,
+  onNavigate,
+  onImportCharacter,
+  onExportCharacter,
+  onClearCharacter,
+  theme,
+  onToggleTheme,
+}) {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfResult, setPdfResult]   = useState(null)
   const [debugFields, setDebugFields] = useState(null)
+  const [dataResult, setDataResult] = useState(null)
+  const [configLoading, setConfigLoading] = useState(true)
+  const [showClearDialog, setShowClearDialog] = useState(false)
   const themeToggleId = useId()
 
   // ── IA ──
-  const [aiKey, setAiKey]                 = useState(() => getAIKey())
-  const [aiEndpoint, setAiEndpoint]       = useState(() => getAIEndpoint())
-  const [aiModel, setAiModel]             = useState(() => getAIModel())
+  const [aiKey, setAiKey]                 = useState('')
+  const [aiEndpoint, setAiEndpoint]       = useState('')
+  const [aiModel, setAiModel]             = useState('')
   const [showAiKey, setShowAiKey]         = useState(false)
   const [aiKeySaved, setAiKeySaved]       = useState(false)
 
-  const saveAiConfig = () => {
-    saveAIKey(aiKey)
-    saveAIEndpoint(aiEndpoint)
-    saveAIModel(aiModel)
+  useEffect(() => {
+    let active = true
+
+    loadAIConfig()
+      .then((config) => {
+        if (!active) return
+        setAiKey(config.apiKey)
+        setAiEndpoint(config.endpoint)
+        setAiModel(config.model)
+      })
+      .finally(() => {
+        if (active) setConfigLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const persistAiConfig = async () => {
+    await saveAIConfig({ apiKey: aiKey, endpoint: aiEndpoint, model: aiModel })
     setAiKeySaved(true)
     setTimeout(() => setAiKeySaved(false), 2000)
   }
@@ -70,7 +97,8 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
 
     try {
       const characterData = await parsePDFCharacterSheet(file)
-      if (onUpdate) onUpdate(characterData)
+      if (onImportCharacter) onImportCharacter(characterData)
+      else if (onUpdate) onUpdate(characterData)
       setPdfResult({ ok: true, message: `✅ Ficha importada correctamente.${characterData.name ? ` Personaje: ${characterData.name}` : ''}` })
       if (onNavigate) setTimeout(() => onNavigate('character'), 1500)
     } catch (err) {
@@ -81,7 +109,9 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
   }
   // ── Exporta la ficha a JSON ──
   const exportCharacter = () => {
-    const data = localStorage.getItem('dnd_character') || '{}'
+    const data = typeof onExportCharacter === 'function'
+      ? onExportCharacter()
+      : JSON.stringify(character || {}, null, 2)
     const blob = new Blob([data], { type: 'application/json' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
@@ -89,24 +119,46 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
     a.download = 'dnd-personaje.json'
     a.click()
     URL.revokeObjectURL(url)
+    setDataResult({ ok: true, message: '✅ Ficha exportada correctamente.' })
   }
 
   // ── Importa la ficha desde JSON ──
   const importCharacter = (e) => {
     const file = e.target.files[0]
     if (!file) return
+    e.target.value = ''
 
     const reader = new FileReader()
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result)
-        localStorage.setItem('dnd_character', JSON.stringify(data))
-        alert('✅ Personaje importado correctamente. Recarga la página para verlo.')
+        if (typeof onImportCharacter === 'function') {
+          onImportCharacter(data)
+        }
+        setDataResult({ ok: true, message: `✅ Personaje importado correctamente.${data?.name ? ` Personaje: ${data.name}` : ''}` })
+        if (onNavigate) setTimeout(() => onNavigate('character'), 600)
       } catch {
-        alert('❌ El archivo no tiene un formato válido.')
+        setDataResult({ ok: false, message: '❌ El archivo no tiene un formato válido.' })
       }
     }
     reader.readAsText(file)
+  }
+
+  const clearCharacterData = () => {
+    if (typeof onClearCharacter === 'function') {
+      onClearCharacter()
+    } else if (typeof onUpdate === 'function') {
+      onUpdate({
+        name: '',
+        class: '',
+        subclass: '',
+        race: '',
+        level: 1,
+      })
+    }
+    setDataResult({ ok: true, message: '✅ Datos de la ficha borrados.' })
+    if (onNavigate) setTimeout(() => onNavigate('character'), 400)
+    setShowClearDialog(false)
   }
 
   return (
@@ -157,6 +209,7 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
             type="text"
             value={aiEndpoint}
             onChange={e => setAiEndpoint(e.target.value)}
+            disabled={configLoading}
             placeholder="https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent"
             autoComplete="off"
             spellCheck={false}
@@ -168,6 +221,7 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
             type="text"
             value={aiModel}
             onChange={e => setAiModel(e.target.value)}
+            disabled={configLoading}
             placeholder="gemma-4-31b-it"
             autoComplete="off"
             spellCheck={false}
@@ -194,6 +248,7 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
               type={showAiKey ? 'text' : 'password'}
               value={aiKey}
               onChange={e => setAiKey(e.target.value)}
+              disabled={configLoading}
               placeholder="sk-... o AIza..."
               autoComplete="off"
               spellCheck={false}
@@ -208,14 +263,18 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
             </button>
           </div>
           <div className={styles.apiKeyActions}>
-            <button className="btn btn-primary" onClick={saveAiConfig} type="button">
+            <button className="btn btn-primary" onClick={persistAiConfig} type="button" disabled={configLoading}>
               💾 Guardar configuración IA
             </button>
             {aiKey && (
               <button
                 className="btn btn-secondary"
                 type="button"
-                onClick={() => { saveAIKey(''); setAiKey('') }}
+                onClick={async () => {
+                  await clearAIKey()
+                  setAiKey('')
+                }}
+                disabled={configLoading}
               >
                 🗑️ Borrar clave
               </button>
@@ -311,17 +370,29 @@ export default function Settings({ onUpdate, onNavigate, theme, onToggleTheme })
 
           <button
             className="btn btn-danger"
-            onClick={() => {
-              if (confirm('¿Borrar todos los datos de la ficha?')) {
-                localStorage.removeItem('dnd_character')
-                alert('Datos borrados. Recarga la página.')
-              }
-            }}
+            onClick={() => setShowClearDialog(true)}
           >
             🗑️ Borrar ficha
           </button>
         </div>
+
+        {dataResult && (
+          <div className={`${styles.testResult} ${dataResult.ok ? styles.testOk : styles.testError}`}>
+            {dataResult.message}
+          </div>
+        )}
       </section>
+
+      <ConfirmDialog
+        open={showClearDialog}
+        title="Borrar datos del personaje"
+        message="Se restablecerá la ficha actual y se perderán los cambios no exportados."
+        confirmLabel="Borrar datos"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={clearCharacterData}
+        onCancel={() => setShowClearDialog(false)}
+      />
 
       {/* ══ SECCIÓN: SOBRE LA APP ══ */}
       <section className={styles.section}>

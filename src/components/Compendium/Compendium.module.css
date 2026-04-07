@@ -90,6 +90,10 @@
   flex: 1;
 }
 
+.virtualList {
+  flex: 1;
+}
+
 .listItem {
   display: flex;
   align-items: center;

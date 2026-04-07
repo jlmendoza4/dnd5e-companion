@@ -1,9 +1,43 @@
-tirar dados 2 veces o varios dependiendo de las mejoras que tengo
+MEJORAS PRIORITARIAS
 
-añadir cuando es filo llama verde o atronador
+P0 - arquitectura y seguridad
 
-espacio para apuntar cosas de las sesiones
+- mover la configuracion sensible de IA fuera de localStorage si se mantiene en Electron [hecho]
+- centralizar el guardado de personaje, tema y ajustes en un unico servicio o store [hecho]
+- evitar escrituras directas a localStorage desde componentes secundarios [hecho]
+- quitar alert y confirm nativos y sustituirlos por modales o toasts propios [hecho]
+- añadir validacion y migracion de datos al importar JSON o cargar estado antiguo [hecho]
 
-expansiones coger solo la informacion de la clase actual y subclase
+P1 - calidad del proyecto
 
-historial de tiradas y borrar tiradas
+- añadir eslint y scripts de lint [hecho]
+- añadir tests basicos para utilidades, persistencia e importacion [hecho]
+- eliminar logica duplicada de reglas D&D como bonus de competencia y normalizacion de clases [hecho]
+- revisar package.json y limpiar claves duplicadas o configuraciones inconsistentes [hecho]
+- documentar mejor flujo de build web y build Electron [hecho]
+
+P2 - rendimiento y mantenibilidad
+
+- cachear mejor llamadas al compendio y evitar fetch repetidos [hecho]
+- aplicar lazy loading o virtualizacion real en listas grandes del compendio [hecho]
+- reducir dependencia de traduccion externa y valorar traducciones locales o cache con expiracion [hecho]
+- separar mejor reglas del juego, UI y persistencia [hecho]
+
+FUNCIONALIDAD
+
+- tirar dados 2 veces o varios dependiendo de las mejoras que tengo [hecho]
+- añadir cuando es filo llama verde o atronador [hecho]
+- espacio para apuntar cosas de las sesiones [hecho]
+- expansiones coger solo la informacion de la clase actual y subclase [hecho]
+- historial de tiradas y borrar tiradas [hecho]
+
+SIGUIENTE BLOQUE RECOMENDADO
+
+- refactor de persistencia: importacion/exportacion, borrado y guardado sin recargar pagina [hecho]
+- limpieza de reglas D&D compartidas en un servicio comun [hecho]
+- base de calidad: lint + tests minimos [hecho]
+
+PENDIENTE DE PULIDO
+
+- limpiar warnings de eslint restantes en hooks y variables no usadas
+- valorar mover tambien el historial de calculadora y caches a una capa de estado mas alta si se quiere seguir refactorizando

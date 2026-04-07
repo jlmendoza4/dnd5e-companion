@@ -10,24 +10,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { getSpells, getSpellDetail } from '../../services/dndApi'
 import { translateArray } from '../../services/autoTranslate'
+import { getProficiencyBonus, resolveClassIndex } from '../../services/dndRules'
 import { tSimpleText, tSpellName } from '../../services/dndTranslations'
 import { getLocalSpellsByClass, getLocalSpellDetail, SPELL_SEARCH_ALIASES } from '../../services/localSpells'
 import styles from './SpellBook.module.css'
-
-// ── Clase → índice API ────────────────────────────────────────
-const CLASS_INDEX = {
-  bardo: 'bard', bárbaro: null, barbaro: null,
-  clérigo: 'cleric', clerigo: 'cleric',
-  druida: 'druid',
-  explorador: 'ranger',
-  guerrero: null,
-  hechicero: 'sorcerer',
-  mago: 'wizard',
-  monje: null,
-  paladín: 'paladin', paladin: 'paladin',
-  pícaro: null, picaro: null,
-  warlock: 'warlock', brujo: 'warlock'
-}
 
 // ── Capacidad conjuradora por clase API ───────────────────────
 const SPELL_ABILITY = {
@@ -49,15 +35,7 @@ const SCHOOLS = {
 function normalize(str) {
   return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
 }
-function resolveClassIndex(className) {
-  const n = normalize(className)
-  for (const [k, v] of Object.entries(CLASS_INDEX)) {
-    if (n === normalize(k) || n.includes(normalize(k))) return v
-  }
-  return null
-}
 function getMod(score) { return Math.floor((Number(score) - 10) / 2) }
-function getProfBonus(level) { return Math.ceil(Number(level) / 4) + 1 }
 function formatSigned(n) { return Number(n) >= 0 ? `+${n}` : String(n) }
 function resolveModifierText(text, mod) {
   if (text == null) return ''
@@ -296,7 +274,7 @@ export default function SpellBook({ character, onUpdate }) {
   const classIndex  = resolveClassIndex(character.class)
   const abilityKey  = classIndex ? SPELL_ABILITY[classIndex] : null
   const spellMod    = abilityKey ? getMod(character.stats?.[abilityKey] ?? 10) : null
-  const profBonus   = getProfBonus(character.level)
+  const profBonus   = getProficiencyBonus(character.level)
   const saveCD      = spellMod !== null ? 8 + profBonus + spellMod : null
   const attackBonus = spellMod !== null ? profBonus + spellMod : null
 

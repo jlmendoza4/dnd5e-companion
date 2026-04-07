@@ -8,93 +8,11 @@
  */
 import { useState, useEffect, useMemo } from 'react'
 import { getClassLevels, getFeatureDetail, getSubclassLevelFeatures } from '../../services/dndApi'
+import { resolveClassIndex, resolveSubclassIndex } from '../../services/dndRules'
 import { translateText, translateArray } from '../../services/autoTranslate'
 import { tSimpleText } from '../../services/dndTranslations'
 import { getLocalSubclassFeatures, resolveLocalSubclassKey } from '../../services/subclassData'
 import styles from './ClassPanel.module.css'
-
-// ── Mapas de resolución (mismos que LevelUpModal) ─────────────
-const CLASS_INDEX = {
-  bárbaro: 'barbarian', barbaro: 'barbarian',
-  bardo: 'bard',
-  clérigo: 'cleric', clerigo: 'cleric',
-  druida: 'druid',
-  explorador: 'ranger',
-  guerrero: 'fighter',
-  hechicero: 'sorcerer',
-  mago: 'wizard',
-  monje: 'monk',
-  paladín: 'paladin', paladin: 'paladin',
-  pícaro: 'rogue', picaro: 'rogue',
-  warlock: 'warlock', brujo: 'warlock'
-}
-
-const SUBCLASS_INDEX = {
-  berserker: 'berserker',
-  'guerrero tottem': 'totem-warrior', 'totem warrior': 'totem-warrior', 'totem-warrior': 'totem-warrior',
-  lore: 'lore', 'conocimiento del bardo': 'lore',
-  valor: 'valor',
-  life: 'life', vida: 'life',
-  light: 'light', luz: 'light',
-  nature: 'nature', naturaleza: 'nature',
-  tempest: 'tempest', tempestad: 'tempest',
-  trickery: 'trickery', engaño: 'trickery',
-  war: 'war', guerra: 'war',
-  knowledge: 'knowledge', conocimiento: 'knowledge',
-  land: 'land', tierra: 'land',
-  moon: 'moon', luna: 'moon',
-  champion: 'champion', 'campeón': 'champion', campeon: 'champion',
-  'battle master': 'battle-master', 'maestro de batalla': 'battle-master', 'battle-master': 'battle-master',
-  'eldritch knight': 'eldritch-knight', 'caballero sobrenatural': 'eldritch-knight', 'eldritch-knight': 'eldritch-knight',
-  'open hand': 'open-hand', 'mano abierta': 'open-hand', 'open-hand': 'open-hand',
-  shadow: 'shadow', sombra: 'shadow',
-  'four elements': 'four-elements', 'cuatro elementos': 'four-elements', 'four-elements': 'four-elements',
-  devotion: 'devotion', 'devoción': 'devotion', devocion: 'devotion',
-  ancients: 'ancients', ancestros: 'ancients',
-  vengeance: 'vengeance', venganza: 'vengeance',
-  hunter: 'hunter', cazador: 'hunter',
-  'beast master': 'beast-master', 'maestro de bestias': 'beast-master', 'beast-master': 'beast-master',
-  thief: 'thief', 'ladrón': 'thief', ladron: 'thief',
-  assassin: 'assassin', asesino: 'assassin',
-  'arcane trickster': 'arcane-trickster', 'embaucador arcano': 'arcane-trickster', 'arcane-trickster': 'arcane-trickster',
-  draconic: 'draconic', 'dracónico': 'draconic', draconico: 'draconic',
-  'wild magic': 'wild-magic', 'magia salvaje': 'wild-magic', 'wild-magic': 'wild-magic',
-  fiend: 'fiend', demonio: 'fiend', diablo: 'fiend', 'the fiend': 'fiend',
-  archfey: 'the-archfey', 'hada ancestral': 'the-archfey', 'the archfey': 'the-archfey', 'archi-hada': 'the-archfey',
-  'great old one': 'the-great-old-one', 'gran antiguo': 'the-great-old-one', 'the great old one': 'the-great-old-one',
-  evocation: 'evocation', 'evocación': 'evocation', evocacion: 'evocation',
-  abjuration: 'abjuration', 'abjuración': 'abjuration', abjuracion: 'abjuration',
-  conjuration: 'conjuration', 'conjuración': 'conjuration', conjuracion: 'conjuration',
-  divination: 'divination', 'adivinación': 'divination', adivinacion: 'divination',
-  enchantment: 'enchantment', encantamiento: 'enchantment',
-  illusion: 'illusion', 'ilusión': 'illusion', ilusion: 'illusion',
-  necromancy: 'necromancy', 'nigromancía': 'necromancy', nigromancia: 'necromancy',
-  transmutation: 'transmutation', 'transmutación': 'transmutation', transmutacion: 'transmutation',
-}
-
-function normalize(str) {
-  return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
-}
-
-function resolveClassIndex(className) {
-  const norm = normalize(className)
-  if (CLASS_INDEX[norm]) return CLASS_INDEX[norm]
-  for (const [key, val] of Object.entries(CLASS_INDEX)) {
-    if (norm.includes(normalize(key))) return val
-  }
-  return null
-}
-
-function resolveSubclassIndex(subclassName) {
-  if (!subclassName) return null
-  const norm = normalize(subclassName)
-  if (SUBCLASS_INDEX[norm]) return SUBCLASS_INDEX[norm]
-  for (const [key, val] of Object.entries(SUBCLASS_INDEX)) {
-    const nk = normalize(key)
-    if (norm.includes(nk) || nk.includes(norm)) return val
-  }
-  return null
-}
 
 const SLOT_LABELS = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º']
 

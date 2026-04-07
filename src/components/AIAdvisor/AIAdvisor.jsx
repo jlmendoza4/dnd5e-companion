@@ -14,8 +14,9 @@ import { useState, useRef, useEffect } from 'react'
 import {
   askAI,
   buildCharacterContext,
-  getAIKey,
+  getCachedAIConfig,
   getAIProviderLabel,
+  loadAIConfig,
 } from '../../services/aiService'
 import styles from './AIAdvisor.module.css'
 
@@ -152,6 +153,8 @@ export default function AIAdvisor({ character }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [aiConfig, setAiConfig] = useState(() => getCachedAIConfig())
+  const [configLoading, setConfigLoading] = useState(true)
   const messagesEndRef = useRef(null)
 
   // Auto-scroll al último mensaje
@@ -159,8 +162,24 @@ export default function AIAdvisor({ character }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
-  const apiKey = getAIKey()
-  const providerLabel = getAIProviderLabel()
+  useEffect(() => {
+    let active = true
+
+    loadAIConfig()
+      .then((config) => {
+        if (active) setAiConfig(config)
+      })
+      .finally(() => {
+        if (active) setConfigLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const apiKey = aiConfig.apiKey
+  const providerLabel = getAIProviderLabel(aiConfig)
 
   const sendMessage = async (userContent) => {
     const trimmed = userContent.trim()
@@ -261,7 +280,7 @@ export default function AIAdvisor({ character }) {
             key={a.label}
             className={styles.quickBtn}
             onClick={() => sendMessage(a.prompt)}
-            disabled={loading || !apiKey}
+            disabled={loading || configLoading || !apiKey}
             type="button"
             title={a.prompt}
           >

@@ -13,6 +13,7 @@
  * estados de carga/error correctos, y listas virtualizadas para colecciones grandes.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FixedSizeList as List } from 'react-window'
 import {
   getClasses, getClassDetail, getClassLevels, getClassSubclasses,
   getRaces, getRaceDetail,
@@ -31,6 +32,7 @@ import {
   tComponent,
   tErrorMessage
 } from '../../services/dndTranslations'
+import { getBestMentalAbility, getCastingAbilityByClass, getProficiencyBonus, normalizeClassName } from '../../services/dndRules'
 import { getModifier } from '../../services/dndUtils'
 import { translateArray } from '../../services/autoTranslate'
 import styles from './Compendium.module.css'
@@ -53,41 +55,11 @@ const SPELL_LEVELS = [
   }))
 ]
 
-function getProficiencyBonus(level = 1) {
-  return Math.ceil((Number(level) || 1) / 4) + 1
-}
+const VIRTUAL_ITEM_SIZE = 54
 
-function normalizeClassName(name = '') {
-  return String(name)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-}
-
-function getCastingAbilityByClass(className = '') {
-  const c = normalizeClassName(className)
-
-  if (['mago', 'wizard', 'artificer', 'artifice'].includes(c)) return 'INT'
-  if (['clerigo', 'clérigo', 'druida', 'druid', 'explorador', 'ranger'].includes(c)) return 'SAB'
-  if (['bardo', 'bard', 'paladin', 'paladin', 'hechicero', 'sorcerer', 'warlock', 'brujo'].includes(c)) return 'CAR'
-
-  // Clases no lanzadoras o no definidas: fallback al mayor mental
-  return null
-}
-
-function getBestMentalAbility(stats = {}) {
-  const pool = ['INT', 'SAB', 'CAR']
-  let best = 'INT'
-  let bestVal = Number(stats.INT || 10)
-  for (const key of pool) {
-    const val = Number(stats[key] || 10)
-    if (val > bestVal) {
-      bestVal = val
-      best = key
-    }
-  }
-  return best
+function getVirtualListHeight() {
+  if (typeof window !== 'undefined' && window.innerWidth <= 900) return 220
+  return 460
 }
 
 function getAbilityLabel(key) {
@@ -129,6 +101,51 @@ function ErrorState({ message, onRetry }) {
         </button>
       )}
     </div>
+  )
+}
+
+function VirtualItemList({ items, selectedKey, onSelect, renderLabel, emptyMessage = 'Sin resultados' }) {
+  const height = getVirtualListHeight()
+
+  if (!items.length) {
+    return <p className={styles.noResults}>{emptyMessage}</p>
+  }
+
+  const itemData = {
+    items,
+    selectedKey,
+    onSelect,
+    renderLabel,
+  }
+
+  return (
+    <List
+      className={styles.virtualList}
+      height={height}
+      width="100%"
+      itemCount={items.length}
+      itemData={itemData}
+      itemKey={(index, data) => data.items[index]?.index || data.items[index]?.name || index}
+      itemSize={VIRTUAL_ITEM_SIZE}
+    >
+      {({ index, style, data }) => {
+        const item = data.items[index]
+        const itemKey = item?.index || item?.name || String(index)
+        const isActive = data.selectedKey === itemKey
+
+        return (
+          <div style={style}>
+            <button
+              className={`${styles.listItem} ${isActive ? styles.listItemActive : ''}`}
+              onClick={() => data.onSelect(item)}
+            >
+              <span className={styles.listItemName}>{data.renderLabel(item)}</span>
+              <span className={styles.listItemArrow}>›</span>
+            </button>
+          </div>
+        )
+      }}
+    </List>
   )
 }
 
@@ -184,18 +201,12 @@ function ClassesSection() {
       {/* Lista de clases */}
       <div className={styles.listPanel}>
         <h3 className={styles.panelTitle}>Clases ({classes.length})</h3>
-        <div className={styles.itemList}>
-          {classes.map(cls => (
-            <button
-              key={cls.index}
-              className={`${styles.listItem} ${selected?.index === cls.index ? styles.listItemActive : ''}`}
-              onClick={() => setSelected(cls)}
-            >
-              <span className={styles.listItemName}>{tClass(cls)}</span>
-              <span className={styles.listItemArrow}>›</span>
-            </button>
-          ))}
-        </div>
+        <VirtualItemList
+          items={classes}
+          selectedKey={selected?.index}
+          onSelect={setSelected}
+          renderLabel={(item) => tClass(item)}
+        />
       </div>
 
       {/* Detalle de la clase seleccionada */}
@@ -329,18 +340,12 @@ function RacesSection() {
     <div className={styles.splitLayout}>
       <div className={styles.listPanel}>
         <h3 className={styles.panelTitle}>Razas ({races.length})</h3>
-        <div className={styles.itemList}>
-          {races.map(race => (
-            <button
-              key={race.index}
-              className={`${styles.listItem} ${selected?.index === race.index ? styles.listItemActive : ''}`}
-              onClick={() => setSelected(race)}
-            >
-              <span className={styles.listItemName}>{tRace(race)}</span>
-              <span className={styles.listItemArrow}>›</span>
-            </button>
-          ))}
-        </div>
+        <VirtualItemList
+          items={races}
+          selectedKey={selected?.index}
+          onSelect={setSelected}
+          renderLabel={(item) => tRace(item)}
+        />
       </div>
 
       <div className={styles.detailPanel}>
@@ -588,22 +593,13 @@ function SpellsSection({ character }) {
         {error && <ErrorState message={error} />}
 
         {!loading && !error && (
-          <div className={styles.itemList}>
-            {filteredSpells.length === 0 ? (
-              <p className={styles.noResults}>No se encontraron hechizos</p>
-            ) : (
-              filteredSpells.map(spell => (
-                <button
-                  key={spell.index}
-                  className={`${styles.listItem} ${selected?.index === spell.index ? styles.listItemActive : ''}`}
-                  onClick={() => setSelected(spell)}
-                >
-                  <span className={styles.listItemName}>{tSimpleText(spell.name)}</span>
-                  <span className={styles.listItemArrow}>›</span>
-                </button>
-              ))
-            )}
-          </div>
+          <VirtualItemList
+            items={filteredSpells}
+            selectedKey={selected?.index}
+            onSelect={setSelected}
+            renderLabel={(item) => tSimpleText(item.name)}
+            emptyMessage="No se encontraron hechizos"
+          />
         )}
       </div>
 
@@ -826,18 +822,12 @@ function EquipmentSection() {
         {loading && <LoadingState message="Cargando equipo..." />}
         {error && <ErrorState message={error} />}
         {!loading && !error && (
-          <div className={styles.itemList}>
-            {filtered.map(item => (
-              <button
-                key={item.index}
-                className={`${styles.listItem} ${selected?.index === item.index ? styles.listItemActive : ''}`}
-                onClick={() => setSelected(item)}
-              >
-                <span className={styles.listItemName}>{tSimpleText(item.name)}</span>
-                <span className={styles.listItemArrow}>›</span>
-              </button>
-            ))}
-          </div>
+          <VirtualItemList
+            items={filtered}
+            selectedKey={selected?.index}
+            onSelect={setSelected}
+            renderLabel={(item) => tSimpleText(item.name)}
+          />
         )}
       </div>
 

@@ -13,6 +13,7 @@
  *  5. Equipo y rasgos
  */
 import { useState } from 'react'
+import { getProficiencyBonus } from '../../services/dndRules'
 import { getModifier } from '../../services/dndUtils'
 import LevelUpModal from './LevelUpModal'
 import SpellBook from './SpellBook'
@@ -118,11 +119,6 @@ const EMPTY_SKILLS = {
 const EMPTY_SKILL_PROFS = Object.fromEntries(Object.keys(EMPTY_SKILLS).map(k => [k, false]))
 const EMPTY_SAVES = { FUE: 0, DES: 0, CON: 0, INT: 0, SAB: 0, CAR: 0 }
 const EMPTY_SAVE_PROFS = { FUE: false, DES: false, CON: false, INT: false, SAB: false, CAR: false }
-
-// ── Calcula el bonificador de competencia según el nivel ──
-function getProficiencyBonus(level) {
-  return Math.ceil(level / 4) + 1
-}
 
 export default function CharacterSheet({ character, onUpdate, onReset }) {
   // Estado local para el campo de nuevo hechizo/equipo que se está añadiendo

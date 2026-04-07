@@ -246,7 +246,7 @@ function parseClassLevel(raw) {
 }
 
 function toInt(val, fallback = 0) {
-  const n = parseInt(String(val ?? '').replace(/[^0-9\-]/g, ''), 10)
+  const n = parseInt(String(val ?? '').replace(/[^0-9-]/g, ''), 10)
   return isNaN(n) ? fallback : n
 }
 

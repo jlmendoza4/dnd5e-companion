@@ -3,28 +3,44 @@
   "private": true,
   "version": "1.0.0",
   "description": "Aplicación compañera de D&D 5e con ficha de personaje, asistente IA, calculadora de daño y compendio",
+  "author": "jlmendoza4",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jlmendoza4/dnd5e-companion.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "eslint .",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "electron": "electron .",
-    "electron:build": "vite build && electron-builder --win --x64"
+    "electron:build": "vite build && electron-builder --win --x64",
+    "electron:publish": "vite build && electron-builder --win --x64 --publish always"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "electron-updater": "^6.6.2",
     "pdfjs-dist": "^5.6.205",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-window": "^1.8.10"
   },
   "devDependencies": {
+    "@eslint/js": "^9.24.0",
     "@vitejs/plugin-react": "^4.3.1",
     "electron": "^41.1.1",
     "electron-builder": "^26.8.1",
+    "eslint": "^9.24.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "vitest": "^3.1.1",
     "vite": "^5.4.10"
   },
-  "main": "electron/main.js",
-  "electron:build": "vite build && electron-builder --win --x64",
+  "main": "electron/main.cjs",
   "build": {
     "appId": "com.dnd5e.companion",
     "productName": "D&D 5e Companion",
@@ -37,13 +53,19 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "public/favicon.ico"
+      "icon": "public/favicon.ico",
+      "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "jlmendoza4",
+      "repo": "dnd5e-companion"
     }
   }
 }

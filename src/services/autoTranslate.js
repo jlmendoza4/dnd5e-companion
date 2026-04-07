@@ -5,23 +5,29 @@
  * Las traducciones se cachean en localStorage para no repetir llamadas.
  */
 
+import { STORAGE_KEYS, readStoredJSON, writeStoredJSON } from './storage'
+
 const CACHE_KEY = 'dnd_trans_v1'
 const MAX_CHARS = 450 // MyMemory tiene límite de 500 chars por petición
+const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7
 
 function getCache() {
-  try {
-    return JSON.parse(localStorage.getItem(CACHE_KEY) || '{}')
-  } catch {
-    return {}
-  }
+  return readStoredJSON(STORAGE_KEYS.translateCache || CACHE_KEY, {})
 }
 
 function saveCache(cache) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
-  } catch {
-    // Ignorar errores de cuota
-  }
+  writeStoredJSON(STORAGE_KEYS.translateCache || CACHE_KEY, cache)
+}
+
+function getCachedTranslation(cache, text) {
+  const entry = cache[text]
+  if (!entry) return null
+
+  if (typeof entry === 'string') return entry
+
+  if (!entry.value || !entry.updatedAt) return null
+  if (Date.now() - entry.updatedAt > CACHE_TTL_MS) return null
+  return entry.value
 }
 
 async function callMyMemory(text) {
@@ -45,7 +51,8 @@ export async function translateText(text) {
   if (!trimmed) return text
 
   const cache = getCache()
-  if (cache[trimmed]) return cache[trimmed]
+  const cachedTranslation = getCachedTranslation(cache, trimmed)
+  if (cachedTranslation) return cachedTranslation
 
   try {
     let translated
@@ -58,7 +65,10 @@ export async function translateText(text) {
       translated = parts.join(' ')
     }
     const c = getCache()
-    c[trimmed] = translated
+    c[trimmed] = {
+      value: translated,
+      updatedAt: Date.now(),
+    }
     saveCache(c)
     return translated
   } catch {
