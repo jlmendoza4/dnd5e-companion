@@ -10,10 +10,11 @@
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1rem;
+  padding: 5vh 1rem 1rem;
   animation: fadeIn 0.15s ease;
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
@@ -490,3 +491,112 @@
 
 
 
+
+/* ── DOTES HEXBLADE ── */
+.featSection {
+  margin-top: 0.9rem;
+  border-top: 1px solid rgba(124, 58, 237, 0.2);
+  padding-top: 0.75rem;
+}
+
+.featSectionTitle {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--purple-light, #a78bfa);
+  font-family: var(--font-title, serif);
+  margin: 0 0 0.6rem;
+}
+
+.featList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.featCard {
+  background: var(--surface-3);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: 8px;
+  padding: 0.65rem 0.82rem;
+}
+
+.featCardBest {
+  border-color: rgba(139, 92, 246, 0.55);
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.featCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.featTier {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-family: var(--font-title, serif);
+  flex-shrink: 0;
+}
+
+.featTierS {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(234, 179, 8, 0.45);
+}
+
+.featTierA {
+  background: rgba(139, 92, 246, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.45);
+}
+
+.featTierB {
+  background: rgba(100, 116, 139, 0.18);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+}
+
+.featName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.featNameEn {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.featBestBadge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: #fbbf24;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.featDesc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0 0 0.3rem;
+}
+
+.featTip {
+  font-size: 0.8rem;
+  color: var(--purple-light, #a78bfa);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}

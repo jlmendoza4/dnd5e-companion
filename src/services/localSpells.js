@@ -135,6 +135,74 @@ const LOCAL_SPELLS = [
         }
       }
     }
+  },
+  {
+    index: 'custom:armor-of-agathys',
+    name: 'Armor of Agathys',
+    esName: 'Armadura de Agathys',
+    aliases: ['armadura de agathys', 'armor of agathys', 'agathys', 'armadura agathys'],
+    classes: ['warlock'],
+    detail: {
+      index: 'custom:armor-of-agathys',
+      name: 'Armor of Agathys',
+      level: 1,
+      school: { name: 'Abjuration' },
+      casting_time: '1 action',
+      range: 'Self',
+      duration: '1 hour',
+      components: ['V', 'S', 'M'],
+      material: 'A cup of water',
+      concentration: false,
+      ritual: false,
+      desc: [
+        'Aparece una capa mágica de hielo protectora alrededor de ti. Ganas 5 puntos de golpe temporales por nivel de espacio usado (5 a nivel 1, 10 a nivel 2, etc.).',
+        'Si una criatura te golpea con un ataque de cuerpo a cuerpo mientras tienes estos puntos de golpe temporales, recibe 5 puntos de daño de frío por nivel de espacio usado.',
+        'Los puntos de golpe temporales desaparecen cuando el conjuro termina. Mientras tengas puntos de golpe temporales de este conjuro, el efecto de retribución persiste.'
+      ],
+      higher_level: [
+        'Al lanzarlo usando un espacio de conjuro de nivel 2 o superior, los puntos de golpe temporales y el daño de frío aumentan en 5 por cada nivel por encima del 1.º (máximo 5× nivel del slot).'
+      ],
+      damage: {
+        damage_type: { name: 'Cold' },
+        damage_at_slot_level: {
+          1: '5 PG temp. / 5 frío',
+          2: '10 PG temp. / 10 frío',
+          3: '15 PG temp. / 15 frío',
+          4: '20 PG temp. / 20 frío',
+          5: '25 PG temp. / 25 frío',
+        }
+      }
+    }
+  },
+  {
+    index: 'custom:comprehend-languages',
+    name: 'Comprehend Languages',
+    esName: 'Comprensión de lenguas',
+    aliases: [
+      'comprension de lenguas', 'comprensión de lenguas', 'comprehend languages',
+      'entender idiomas', 'comprender idiomas', 'lenguas'
+    ],
+    classes: ['warlock', 'wizard', 'sorcerer', 'bard'],
+    detail: {
+      index: 'custom:comprehend-languages',
+      name: 'Comprehend Languages',
+      level: 1,
+      school: { name: 'Divination' },
+      casting_time: '1 action (or 10 minutes as a ritual)',
+      range: 'Self',
+      duration: '1 hour',
+      components: ['V', 'S', 'M'],
+      material: 'A pinch of soot and salt',
+      concentration: false,
+      ritual: true,
+      desc: [
+        'Durante la duración, entiendes el significado literal de cualquier idioma hablado que escuches.',
+        'También entiendes cualquier lengua escrita que veas, pero debes estar tocando la superficie sobre la que están escritas las palabras.',
+        'Se tarda aproximadamente 1 minuto en leer una página de texto.',
+        'Este conjuro no te permite comprender los mensajes ocultos en un texto ni los glifos mágicos que no formen parte de un idioma, como los de un glifo de guardia.'
+      ],
+      higher_level: []
+    }
   }
 ]
 
@@ -150,7 +218,13 @@ export const SPELL_SEARCH_ALIASES = {
   'hoja atronadora': ['booming blade'],
   'mano de mago': ['mage hand'],
   'misil magico': ['magic missile'],
-  'misil mágico': ['magic missile']
+  'misil mágico': ['magic missile'],
+  'armadura de agathys': ['armor of agathys'],
+  'agathys': ['armor of agathys'],
+  'comprension de lenguas': ['comprehend languages'],
+  'comprensión de lenguas': ['comprehend languages'],
+  'entender idiomas': ['comprehend languages'],
+  'lenguas': ['comprehend languages'],
 }
 
 export function getLocalSpellsByClass(classIndex) {

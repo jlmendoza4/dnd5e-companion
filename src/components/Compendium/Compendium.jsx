@@ -13,6 +13,7 @@
  * estados de carga/error correctos, y listas virtualizadas para colecciones grandes.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useCharacter } from '../../contexts/CharacterContext'
 import { FixedSizeList as List } from 'react-window'
 import {
   getClasses, getClassDetail, getClassLevels, getClassSubclasses,
@@ -930,7 +931,8 @@ function EquipmentSection() {
 // ══════════════════════════════════════════════
 // COMPONENTE PRINCIPAL: COMPENDIUM
 // ══════════════════════════════════════════════
-export default function Compendium({ character }) {
+export default function Compendium() {
+  const { character } = useCharacter()
   const [activeSection, setActiveSection] = useState('classes')
 
   return (

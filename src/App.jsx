@@ -3,88 +3,42 @@
  *
  * Gestiona:
  * - Navegación entre módulos mediante tabs
- * - Estado global del personaje (sincronizado con localStorage)
- * - Estado de la API key de Claude
- *
- * Arquitectura basada en las directrices del agente "Frontend Developer":
- * componentes reutilizables, estado limpio, navegación clara.
+ * - Estado global del personaje y tema (via CharacterContext)
  */
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
+import { CharacterProvider, useCharacter } from './contexts/CharacterContext'
 import CharacterSheet from './components/CharacterSheet/CharacterSheet'
 import DamageCalculator from './components/DamageCalculator/DamageCalculator'
+import DiceRoller from './components/DiceRoller/DiceRoller'
 import Compendium from './components/Compendium/Compendium'
 import Settings from './components/Settings/Settings'
 import AIAdvisor from './components/AIAdvisor/AIAdvisor'
 import SessionNotes from './components/SessionNotes/SessionNotes'
 import ConfirmDialog from './components/Common/ConfirmDialog'
-import {
-  DEFAULT_CHARACTER,
-  clearCharacterStorage,
-  exportCharacterData,
-  importCharacterData,
-  loadCharacter,
-  loadTheme,
-  saveCharacter,
-  saveTheme,
-} from './services/storage'
+import ErrorBoundary from './components/Common/ErrorBoundary'
 import styles from './App.module.css'
 
 // Tabs de navegación principal
 const TABS = [
-  { id: 'character', label: 'Ficha', icon: '📜' },
-  { id: 'damage',    label: 'Calculadora', icon: '🎲' },
-  { id: 'compendium',label: 'Compendio', icon: '📚' },
-  { id: 'notes', label: 'Notas', icon: '📝' },
-  { id: 'ai',        label: 'Consejero IA', icon: '🤖' },
-  { id: 'settings',  label: 'Config', icon: '⚙️' }
+  { id: 'character',  label: 'Ficha',        icon: '📜' },
+  { id: 'damage',     label: 'Calculadora',  icon: '🎲' },
+  { id: 'dice',       label: 'Dados',        icon: '🎲' },
+  { id: 'compendium', label: 'Compendio',    icon: '📚' },
+  { id: 'notes',      label: 'Notas',        icon: '📝' },
+  { id: 'ai',         label: 'Consejero IA', icon: '🤖' },
+  { id: 'settings',   label: 'Config',       icon: '⚙️' },
 ]
 
-export default function App() {
+function AppContent() {
+  const { character, theme, toggleTheme, clearCharacter } = useCharacter()
   const [activeTab, setActiveTab] = useState('character')
-  const [theme, setTheme] = useState(() => loadTheme())
-  const [character, setCharacter] = useState(() => loadCharacter())
   const [showResetDialog, setShowResetDialog] = useState(false)
 
-  // Guarda el personaje en localStorage cada vez que cambia
-  useEffect(() => {
-    saveCharacter(character)
-  }, [character])
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    document.documentElement.style.colorScheme = theme
-    saveTheme(theme)
-  }, [theme])
-
-  // Actualización parcial del personaje (merge con estado anterior)
-  const updateCharacter = useCallback((updates) => {
-    setCharacter(prev => ({ ...prev, ...updates }))
-  }, [])
-
-  const importCharacter = useCallback((nextCharacter) => {
-    setCharacter(importCharacterData(nextCharacter))
-  }, [])
-
-  const exportCharacter = useCallback(() => exportCharacterData(character), [character])
-
-  const clearCharacter = useCallback(() => {
-    clearCharacterStorage()
-    setCharacter(DEFAULT_CHARACTER)
-  }, [])
-
-  // Resetea el personaje al estado inicial
-  const resetCharacter = useCallback(() => {
-    setShowResetDialog(true)
-  }, [])
-
-  const confirmResetCharacter = useCallback(() => {
+  const handleReset = () => setShowResetDialog(true)
+  const confirmReset = () => {
     clearCharacter()
     setShowResetDialog(false)
-  }, [clearCharacter])
-
-  const toggleTheme = useCallback(() => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
-  }, [])
+  }
 
   return (
     <div className={styles.app}>
@@ -134,37 +88,13 @@ export default function App() {
       {/* ── CONTENIDO PRINCIPAL ── */}
       <main className={styles.main}>
         <div className={`${styles.tabContent} fade-in`} key={activeTab}>
-          {activeTab === 'character' && (
-            <CharacterSheet
-              character={character}
-              onUpdate={updateCharacter}
-              onReset={resetCharacter}
-            />
-          )}
-          {activeTab === 'damage' && (
-            <DamageCalculator character={character} onUpdate={updateCharacter} />
-          )}
-          {activeTab === 'compendium' && (
-            <Compendium character={character} />
-          )}
-          {activeTab === 'notes' && (
-            <SessionNotes character={character} onUpdate={updateCharacter} />
-          )}
-          {activeTab === 'ai' && (
-            <AIAdvisor character={character} />
-          )}
-          {activeTab === 'settings' && (
-            <Settings
-              character={character}
-              onUpdate={updateCharacter}
-              onNavigate={setActiveTab}
-              onImportCharacter={importCharacter}
-              onExportCharacter={exportCharacter}
-              onClearCharacter={clearCharacter}
-              theme={theme}
-              onToggleTheme={toggleTheme}
-            />
-          )}
+          {activeTab === 'character'  && <CharacterSheet onReset={handleReset} />}
+          {activeTab === 'damage'     && <DamageCalculator />}
+          {activeTab === 'dice'       && <DiceRoller />}
+          {activeTab === 'compendium' && <ErrorBoundary label="Compendio"><Compendium /></ErrorBoundary>}
+          {activeTab === 'notes'      && <SessionNotes />}
+          {activeTab === 'ai'         && <ErrorBoundary label="Consejero IA"><AIAdvisor /></ErrorBoundary>}
+          {activeTab === 'settings'   && <Settings onNavigate={setActiveTab} />}
         </div>
       </main>
 
@@ -183,9 +113,17 @@ export default function App() {
         confirmLabel="Borrar ficha"
         cancelLabel="Cancelar"
         danger
-        onConfirm={confirmResetCharacter}
+        onConfirm={confirmReset}
         onCancel={() => setShowResetDialog(false)}
       />
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <CharacterProvider>
+      <AppContent />
+    </CharacterProvider>
   )
 }

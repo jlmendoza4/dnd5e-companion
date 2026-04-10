@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
+import { useCharacter } from '../../contexts/CharacterContext'
 import styles from './SessionNotes.module.css'
 
-export default function SessionNotes({ character, onUpdate }) {
+export default function SessionNotes() {
+  const { character, updateCharacter: onUpdate } = useCharacter()
   const notes = useMemo(() => String(character?.sessionNotes || ''), [character?.sessionNotes])
 
   const handleChange = (value) => {

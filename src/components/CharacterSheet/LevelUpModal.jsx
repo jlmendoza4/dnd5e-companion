@@ -47,6 +47,74 @@ const ASI_LEVELS = {
 // ── Nombres en español de los niveles de conjuro ─────────────
 const SLOT_LABELS = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º']
 
+// ── Dotes recomendadas para Brujo Filo Maléfico ───────────────
+const HEXBLADE_ASI_FEATS = [
+  {
+    name: 'War Caster',
+    nameEs: 'Mago de Guerra',
+    tier: 'S',
+    desc: 'Ventaja en TS de Constitución para mantener concentración. Puedes lanzar un conjuro como reacción en un ataque de oportunidad.',
+    tip: 'PRIORITARIA en nivel 4. Mantener Hex, Darkness o Hypnotic Pattern es el núcleo de la build — no pierdas concentración.',
+    bestAt: [4],
+  },
+  {
+    name: 'Resilient (CON)',
+    nameEs: 'Resistente (CON)',
+    tier: 'S',
+    desc: '+1 CON y competencia en tiradas de salvación de Constitución. Alternativa sólida a Mago de Guerra.',
+    tip: 'Elige este si tu CON es impar (13, 15, 17): lo sube a par Y añade competencia completa en TS de concentración.',
+    bestAt: [4, 8],
+  },
+  {
+    name: 'Sentinel',
+    nameEs: 'Centinela',
+    tier: 'A',
+    desc: 'Ataque de reacción cuando un enemigo ataca a un aliado. Los enemigos que golpeas no pueden alejarse de ti ese turno.',
+    tip: 'Traba a los jefes junto a ti y maximiza el tiempo activo de la Maldición. Muy potente en build melee.',
+    bestAt: [4, 8],
+  },
+  {
+    name: 'Lucky',
+    nameEs: 'Afortunado',
+    tier: 'A',
+    desc: '3 puntos de suerte por descanso largo para rehacer ataques, TS o tiradas de habilidad propias o enemigas.',
+    tip: 'Seguro universal: úsalo para anular el TS del jefe contra tu Hold Monster o para convertir un fallo crítico de ataque.',
+    bestAt: [8, 12],
+  },
+  {
+    name: 'Fey Touched',
+    nameEs: 'Marcado por el Fey',
+    tier: 'A',
+    desc: '+1 CAR (o INT/SAB). Misty Step gratuito 1/día + un conjuro de 1er nivel de encantamiento o adivinación 1/día.',
+    tip: 'Sube CAR impar a par Y añade movilidad de combate. Si tu CAR es 17 o 19, este dote cierra el gap de un punto.',
+    bestAt: [8, 12, 16],
+  },
+  {
+    name: 'Shadow Touched',
+    nameEs: 'Marcado por las Sombras',
+    tier: 'B',
+    desc: '+1 CAR (o INT/SAB). Invisibilidad gratuita 1/día + un conjuro de 1er nivel de ilusión o nigromancia.',
+    tip: 'Apertura desde sigilo sin gastar slot. Potente si tu CAR ya es 20 y buscas versatilidad táctica.',
+    bestAt: [12, 16],
+  },
+  {
+    name: 'Polearm Master',
+    nameEs: 'Maestro de Armas de Asta',
+    tier: 'B',
+    desc: 'Ataque adicional de acción adicional con el extremo del arma. Ataque de oportunidad cuando un enemigo entra en tu alcance.',
+    tip: 'Combina con Centinela para control absoluto del área de melee: nadie entra ni sale sin recibir daño.',
+    bestAt: [4, 8],
+  },
+  {
+    name: 'Medium Armor Master',
+    nameEs: 'Maestro de Armadura Media',
+    tier: 'B',
+    desc: 'Sin penalización de sigilo en armaduras medias y el bono de DEX a la CA sube al máximo de +3.',
+    tip: 'Permite llegar a CA 18–19 con armadura media + escudo si tienes DEX 16+. Útil si no tienes armadura pesada.',
+    bestAt: [8, 12],
+  },
+]
+
 function FeatureList({ features, expanded, setExpanded }) {
   return (
     <ul className={styles.featureList}>
@@ -343,6 +411,41 @@ export default function LevelUpModal({ character, onConfirm, onCancel }) {
                 sube dos puntuaciones en 1, o una en 2 (máx. 20).
                 También puedes tomar una dote en su lugar.
               </p>
+
+              {/* ── Dotes para Hexblade ──────────────────────── */}
+              {localSubclassKey === 'hexblade' && (
+                <div className={styles.featSection}>
+                  <p className={styles.featSectionTitle}>🗡️ Dotes — Filo Maléfico</p>
+                  <div className={styles.featList}>
+                    {[...HEXBLADE_ASI_FEATS]
+                      .sort((a, b) => {
+                        const tierOrder = { S: 0, A: 1, B: 2 }
+                        const aIdeal = a.bestAt.includes(newLevel) ? 0 : 1
+                        const bIdeal = b.bestAt.includes(newLevel) ? 0 : 1
+                        if (aIdeal !== bIdeal) return aIdeal - bIdeal
+                        return tierOrder[a.tier] - tierOrder[b.tier]
+                      })
+                      .map(feat => (
+                        <div
+                          key={feat.name}
+                          className={`${styles.featCard} ${feat.bestAt.includes(newLevel) ? styles.featCardBest : ''}`}
+                        >
+                          <div className={styles.featCardHeader}>
+                            <span className={`${styles.featTier} ${styles[`featTier${feat.tier}`]}`}>{feat.tier}</span>
+                            <span className={styles.featName}>{feat.nameEs}</span>
+                            <span className={styles.featNameEn}>{feat.name}</span>
+                            {feat.bestAt.includes(newLevel) && (
+                              <span className={styles.featBestBadge}>✦ Ideal ahora</span>
+                            )}
+                          </div>
+                          <p className={styles.featDesc}>{feat.desc}</p>
+                          <p className={styles.featTip}>💡 {feat.tip}</p>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
             </section>
           )}
 

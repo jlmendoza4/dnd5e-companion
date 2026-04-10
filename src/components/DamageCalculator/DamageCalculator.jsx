@@ -12,415 +12,44 @@
  * - Historial de tiradas
  * - Simulador de críticos
  */
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   getProficiencyBonus,
   getSpellcastingAbilityKey,
   normalizeClassName,
   resolveClassIndex,
 } from '../../services/dndRules'
-import {
-  STORAGE_KEYS,
-  readStoredJSON,
-  readStoredString,
-  writeStoredJSON,
-  writeStoredString,
-} from '../../services/storage'
+import { STORAGE_KEYS, readStoredString, writeStoredString } from '../../services/storage'
 import { getModifier } from '../../services/dndUtils'
-import { getWeapons, getSpells, getEquipmentDetail, getSpellDetail } from '../../services/dndApi'
+import { getSpells, getSpellDetail } from '../../services/dndApi'
 import { getLocalSpellsByClass, getLocalSpellDetail } from '../../services/localSpells'
 import { translateArray } from '../../services/autoTranslate'
 import { tSpellName, tDamageType, tSimpleText } from '../../services/dndTranslations'
+import { useCharacter } from '../../contexts/CharacterContext'
+import { QUICK_WEAPONS, QUICK_SPELLS } from '../../constants/weapons'
+import { SPELL_SLOT_LEVELS, SPIRIT_SHROUD_MIN_SLOT, SPIRIT_SHROUD_DAMAGE_TYPES } from '../../constants/spellSlots'
+import { SKILLS_CONFIG as SKILL_ROLL_LIST, SAVE_CONFIG as SAVE_ROLL_LIST } from '../../constants/stats'
+import {
+  mapApiSpellToCalculator,
+  rollDie,
+  rollDice,
+  normalizeKnownSpellEntry,
+  normalizeSpellText,
+  getDefaultAttacksPerAction,
+  getAttacksPerActionReason,
+  isSpiritShroudSpell,
+  getSpiritShroudDiceBySlot,
+  getBladeDiceByLevel,
+  getBoomingMoveDiceByLevel,
+} from './damageUtils'
+import { useSpellSlots } from '../../hooks/useSpellSlots'
+import { useAttackHistory } from '../../hooks/useAttackHistory'
+import { useSkillRolls } from '../../hooks/useSkillRolls'
 import HexbladeToolkit from '../HexbladeToolkit/HexbladeToolkit'
 import styles from './DamageCalculator.module.css'
 
-// ── Armas predefinidas para acceso rápido (sin necesidad de API) ──
-const QUICK_WEAPONS = [
-  { name: 'Daga',           dmgDice: '1d4',  dmgType: 'perforante', atkMod: 'DES', range: 'CaC/20/60' },
-  { name: 'Espada corta',   dmgDice: '1d6',  dmgType: 'perforante', atkMod: 'DES', range: 'CaC' },
-  { name: 'Espada larga',   dmgDice: '1d8',  dmgType: 'cortante',   atkMod: 'FUE', range: 'CaC' },
-  { name: 'Espadón',        dmgDice: '2d6',  dmgType: 'cortante',   atkMod: 'FUE', range: 'CaC', twoHanded: true },
-  { name: 'Hacha de mano',  dmgDice: '1d6',  dmgType: 'cortante',   atkMod: 'FUE', range: 'CaC/20/60' },
-  { name: 'Hacha de guerra',dmgDice: '1d8',  dmgType: 'cortante',   atkMod: 'FUE', range: 'CaC' },
-  { name: 'Arco corto',     dmgDice: '1d6',  dmgType: 'perforante', atkMod: 'DES', range: '80/320' },
-  { name: 'Arco largo',     dmgDice: '1d8',  dmgType: 'perforante', atkMod: 'DES', range: '150/600' },
-  { name: 'Ballesta ligera',dmgDice: '1d8',  dmgType: 'perforante', atkMod: 'DES', range: '80/320' },
-  { name: 'Maza',           dmgDice: '1d6',  dmgType: 'contundente',atkMod: 'FUE', range: 'CaC' },
-  { name: 'Martillo de guerra', dmgDice: '1d8', dmgType: 'contundente', atkMod: 'FUE', range: 'CaC' },
-  { name: 'Lanza',          dmgDice: '1d6',  dmgType: 'perforante', atkMod: 'FUE', range: 'CaC/20/60' },
-]
-
-// ── Hechizos ofensivos predefinidos ──
-const QUICK_SPELLS = [
-  { name: 'Rayo de Fuego (truco)', dmgDice: '1d10', dmgType: 'fuego', saveMod: 'INT', level: 0 },
-  { name: 'Toque Helado (truco)',  dmgDice: '1d8',  dmgType: 'frío',  atkMod: 'INT',  level: 0 },
-  { name: 'Bola de Fuego (3er)',   dmgDice: '8d6',  dmgType: 'fuego', saveMod: 'DES', saveType: 'DEX', level: 3 },
-  { name: 'Rayo (3er)',            dmgDice: '8d6',  dmgType: 'relámpago', saveMod: 'DES', level: 3 },
-  { name: 'Proyectil Mágico (1er)',dmgDice: '1d4',  dmgType: 'de fuerza', bonus: 1, extras: 2, level: 1, noRoll: true },
-  { name: 'Ola de Trueno (1er)',   dmgDice: '2d8',  dmgType: 'trueno', saveMod: 'CON', level: 1 },
-  { name: 'Rayo de Escarcha (truco)', dmgDice: '1d8', dmgType: 'frío', saveMod: 'CON', level: 0 },
-  { name: 'Llamarada (1er)',       dmgDice: '1d6',  dmgType: 'fuego', atkMod: 'SAB', level: 1 },
-  { name: 'Mordisco del Caos (truco)', dmgDice: '1d10', dmgType: 'ácido', saveMod: 'INT', level: 0 },
-  { name: 'Palabra Atronadora (1er)',  dmgDice: '3d8', dmgType: 'trueno', saveMod: 'CON', level: 1 },
-]
-
-const SPELL_SLOT_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-const SPIRIT_SHROUD_MIN_SLOT = 3
-const SPIRIT_SHROUD_DAMAGE_TYPES = ['necrotico', 'frio', 'radiante']
-
-const EMPTY_SPELL_SLOTS = {
-  1: { max: 0, current: 0 },
-  2: { max: 0, current: 0 },
-  3: { max: 0, current: 0 },
-  4: { max: 0, current: 0 },
-  5: { max: 0, current: 0 },
-  6: { max: 0, current: 0 },
-  7: { max: 0, current: 0 },
-  8: { max: 0, current: 0 },
-  9: { max: 0, current: 0 },
-}
-
-// ── Habilidades y salvaciones para tiradas rápidas ──
-const SKILL_ROLL_LIST = [
-  { key: 'acrobatics',    label: 'Acrobacia',          stat: 'DES' },
-  { key: 'animalHandling',label: 'Trato con animales', stat: 'SAB' },
-  { key: 'arcana',        label: 'Arcana',             stat: 'INT' },
-  { key: 'athletics',     label: 'Atletismo',          stat: 'FUE' },
-  { key: 'deception',     label: 'Engaño',             stat: 'CAR' },
-  { key: 'history',       label: 'Historia',           stat: 'INT' },
-  { key: 'insight',       label: 'Perspicacia',        stat: 'SAB' },
-  { key: 'intimidation',  label: 'Intimidación',       stat: 'CAR' },
-  { key: 'investigation', label: 'Investigación',      stat: 'INT' },
-  { key: 'medicine',      label: 'Medicina',           stat: 'SAB' },
-  { key: 'nature',        label: 'Naturaleza',         stat: 'INT' },
-  { key: 'perception',    label: 'Percepción',         stat: 'SAB' },
-  { key: 'performance',   label: 'Interpretación',     stat: 'CAR' },
-  { key: 'persuasion',    label: 'Persuasión',         stat: 'CAR' },
-  { key: 'religion',      label: 'Religión',           stat: 'INT' },
-  { key: 'sleightOfHand', label: 'Juego de manos',     stat: 'DES' },
-  { key: 'stealth',       label: 'Sigilo',             stat: 'DES' },
-  { key: 'survival',      label: 'Supervivencia',      stat: 'SAB' },
-]
-
-const SAVE_ROLL_LIST = [
-  { key: 'FUE', label: 'Fuerza' },
-  { key: 'DES', label: 'Destreza' },
-  { key: 'CON', label: 'Constitución' },
-  { key: 'INT', label: 'Inteligencia' },
-  { key: 'SAB', label: 'Sabiduría' },
-  { key: 'CAR', label: 'Carisma' },
-]
-
-function getFirstDamageDice(detail) {
-  if (!detail?.damage) return null
-
-  if (detail.damage.damage_at_slot_level) {
-    const entries = Object.entries(detail.damage.damage_at_slot_level)
-      .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
-    return entries[0]?.[1] || null
-  }
-
-  if (detail.damage.damage_at_character_level) {
-    const entries = Object.entries(detail.damage.damage_at_character_level)
-      .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
-    return entries[0]?.[1] || null
-  }
-
-  return detail.damage.damage_dice || null
-}
-
-function mapApiSpellToCalculator(detail) {
-  const rawSave = detail?.dc?.dc_type?.index || ''
-  const saveType = rawSave ? rawSave.toUpperCase() : null
-  const dmgDice = getFirstDamageDice(detail) || '0d0'
-  const dmgType = detail?.damage?.damage_type?.index || detail?.damage?.damage_type?.name || 'variable'
-  const name = detail?.name || 'Hechizo'
-  const desc = Array.isArray(detail?.desc) ? detail.desc.join('\n\n') : (detail?.desc || '')
-
-  // Conjuros como Magic Missile no usan tirada de ataque ni salvación.
-  const normalized = name.toLowerCase()
-  const isAutoHit = normalized.includes('magic missile') || normalized.includes('proyectil magico')
-  const noRoll = isAutoHit || (!detail?.attack_type && !saveType)
-
-  return {
-    source: 'api',
-    index: detail.index,
-    name,
-    dmgDice,
-    dmgType,
-    desc,
-    range: detail.range,
-    level: detail.level,
-    saveType,
-    saveMod: saveType,
-    noRoll
-  }
-}
-
-// ── Lanza un dado virtual ──
-function rollDie(sides) {
-  return Math.floor(Math.random() * sides) + 1
-}
-
-// ── Parsea una expresión de dados (p.ej. "2d6") ──
-function parseDice(diceStr) {
-  const match = diceStr.match(/^(\d+)d(\d+)$/)
-  if (!match) return { count: 0, sides: 0 }
-  return { count: parseInt(match[1]), sides: parseInt(match[2]) }
-}
-
-// ── Lanza múltiples dados y devuelve los resultados ──
-function rollDice(diceStr, criticalDouble = false) {
-  const { count, sides } = parseDice(diceStr)
-  if (!count || !sides) return { rolls: [], total: 0 }
-
-  const numDice = criticalDouble ? count * 2 : count
-  const rolls = Array.from({ length: numDice }, () => rollDie(sides))
-  return {
-    rolls,
-    total: rolls.reduce((sum, r) => sum + r, 0),
-    notation: criticalDouble ? `${numDice}d${sides} (crítico)` : diceStr
-  }
-}
-
-function normalizeKnownSpellEntry(entry) {
-  if (entry && typeof entry === 'object') return entry
-  return { index: null, name: String(entry || '') }
-}
-
-function normalizeSpellText(value = '') {
-  return String(value)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-}
-
-function normalizeStorageKeyPart(value = '') {
-  return String(value || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
-function getSkillHistoryStorageKey(character = {}) {
-  const name = normalizeStorageKeyPart(character?.name) || 'sin-nombre'
-  const cls = normalizeStorageKeyPart(character?.class) || 'sin-clase'
-  const race = normalizeStorageKeyPart(character?.race) || 'sin-raza'
-  const subclass = normalizeStorageKeyPart(character?.subclass) || 'sin-subclase'
-  return `dnd_skill_roll_history_${name}__${cls}__${race}__${subclass}`
-}
-
-function getAttackHistoryStorageKey(character = {}) {
-  const name = normalizeStorageKeyPart(character?.name) || 'sin-nombre'
-  const cls = normalizeStorageKeyPart(character?.class) || 'sin-clase'
-  const race = normalizeStorageKeyPart(character?.race) || 'sin-raza'
-  const subclass = normalizeStorageKeyPart(character?.subclass) || 'sin-subclase'
-  return `dnd_attack_roll_history_${name}__${cls}__${race}__${subclass}`
-}
-
-function normalizeSpellSlots(rawSlots) {
-  const out = { ...EMPTY_SPELL_SLOTS }
-  const source = rawSlots && typeof rawSlots === 'object' ? rawSlots : {}
-
-  for (const level of SPELL_SLOT_LEVELS) {
-    const key = String(level)
-    const row = source[key] || source[level] || {}
-    const max = Math.max(0, Number(row.max) || 0)
-    const currentRaw = Number(row.current)
-    const current = Number.isFinite(currentRaw) ? Math.max(0, Math.min(max, currentRaw)) : max
-    out[key] = { max, current }
-  }
-
-  return out
-}
-
-function isSpiritShroudSpell(item) {
-  const index = String(item?.index || '').toLowerCase()
-  const name = normalizeSpellText(item?.name || '')
-  return index === 'custom:spirit-shroud' || name === 'spirit shroud' || name === 'velo espiritual'
-}
-
-function getSpiritShroudDiceBySlot(slotLevel) {
-  const level = Math.max(SPIRIT_SHROUD_MIN_SLOT, Number(slotLevel) || SPIRIT_SHROUD_MIN_SLOT)
-  return `${level - 2}d8`
-}
-
-function getBladeDiceByLevel(characterLevel) {
-  if (characterLevel >= 17) return 3
-  if (characterLevel >= 11) return 2
-  if (characterLevel >= 5) return 1
-  return 0
-}
-
-function getBoomingMoveDiceByLevel(characterLevel) {
-  if (characterLevel >= 17) return 4
-  if (characterLevel >= 11) return 3
-  if (characterLevel >= 5) return 2
-  return 1
-}
-
-function getDefaultAttacksPerAction(className, subclassName, level) {
-  const c = normalizeClassName(className)
-  const s = normalizeClassName(subclassName)
-  const safeLevel = Math.max(1, Math.min(20, Number(level) || 1))
-
-  if (c === 'fighter' || c === 'guerrero') {
-    if (safeLevel >= 20) return 4
-    if (safeLevel >= 11) return 3
-    if (safeLevel >= 5) return 2
-    return 1
-  }
-
-  if (['barbarian', 'barbaro', 'paladin', 'ranger', 'explorador', 'monk', 'monje'].includes(c)) {
-    return safeLevel >= 5 ? 2 : 1
-  }
-
-  // Hexblade suele jugarse con ataque multiple en melé a partir de nivel 5.
-  if ((c === 'warlock' || c === 'brujo') && (s.includes('hexblade') || s.includes('filo'))) {
-    return safeLevel >= 5 ? 2 : 1
-  }
-
-  return 1
-}
-
-function getAttacksPerActionReason(className, subclassName, level, attacksPerAction, isCustomized) {
-  const c = normalizeClassName(className)
-  const s = normalizeClassName(subclassName)
-  const lvl = Math.max(1, Number(level) || 1)
-  const attacks = Math.max(1, Number(attacksPerAction) || 1)
-
-  const baseAutoReason = (() => {
-    if (c === 'fighter' || c === 'guerrero') {
-      if (lvl >= 20) return 'Guerrero 20: Ataque adicional (3) = 4 ataques/accion.'
-      if (lvl >= 11) return 'Guerrero 11+: Ataque adicional (2) = 3 ataques/accion.'
-      if (lvl >= 5) return 'Guerrero 5+: Ataque adicional = 2 ataques/accion.'
-      return 'Guerrero 1-4: 1 ataque/accion.'
-    }
-
-    if (['barbarian', 'barbaro', 'paladin', 'ranger', 'explorador', 'monk', 'monje'].includes(c)) {
-      if (lvl >= 5) return 'Clase marcial 5+: Ataque adicional = 2 ataques/accion.'
-      return 'Clase marcial 1-4: 1 ataque/accion.'
-    }
-
-    if ((c === 'warlock' || c === 'brujo') && (s.includes('hexblade') || s.includes('filo'))) {
-      if (lvl >= 5) {
-        return 'Filo Malefico 5+: 2 ataques/accion asumiendo la invocacion Hoja sedienta (Thirsting Blade).'
-      }
-      return 'Filo Malefico 1-4: 1 ataque/accion.'
-    }
-
-    return `${className || 'Clase'}: 1 ataque/accion por defecto.`
-  })()
-
-  if (isCustomized) {
-    return `Manual: ${attacks} ataque(s) por accion. Base automatica para tu personaje: ${baseAutoReason}`
-  }
-
-  return `Automatico: ${baseAutoReason}`
-}
-
-function getDefaultSpellSlotsByClassLevel(classIndex, level) {
-  const out = normalizeSpellSlots(null)
-  const safeLevel = Math.max(1, Math.min(20, Number(level) || 1))
-  const set = (slotLevel, amount) => {
-    const key = String(slotLevel)
-    out[key] = { max: amount, current: amount }
-  }
-
-  const FULL = {
-    1: [2],
-    2: [3],
-    3: [4, 2],
-    4: [4, 3],
-    5: [4, 3, 2],
-    6: [4, 3, 3],
-    7: [4, 3, 3, 1],
-    8: [4, 3, 3, 2],
-    9: [4, 3, 3, 3, 1],
-    10: [4, 3, 3, 3, 2],
-    11: [4, 3, 3, 3, 2, 1],
-    12: [4, 3, 3, 3, 2, 1],
-    13: [4, 3, 3, 3, 2, 1, 1],
-    14: [4, 3, 3, 3, 2, 1, 1],
-    15: [4, 3, 3, 3, 2, 1, 1, 1],
-    16: [4, 3, 3, 3, 2, 1, 1, 1],
-    17: [4, 3, 3, 3, 2, 1, 1, 1, 1],
-    18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
-    19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
-    20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
-  }
-
-  const HALF = {
-    1: [],
-    2: [2],
-    3: [3],
-    4: [3],
-    5: [4, 2],
-    6: [4, 2],
-    7: [4, 3],
-    8: [4, 3],
-    9: [4, 3, 2],
-    10: [4, 3, 2],
-    11: [4, 3, 3],
-    12: [4, 3, 3],
-    13: [4, 3, 3, 1],
-    14: [4, 3, 3, 1],
-    15: [4, 3, 3, 2],
-    16: [4, 3, 3, 2],
-    17: [4, 3, 3, 3, 1],
-    18: [4, 3, 3, 3, 1],
-    19: [4, 3, 3, 3, 2],
-    20: [4, 3, 3, 3, 2],
-  }
-
-  const WARLOCK = {
-    1: { slots: 1, level: 1 },
-    2: { slots: 2, level: 1 },
-    3: { slots: 2, level: 2 },
-    4: { slots: 2, level: 2 },
-    5: { slots: 2, level: 3 },
-    6: { slots: 2, level: 3 },
-    7: { slots: 2, level: 4 },
-    8: { slots: 2, level: 4 },
-    9: { slots: 2, level: 5 },
-    10: { slots: 2, level: 5 },
-    11: { slots: 3, level: 5 },
-    12: { slots: 3, level: 5 },
-    13: { slots: 3, level: 5 },
-    14: { slots: 3, level: 5 },
-    15: { slots: 3, level: 5 },
-    16: { slots: 3, level: 5 },
-    17: { slots: 4, level: 5 },
-    18: { slots: 4, level: 5 },
-    19: { slots: 4, level: 5 },
-    20: { slots: 4, level: 5 },
-  }
-
-  if (['bard', 'cleric', 'druid', 'sorcerer', 'wizard'].includes(classIndex)) {
-    const arr = FULL[safeLevel] || []
-    arr.forEach((amount, idx) => set(idx + 1, amount))
-    return out
-  }
-
-  if (['paladin', 'ranger', 'artificer'].includes(classIndex)) {
-    const arr = HALF[safeLevel] || []
-    arr.forEach((amount, idx) => set(idx + 1, amount))
-    return out
-  }
-
-  if (classIndex === 'warlock') {
-    const row = WARLOCK[safeLevel]
-    if (row) set(row.level, row.slots)
-    return out
-  }
-
-  return out
-}
-
-export default function DamageCalculator({ character, onUpdate }) {
+export default function DamageCalculator() {
+  const { character, updateCharacter: onUpdate } = useCharacter()
   const [category, setCategory]       = useState('weapon') // 'weapon' | 'spell'
   const [selectedItem, setSelectedItem] = useState(QUICK_WEAPONS[2]) // Espada larga por defecto
   const [spellSearch, setSpellSearch] = useState('')
@@ -429,8 +58,6 @@ export default function DamageCalculator({ character, onUpdate }) {
   const [spiritShroudSlotLevel, setSpiritShroudSlotLevel] = useState(String(SPIRIT_SHROUD_MIN_SLOT))
   const [spiritShroudDamageType, setSpiritShroudDamageType] = useState(SPIRIT_SHROUD_DAMAGE_TYPES[0])
   const [advantage, setAdvantage]     = useState('normal') // 'normal'|'advantage'|'disadvantage'
-  const [rollHistory, setRollHistory] = useState([])
-  const [lastRollBatch, setLastRollBatch] = useState([])
   const [apiSpellList, setApiSpellList] = useState([])
   const [spellListLoading, setSpellListLoading] = useState(false)
   const [spellError, setSpellError] = useState(null)
@@ -444,49 +71,32 @@ export default function DamageCalculator({ character, onUpdate }) {
     return ['class', 'all', 'learned'].includes(saved) ? saved : 'class'
   }) // 'class' | 'all' | 'learned'
 
-  // ── Estado tiradas de habilidad/salvación ──
-  const [showSkillDice, setShowSkillDice]   = useState(false)
-  const [skillRollMode, setSkillRollMode]   = useState('normal')
-  const [skillRollTab, setSkillRollTab]     = useState('skills')
-  const [skillRollResult, setSkillRollResult] = useState(null)
-  const [skillRollHistory, setSkillRollHistory] = useState([])
-  const [skillRolling, setSkillRolling]     = useState(false)
-  const attackHistoryHydratedKeyRef = useRef('')
+  // ── Hooks extraídos ──
+  const { rollHistory, setRollHistory, lastRollBatch, setLastRollBatch } = useAttackHistory(character)
 
-  const rollSkillCheck = (modifier, label) => {
-    setSkillRolling(true)
-    setSkillRollResult(null)
-    const d20 = () => Math.floor(Math.random() * 20) + 1
-    setTimeout(() => {
-      const die1 = d20()
-      const die2 = skillRollMode !== 'normal' ? d20() : null
-      let chosen = die1
-      if (skillRollMode === 'advantage')    chosen = Math.max(die1, die2)
-      if (skillRollMode === 'disadvantage') chosen = Math.min(die1, die2)
-      const total  = chosen + modifier
-      const isCrit = chosen === 20
-      const isFail = chosen === 1
-      const result = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        label,
-        modifier,
-        die1,
-        die2,
-        chosen,
-        total,
-        isCrit,
-        isFail,
-        mode: skillRollMode,
-      }
-      setSkillRollResult(result)
-      setSkillRollHistory((prev) => [result, ...prev].slice(0, 30))
-      setSkillRolling(false)
-    }, 350)
-  }
+  const skillRolls = useSkillRolls(character)
+
+  const level = character.level || 1
+  const classIndex = resolveClassIndex(character.class) || ''
+  const attackPresetSignature = `${normalizeClassName(character.class)}:${normalizeClassName(character.subclass)}:${level}`
+
+  const {
+    spellSlots,
+    spiritShroudSlotOptions,
+    setSpellSlotMax,
+    setSpellSlotCurrent,
+    resetSpellSlots: resetSpellSlotsBase,
+    spendSpellSlot,
+  } = useSpellSlots({ character, onUpdate, classIndex, level })
+
+  // resetSpellSlots también limpia el error de spell
+  const resetSpellSlots = useCallback(() => {
+    resetSpellSlotsBase()
+    setSpellError(null)
+  }, [resetSpellSlotsBase])
 
   // Estadísticas del personaje
   const stats = character.stats || {}
-  const level = character.level || 1
   const profBonus = getProficiencyBonus(level)
 
   const spellAbilityKey = getSpellcastingAbilityKey(character.class, stats)
@@ -494,16 +104,6 @@ export default function DamageCalculator({ character, onUpdate }) {
   const spellSaveDC = 8 + profBonus + spellAbilityMod
   const spellAttackBonus = profBonus + spellAbilityMod
 
-  const classIndex = resolveClassIndex(character.class) || ''
-  const skillHistoryStorageKey = useMemo(() => getSkillHistoryStorageKey(character), [character])
-  const attackHistoryStorageKey = useMemo(() => getAttackHistoryStorageKey(character), [character])
-  const spellSlots = useMemo(() => normalizeSpellSlots(character.spellSlots), [character.spellSlots])
-  const spiritShroudSlotOptions = useMemo(
-    () => SPELL_SLOT_LEVELS.filter((slotLevel) => slotLevel >= SPIRIT_SHROUD_MIN_SLOT && (spellSlots[String(slotLevel)]?.max || 0) > 0),
-    [spellSlots]
-  )
-  const spellSlotPresetSignature = `${classIndex || 'none'}:${level}`
-  const attackPresetSignature = `${normalizeClassName(character.class)}:${normalizeClassName(character.subclass)}:${level}`
   const attacksReason = useMemo(
     () => getAttacksPerActionReason(
       character.class,
@@ -561,71 +161,8 @@ export default function DamageCalculator({ character, onUpdate }) {
   }, [character.spells, apiSpellList])
 
   useEffect(() => {
-    const LEGACY_ATTACK_HISTORY_KEY = 'dnd_attack_roll_history'
-
-    try {
-      const parsed = readStoredJSON(attackHistoryStorageKey, null)
-      if (Array.isArray(parsed)) {
-        setRollHistory(parsed.slice(0, 30))
-        attackHistoryHydratedKeyRef.current = attackHistoryStorageKey
-        return
-      }
-
-      // Migracion suave desde clave global anterior.
-      const legacyParsed = readStoredJSON(LEGACY_ATTACK_HISTORY_KEY, null)
-      if (Array.isArray(legacyParsed)) {
-        const normalized = legacyParsed.slice(0, 30)
-        setRollHistory(normalized)
-        writeStoredJSON(attackHistoryStorageKey, normalized)
-        attackHistoryHydratedKeyRef.current = attackHistoryStorageKey
-        return
-      }
-
-      setRollHistory([])
-      attackHistoryHydratedKeyRef.current = attackHistoryStorageKey
-    } catch {
-      setRollHistory([])
-      attackHistoryHydratedKeyRef.current = attackHistoryStorageKey
-    }
-  }, [attackHistoryStorageKey])
-
-  useEffect(() => {
-    if (attackHistoryHydratedKeyRef.current !== attackHistoryStorageKey) return
-    writeStoredJSON(attackHistoryStorageKey, rollHistory.slice(0, 30))
-  }, [rollHistory, attackHistoryStorageKey])
-
-  useEffect(() => {
     writeStoredString(STORAGE_KEYS.spellScope, spellScope)
   }, [spellScope])
-
-  useEffect(() => {
-    const LEGACY_SKILL_HISTORY_KEY = 'dnd_skill_roll_history'
-
-    try {
-      const parsed = readStoredJSON(skillHistoryStorageKey, null)
-      if (Array.isArray(parsed)) {
-        setSkillRollHistory(parsed.slice(0, 30))
-        return
-      }
-
-      // Migracion suave desde clave global anterior.
-      const legacyParsed = readStoredJSON(LEGACY_SKILL_HISTORY_KEY, null)
-      if (Array.isArray(legacyParsed)) {
-        const normalized = legacyParsed.slice(0, 30)
-        setSkillRollHistory(normalized)
-        writeStoredJSON(skillHistoryStorageKey, normalized)
-        return
-      }
-
-      setSkillRollHistory([])
-    } catch {
-      setSkillRollHistory([])
-    }
-  }, [skillHistoryStorageKey])
-
-  useEffect(() => {
-    writeStoredJSON(skillHistoryStorageKey, skillRollHistory.slice(0, 30))
-  }, [skillRollHistory, skillHistoryStorageKey])
 
   useEffect(() => {
     if (typeof onUpdate !== 'function') return
@@ -664,26 +201,6 @@ export default function DamageCalculator({ character, onUpdate }) {
   }, [onUpdate, attackPresetSignature])
 
   useEffect(() => {
-    if (typeof onUpdate !== 'function') return
-
-    const alreadyForThisLevel = character.spellSlotsPresetFor === spellSlotPresetSignature
-    if (alreadyForThisLevel) return
-
-    const defaults = getDefaultSpellSlotsByClassLevel(classIndex, level)
-    onUpdate({
-      spellSlots: defaults,
-      spellSlotsPresetFor: spellSlotPresetSignature,
-      spellSlotsCustomized: false,
-    })
-  }, [
-    onUpdate,
-    classIndex,
-    level,
-    character.spellSlotsPresetFor,
-    spellSlotPresetSignature,
-  ])
-
-  useEffect(() => {
     if (category !== 'spell' || !selectedItem) {
       setCastSlotLevel('')
       return
@@ -715,65 +232,6 @@ export default function DamageCalculator({ character, onUpdate }) {
     })
   }, [spiritShroudSlotOptions])
 
-  const patchSpellSlots = useCallback((nextSlots) => {
-    if (typeof onUpdate !== 'function') return
-    onUpdate({
-      spellSlots: nextSlots,
-      spellSlotsCustomized: true,
-    })
-  }, [onUpdate])
-
-  const setSpellSlotMax = useCallback((level, rawValue) => {
-    const key = String(level)
-    const max = Math.max(0, Number(rawValue) || 0)
-    const next = normalizeSpellSlots(spellSlots)
-    const current = Math.min(next[key].current, max)
-    next[key] = { max, current }
-    patchSpellSlots(next)
-  }, [patchSpellSlots, spellSlots])
-
-  const setSpellSlotCurrent = useCallback((level, rawValue) => {
-    const key = String(level)
-    const next = normalizeSpellSlots(spellSlots)
-    const max = next[key].max
-    const current = Math.max(0, Math.min(max, Number(rawValue) || 0))
-    next[key] = { ...next[key], current }
-    patchSpellSlots(next)
-  }, [patchSpellSlots, spellSlots])
-
-  const resetSpellSlots = useCallback(() => {
-    const next = normalizeSpellSlots(spellSlots)
-    for (const level of SPELL_SLOT_LEVELS) {
-      const key = String(level)
-      next[key] = { ...next[key], current: next[key].max }
-    }
-    patchSpellSlots(next)
-    setSpellError(null)
-  }, [patchSpellSlots, spellSlots])
-
-  const spendSpellSlot = useCallback((slotLevel, errorPrefix = '') => {
-    const slotKey = String(slotLevel)
-    const available = spellSlots[slotKey]?.current || 0
-    if (available <= 0) {
-      setSpellError(`${errorPrefix}No te quedan espacios de nivel ${slotLevel}.`)
-      return false
-    }
-
-    if (typeof onUpdate === 'function') {
-      const nextSlots = normalizeSpellSlots(spellSlots)
-      nextSlots[slotKey] = {
-        ...nextSlots[slotKey],
-        current: Math.max(0, (nextSlots[slotKey].current || 0) - 1),
-      }
-      onUpdate({
-        spellSlots: nextSlots,
-        spellSlotsCustomized: true,
-      })
-    }
-
-    return true
-  }, [onUpdate, spellSlots])
-
   const castSpiritShroud = useCallback(() => {
     const slotNum = Number(spiritShroudSlotLevel)
     if (!Number.isFinite(slotNum) || slotNum < SPIRIT_SHROUD_MIN_SLOT || slotNum > 9) {
@@ -781,7 +239,7 @@ export default function DamageCalculator({ character, onUpdate }) {
       return
     }
 
-    if (!spendSpellSlot(slotNum, 'Velo espiritual: ')) return
+    if (!spendSpellSlot(slotNum, setSpellError, 'Velo espiritual: ')) return
 
     setSpiritShroudActive(true)
     setSpellError(null)
@@ -946,9 +404,7 @@ export default function DamageCalculator({ character, onUpdate }) {
         // Si falla el servicio externo, mantenemos la traducción local.
       })
 
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [category, selectedItem?.index, selectedItem?.desc])
 
   // ── Realiza una tirada de ataque completa ──
@@ -971,7 +427,7 @@ export default function DamageCalculator({ character, onUpdate }) {
         setSpellError(`Velo espiritual requiere un espacio valido de nivel ${SPIRIT_SHROUD_MIN_SLOT} o superior.`)
         return
       }
-      if (!spendSpellSlot(selectedSlotNum, 'Velo espiritual: ')) return
+      if (!spendSpellSlot(selectedSlotNum, setSpellError, 'Velo espiritual: ')) return
       setSpiritShroudActive(true)
       setSpiritShroudSlotLevel(String(selectedSlotNum))
       setSpellError(null)
@@ -1115,7 +571,7 @@ export default function DamageCalculator({ character, onUpdate }) {
     setRollHistory((prev) => [...generatedRolls.slice().reverse(), ...prev].slice(0, 30))
 
     if (shouldSpendSlot && !isSelectedSpiritShroud) {
-      if (!spendSpellSlot(selectedSlotNum)) return
+      if (!spendSpellSlot(selectedSlotNum, setSpellError)) return
     }
 
     setSpellError(null)
@@ -1794,14 +1250,14 @@ export default function DamageCalculator({ character, onUpdate }) {
       <div className={styles.skillDiceSection}>
         <button
           className={styles.skillDiceSectionHeader}
-          onClick={() => setShowSkillDice(v => !v)}
+          onClick={() => skillRolls.setShowSkillDice(v => !v)}
           type="button"
         >
           <span>🎯 Tiradas de Habilidad y Salvación</span>
-          <span className={`${styles.skillDiceChevron} ${showSkillDice ? styles.skillDiceChevronOpen : ''}`}>▾</span>
+          <span className={`${styles.skillDiceChevron} ${skillRolls.showSkillDice ? styles.skillDiceChevronOpen : ''}`}>▾</span>
         </button>
 
-        {showSkillDice && (
+        {skillRolls.showSkillDice && (
           <div className={styles.skillDicePanel}>
 
             {/* Modo */}
@@ -1814,8 +1270,8 @@ export default function DamageCalculator({ character, onUpdate }) {
                 <button
                   key={m.value}
                   type="button"
-                  className={`${styles.skillRollModeBtn} ${skillRollMode === m.value ? styles.skillRollModeBtnActive : ''}`}
-                  onClick={() => setSkillRollMode(m.value)}
+                  className={`${styles.skillRollModeBtn} ${skillRolls.skillRollMode === m.value ? styles.skillRollModeBtnActive : ''}`}
+                  onClick={() => skillRolls.setSkillRollMode(m.value)}
                 >
                   <span>{m.icon}</span> {m.label}
                 </button>
@@ -1826,15 +1282,15 @@ export default function DamageCalculator({ character, onUpdate }) {
             <div className={styles.skillRollTabs}>
               <button
                 type="button"
-                className={`${styles.skillRollTabBtn} ${skillRollTab === 'skills' ? styles.skillRollTabBtnActive : ''}`}
-                onClick={() => setSkillRollTab('skills')}
+                className={`${styles.skillRollTabBtn} ${skillRolls.skillRollTab === 'skills' ? styles.skillRollTabBtnActive : ''}`}
+                onClick={() => skillRolls.setSkillRollTab('skills')}
               >
                 🎯 Habilidades
               </button>
               <button
                 type="button"
-                className={`${styles.skillRollTabBtn} ${skillRollTab === 'saves' ? styles.skillRollTabBtnActive : ''}`}
-                onClick={() => setSkillRollTab('saves')}
+                className={`${styles.skillRollTabBtn} ${skillRolls.skillRollTab === 'saves' ? styles.skillRollTabBtnActive : ''}`}
+                onClick={() => skillRolls.setSkillRollTab('saves')}
               >
                 🛡️ Salvaciones
               </button>
@@ -1842,7 +1298,7 @@ export default function DamageCalculator({ character, onUpdate }) {
 
             {/* Lista */}
             <div className={styles.skillRollList}>
-              {skillRollTab === 'skills' && SKILL_ROLL_LIST.map(skill => {
+              {skillRolls.skillRollTab === 'skills' && SKILL_ROLL_LIST.map(skill => {
                 const mod  = character?.skills?.[skill.key] ?? 0
                 const sign = mod >= 0 ? '+' : ''
                 return (
@@ -1850,8 +1306,8 @@ export default function DamageCalculator({ character, onUpdate }) {
                     key={skill.key}
                     type="button"
                     className={styles.skillRollItem}
-                    onClick={() => rollSkillCheck(mod, skill.label)}
-                    disabled={skillRolling}
+                    onClick={() => skillRolls.rollSkillCheck(mod, skill.label)}
+                    disabled={skillRolls.skillRolling}
                   >
                     <span className={styles.skillRollItemStat}>{skill.stat}</span>
                     <span className={styles.skillRollItemLabel}>{skill.label}</span>
@@ -1860,7 +1316,7 @@ export default function DamageCalculator({ character, onUpdate }) {
                 )
               })}
 
-              {skillRollTab === 'saves' && SAVE_ROLL_LIST.map(save => {
+              {skillRolls.skillRollTab === 'saves' && SAVE_ROLL_LIST.map(save => {
                 const mod  = character?.savingThrows?.[save.key] ?? 0
                 const sign = mod >= 0 ? '+' : ''
                 return (
@@ -1868,8 +1324,8 @@ export default function DamageCalculator({ character, onUpdate }) {
                     key={save.key}
                     type="button"
                     className={styles.skillRollItem}
-                    onClick={() => rollSkillCheck(mod, `Sal. ${save.label}`)}
-                    disabled={skillRolling}
+                    onClick={() => skillRolls.rollSkillCheck(mod, `Sal. ${save.label}`)}
+                    disabled={skillRolls.skillRolling}
                   >
                     <span className={styles.skillRollItemStat}>{save.key}</span>
                     <span className={styles.skillRollItemLabel}>{save.label}</span>
@@ -1880,67 +1336,67 @@ export default function DamageCalculator({ character, onUpdate }) {
             </div>
 
             {/* Resultado */}
-            {(skillRolling || skillRollResult) && (
+            {(skillRolls.skillRolling || skillRolls.skillRollResult) && (
               <div className={`${styles.skillRollResultBox} ${
-                skillRollResult?.isCrit ? styles.skillRollResultBoxCrit :
-                skillRollResult?.isFail ? styles.skillRollResultBoxFail : ''
+                skillRolls.skillRollResult?.isCrit ? styles.skillRollResultBoxCrit :
+                skillRolls.skillRollResult?.isFail ? styles.skillRollResultBoxFail : ''
               }`}>
-                {skillRolling ? (
+                {skillRolls.skillRolling ? (
                   <span className={styles.skillRollingAnim}>🎲 Tirando…</span>
-                ) : skillRollResult && (
+                ) : skillRolls.skillRollResult && (
                   <>
                     <div className={styles.skillRollResultLabel}>
-                      {skillRollResult.label}
-                      {skillRollResult.mode === 'advantage'    && <span className={styles.skillRollResultMode}>✨ Ventaja</span>}
-                      {skillRollResult.mode === 'disadvantage' && <span className={styles.skillRollResultMode}>💀 Desventaja</span>}
+                      {skillRolls.skillRollResult.label}
+                      {skillRolls.skillRollResult.mode === 'advantage'    && <span className={styles.skillRollResultMode}>✨ Ventaja</span>}
+                      {skillRolls.skillRollResult.mode === 'disadvantage' && <span className={styles.skillRollResultMode}>💀 Desventaja</span>}
                     </div>
 
                     <div className={styles.skillRollResultDice}>
-                      {skillRollResult.mode !== 'normal' ? (
+                      {skillRolls.skillRollResult.mode !== 'normal' ? (
                         <>
-                          <span className={skillRollResult.die1 === skillRollResult.chosen ? styles.skillDieChosen : styles.skillDieDropped}>
-                            d20: {skillRollResult.die1}
+                          <span className={skillRolls.skillRollResult.die1 === skillRolls.skillRollResult.chosen ? styles.skillDieChosen : styles.skillDieDropped}>
+                            d20: {skillRolls.skillRollResult.die1}
                           </span>
                           <span className={styles.skillDieVs}>vs</span>
-                          <span className={skillRollResult.die2 === skillRollResult.chosen ? styles.skillDieChosen : styles.skillDieDropped}>
-                            d20: {skillRollResult.die2}
+                          <span className={skillRolls.skillRollResult.die2 === skillRolls.skillRollResult.chosen ? styles.skillDieChosen : styles.skillDieDropped}>
+                            d20: {skillRolls.skillRollResult.die2}
                           </span>
                         </>
                       ) : (
-                        <span className={styles.skillDieChosen}>d20: {skillRollResult.die1}</span>
+                        <span className={styles.skillDieChosen}>d20: {skillRolls.skillRollResult.die1}</span>
                       )}
-                      {skillRollResult.modifier !== 0 && (
+                      {skillRolls.skillRollResult.modifier !== 0 && (
                         <span className={styles.skillDieMod}>
-                          {skillRollResult.modifier >= 0 ? '+' : ''}{skillRollResult.modifier}
+                          {skillRolls.skillRollResult.modifier >= 0 ? '+' : ''}{skillRolls.skillRollResult.modifier}
                         </span>
                       )}
                     </div>
 
                     <div className={styles.skillRollResultTotal}>
-                      {skillRollResult.total}
-                      {skillRollResult.isCrit && <span className={styles.skillRollBadgeCrit}>¡CRÍTICO!</span>}
-                      {skillRollResult.isFail && <span className={styles.skillRollBadgeFail}>¡PIFIA!</span>}
+                      {skillRolls.skillRollResult.total}
+                      {skillRolls.skillRollResult.isCrit && <span className={styles.skillRollBadgeCrit}>¡CRÍTICO!</span>}
+                      {skillRolls.skillRollResult.isFail && <span className={styles.skillRollBadgeFail}>¡PIFIA!</span>}
                     </div>
                   </>
                 )}
               </div>
             )}
 
-            {skillRollHistory.length > 0 && (
+            {skillRolls.skillRollHistory.length > 0 && (
               <div className={styles.skillHistory}>
                 <div className={styles.skillHistoryHeader}>
                   <h4 className={styles.skillHistoryTitle}>Historial de habilidades y salvaciones</h4>
                   <button
                     type="button"
                     className={styles.skillHistoryClearBtn}
-                    onClick={() => setSkillRollHistory([])}
+                    onClick={() => skillRolls.setSkillRollHistory([])}
                   >
                     Limpiar
                   </button>
                 </div>
 
                 <div className={styles.skillHistoryList}>
-                  {skillRollHistory.map((roll) => (
+                  {skillRolls.skillRollHistory.map((roll) => (
                     <div key={roll.id} className={styles.skillHistoryItem}>
                       <span className={styles.skillHistoryName}>{roll.label}</span>
                       <span className={styles.skillHistoryMeta}>
@@ -1955,7 +1411,7 @@ export default function DamageCalculator({ character, onUpdate }) {
                       <button
                         className={styles.skillHistoryDeleteBtn}
                         type="button"
-                        onClick={() => setSkillRollHistory((prev) => prev.filter((r) => r.id !== roll.id))}
+                        onClick={() => skillRolls.setSkillRollHistory((prev) => prev.filter((r) => r.id !== roll.id))}
                         title="Borrar esta tirada"
                       >
                         x
@@ -1970,11 +1426,11 @@ export default function DamageCalculator({ character, onUpdate }) {
       </div>
 
       <HexbladeToolkit
-        character={character}
         selectedItem={selectedItem}
         weaponMod={getWeaponMod()}
         spellAttackBonus={spellAttackBonus}
         rollHistory={rollHistory}
+        onUpdate={onUpdate}
       />
     </div>
   )

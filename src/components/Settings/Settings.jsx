@@ -17,17 +17,18 @@ import {
   loadAIConfig,
   saveAIConfig,
 } from '../../services/aiService'
+import { useCharacter } from '../../contexts/CharacterContext'
 
-export default function Settings({
-  character,
-  onUpdate,
-  onNavigate,
-  onImportCharacter,
-  onExportCharacter,
-  onClearCharacter,
-  theme,
-  onToggleTheme,
-}) {
+export default function Settings({ onNavigate }) {
+  const {
+    character,
+    theme,
+    updateCharacter: onUpdate,
+    importCharacter: onImportCharacter,
+    exportCharacter: onExportCharacter,
+    clearCharacter: onClearCharacter,
+    toggleTheme: onToggleTheme,
+  } = useCharacter()
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfResult, setPdfResult]   = useState(null)
   const [debugFields, setDebugFields] = useState(null)
