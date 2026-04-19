@@ -13,12 +13,15 @@ export function useSkillRolls(character) {
     [character]
   )
 
-  const [showSkillDice, setShowSkillDice] = useState(false)
+  const [showSkillDice, setShowSkillDice] = useState(true)
   const [skillRollMode, setSkillRollMode] = useState('normal')
   const [skillRollTab, setSkillRollTab] = useState('skills')
   const [skillRollResult, setSkillRollResult] = useState(null)
   const [skillRollHistory, setSkillRollHistory] = useState([])
   const [skillRolling, setSkillRolling] = useState(false)
+  const [skillSearch, setSkillSearch] = useState('')
+
+  const skillLastResultKey = skillHistoryStorageKey + '_last'
 
   // Carga inicial desde localStorage
   useEffect(() => {
@@ -26,28 +29,36 @@ export function useSkillRolls(character) {
       const parsed = readStoredJSON(skillHistoryStorageKey, null)
       if (Array.isArray(parsed)) {
         setSkillRollHistory(parsed.slice(0, 30))
-        return
+      } else {
+        // Migración suave desde clave global anterior
+        const legacyParsed = readStoredJSON(LEGACY_KEY, null)
+        if (Array.isArray(legacyParsed)) {
+          const normalized = legacyParsed.slice(0, 30)
+          setSkillRollHistory(normalized)
+          writeStoredJSON(skillHistoryStorageKey, normalized)
+        } else {
+          setSkillRollHistory([])
+        }
       }
-
-      // Migración suave desde clave global anterior
-      const legacyParsed = readStoredJSON(LEGACY_KEY, null)
-      if (Array.isArray(legacyParsed)) {
-        const normalized = legacyParsed.slice(0, 30)
-        setSkillRollHistory(normalized)
-        writeStoredJSON(skillHistoryStorageKey, normalized)
-        return
-      }
-
-      setSkillRollHistory([])
     } catch {
       setSkillRollHistory([])
     }
-  }, [skillHistoryStorageKey])
 
-  // Persiste cambios en localStorage
+    try {
+      const lastResult = readStoredJSON(skillLastResultKey, null)
+      if (lastResult && typeof lastResult === 'object') setSkillRollResult(lastResult)
+    } catch { /* ignore */ }
+  }, [skillHistoryStorageKey, skillLastResultKey])
+
+  // Persiste historial en localStorage
   useEffect(() => {
     writeStoredJSON(skillHistoryStorageKey, skillRollHistory.slice(0, 30))
   }, [skillRollHistory, skillHistoryStorageKey])
+
+  // Persiste última tirada en localStorage
+  useEffect(() => {
+    if (skillRollResult) writeStoredJSON(skillLastResultKey, skillRollResult)
+  }, [skillRollResult, skillLastResultKey])
 
   const rollSkillCheck = (modifier, label) => {
     setSkillRolling(true)
@@ -87,6 +98,7 @@ export function useSkillRolls(character) {
     skillRollResult,
     skillRollHistory, setSkillRollHistory,
     skillRolling,
+    skillSearch, setSkillSearch,
     rollSkillCheck,
   }
 }

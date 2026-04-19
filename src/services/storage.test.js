@@ -38,16 +38,24 @@ describe('storage service', () => {
   it('normalizes imported character payloads', () => {
     const normalized = importCharacterData({
       level: 99,
+      inspiration: 3,
       stats: { FUE: 40, DES: 2 },
       spellSlots: { 1: { max: 4, current: 8 } },
       spells: 'invalid',
     })
 
     expect(normalized.level).toBe(20)
+    expect(normalized.inspiration).toBe(3)
     expect(normalized.stats.FUE).toBe(30)
     expect(normalized.stats.DES).toBe(2)
     expect(normalized.spellSlots['1']).toEqual({ max: 4, current: 4 })
     expect(normalized.spells).toEqual([])
+  })
+
+  it('migrates legacy boolean inspiration to numeric value', () => {
+    const normalized = importCharacterData({ inspiration: true })
+
+    expect(normalized.inspiration).toBe(1)
   })
 
   it('persists and reloads the current character', () => {

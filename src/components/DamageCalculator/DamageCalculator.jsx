@@ -257,6 +257,22 @@ export default function DamageCalculator() {
     return isWarlock && isHex
   })()
 
+  // ── Detecta si el personaje puede usar cantips de filo (Green-Flame / Booming Blade) ──
+  // Clases lanzadoras completas + subclases que acceden a la lista de mago
+  const canUseBladeCantips = (() => {
+    const cls = resolveClassIndex(character.class || '') || normalizeClassName(character.class || '')
+    const sub = (character.subclass || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+    const SPELLCASTING_CLASSES = ['wizard', 'warlock', 'sorcerer', 'bard', 'cleric', 'druid', 'paladin', 'ranger', 'artificer']
+    if (SPELLCASTING_CLASSES.includes(cls)) return true
+    // Pícaro Embaucador Arcano y Guerrero Caballero Sobrenatural pueden aprender cantips de mago
+    const isArcaneTrickster = cls === 'rogue' && (sub.includes('embaucador') || sub.includes('arcane') || sub.includes('trickster'))
+    const isEldritchKnight = cls === 'fighter' && (sub.includes('caballero') || sub.includes('eldritch') || sub.includes('knight'))
+    return isArcaneTrickster || isEldritchKnight
+  })()
+
   // ── Obtiene el modificador para armas (FUE/DES, o CAR para Filo Maléfico) ──
   const getWeaponMod = useCallback(() => {
     if (isHexblade) return getModifier(stats['CAR'] || 10)
@@ -813,7 +829,7 @@ export default function DamageCalculator() {
             </select>
           </div>
 
-          {category === 'weapon' && (
+          {category === 'weapon' && canUseBladeCantips && (
             <div className={styles.field}>
               <label className={styles.fieldLabel}>Cantrip sobre ataque</label>
               <select
@@ -843,7 +859,7 @@ export default function DamageCalculator() {
             </div>
           )}
 
-          {category === 'weapon' && (
+          {category === 'weapon' && isHexblade && (
             <div className={styles.slotManager}>
               <div className={styles.slotManagerHeader}>
                 <span className={styles.fieldLabel}>Velo espiritual (TCE)</span>
@@ -1263,7 +1279,7 @@ export default function DamageCalculator() {
             {/* Modo */}
             <div className={styles.skillRollModeBar}>
               {[
-                { value: 'normal',       label: 'Normal',     icon: '⚀' },
+                { value: 'normal',       label: 'Normal',     icon: '🎲' },
                 { value: 'advantage',    label: 'Ventaja',    icon: '✨' },
                 { value: 'disadvantage', label: 'Desventaja', icon: '💀' },
               ].map(m => (
@@ -1283,56 +1299,105 @@ export default function DamageCalculator() {
               <button
                 type="button"
                 className={`${styles.skillRollTabBtn} ${skillRolls.skillRollTab === 'skills' ? styles.skillRollTabBtnActive : ''}`}
-                onClick={() => skillRolls.setSkillRollTab('skills')}
+                onClick={() => { skillRolls.setSkillRollTab('skills'); skillRolls.setSkillSearch('') }}
               >
                 🎯 Habilidades
               </button>
               <button
                 type="button"
                 className={`${styles.skillRollTabBtn} ${skillRolls.skillRollTab === 'saves' ? styles.skillRollTabBtnActive : ''}`}
-                onClick={() => skillRolls.setSkillRollTab('saves')}
+                onClick={() => { skillRolls.setSkillRollTab('saves'); skillRolls.setSkillSearch('') }}
               >
                 🛡️ Salvaciones
               </button>
             </div>
 
+            {/* Buscador */}
+            <input
+              type="text"
+              className={styles.skillSearchInput}
+              placeholder="Buscar habilidad o salvación…"
+              value={skillRolls.skillSearch}
+              onChange={e => skillRolls.setSkillSearch(e.target.value)}
+            />
+
             {/* Lista */}
             <div className={styles.skillRollList}>
-              {skillRolls.skillRollTab === 'skills' && SKILL_ROLL_LIST.map(skill => {
-                const mod  = character?.skills?.[skill.key] ?? 0
-                const sign = mod >= 0 ? '+' : ''
-                return (
-                  <button
-                    key={skill.key}
-                    type="button"
-                    className={styles.skillRollItem}
-                    onClick={() => skillRolls.rollSkillCheck(mod, skill.label)}
-                    disabled={skillRolls.skillRolling}
-                  >
-                    <span className={styles.skillRollItemStat}>{skill.stat}</span>
-                    <span className={styles.skillRollItemLabel}>{skill.label}</span>
-                    <span className={styles.skillRollItemMod}>{sign}{mod}</span>
-                  </button>
-                )
-              })}
+              {(() => {
+                const q = skillRolls.skillSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
 
-              {skillRolls.skillRollTab === 'saves' && SAVE_ROLL_LIST.map(save => {
-                const mod  = character?.savingThrows?.[save.key] ?? 0
-                const sign = mod >= 0 ? '+' : ''
-                return (
-                  <button
-                    key={save.key}
-                    type="button"
-                    className={styles.skillRollItem}
-                    onClick={() => skillRolls.rollSkillCheck(mod, `Sal. ${save.label}`)}
-                    disabled={skillRolls.skillRolling}
-                  >
-                    <span className={styles.skillRollItemStat}>{save.key}</span>
-                    <span className={styles.skillRollItemLabel}>{save.label}</span>
-                    <span className={styles.skillRollItemMod}>{sign}{mod}</span>
-                  </button>
-                )
-              })}
+                if (q) {
+                  // Con buscador activo: muestra habilidades + salvaciones filtradas
+                  const matchSkills = SKILL_ROLL_LIST.filter(s =>
+                    s.label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q) ||
+                    s.stat.toLowerCase().includes(q)
+                  )
+                  const matchSaves = SAVE_ROLL_LIST.filter(s =>
+                    s.label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q) ||
+                    s.key.toLowerCase().includes(q)
+                  )
+                  const allMatch = [
+                    ...matchSkills.map(s => ({ key: s.key, label: s.label, stat: s.stat, mod: character?.skills?.[s.key] ?? 0, prefix: '' })),
+                    ...matchSaves.map(s => ({ key: `save-${s.key}`, label: s.label, stat: s.key, mod: character?.savingThrows?.[s.key] ?? 0, prefix: 'Sal. ' })),
+                  ].sort((a, b) => a.label.localeCompare(b.label, 'es'))
+                  if (allMatch.length === 0) return <p className={styles.apiHint}>Sin resultados</p>
+                  return allMatch.map(item => {
+                    const sign = item.mod >= 0 ? '+' : ''
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        className={styles.skillRollItem}
+                        onClick={() => skillRolls.rollSkillCheck(item.mod, `${item.prefix}${item.label}`)}
+                        disabled={skillRolls.skillRolling}
+                      >
+                        <span className={styles.skillRollItemStat}>{item.stat}</span>
+                        <span className={styles.skillRollItemLabel}>{item.label}</span>
+                        <span className={styles.skillRollItemMod}>{sign}{item.mod}</span>
+                      </button>
+                    )
+                  })
+                }
+
+                // Sin buscador: lista normal por pestaña
+                if (skillRolls.skillRollTab === 'skills') {
+                  return [...SKILL_ROLL_LIST].sort((a, b) => a.label.localeCompare(b.label, 'es')).map(skill => {
+                    const mod  = character?.skills?.[skill.key] ?? 0
+                    const sign = mod >= 0 ? '+' : ''
+                    return (
+                      <button
+                        key={skill.key}
+                        type="button"
+                        className={styles.skillRollItem}
+                        onClick={() => skillRolls.rollSkillCheck(mod, skill.label)}
+                        disabled={skillRolls.skillRolling}
+                      >
+                        <span className={styles.skillRollItemStat}>{skill.stat}</span>
+                        <span className={styles.skillRollItemLabel}>{skill.label}</span>
+                        <span className={styles.skillRollItemMod}>{sign}{mod}</span>
+                      </button>
+                    )
+                  })
+                }
+
+                return [...SAVE_ROLL_LIST].sort((a, b) => a.label.localeCompare(b.label, 'es')).map(save => {
+                  const mod  = character?.savingThrows?.[save.key] ?? 0
+                  const sign = mod >= 0 ? '+' : ''
+                  return (
+                    <button
+                      key={save.key}
+                      type="button"
+                      className={styles.skillRollItem}
+                      onClick={() => skillRolls.rollSkillCheck(mod, `Sal. ${save.label}`)}
+                      disabled={skillRolls.skillRolling}
+                    >
+                      <span className={styles.skillRollItemStat}>{save.key}</span>
+                      <span className={styles.skillRollItemLabel}>{save.label}</span>
+                      <span className={styles.skillRollItemMod}>{sign}{mod}</span>
+                    </button>
+                  )
+                })
+              })()}
             </div>
 
             {/* Resultado */}
@@ -1425,13 +1490,15 @@ export default function DamageCalculator() {
         )}
       </div>
 
-      <HexbladeToolkit
-        selectedItem={selectedItem}
-        weaponMod={getWeaponMod()}
-        spellAttackBonus={spellAttackBonus}
-        rollHistory={rollHistory}
-        onUpdate={onUpdate}
-      />
+      {isHexblade && (
+        <HexbladeToolkit
+          selectedItem={selectedItem}
+          weaponMod={getWeaponMod()}
+          spellAttackBonus={spellAttackBonus}
+          rollHistory={rollHistory}
+          onUpdate={onUpdate}
+        />
+      )}
     </div>
   )
 }

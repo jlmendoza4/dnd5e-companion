@@ -33,10 +33,10 @@ Basada en análisis del codebase (abril 2026).
 
 ## Prioridad 3 — Rendimiento
 
-**6. Code splitting con `React.lazy`**
+**6. Code splitting con `React.lazy`**✅
 Una línea por componente-pestaña. Mejora notable en tiempo de arranque. Toda la app (~7.000 líneas JSX) se carga de golpe actualmente.
 
-**7. Debounce en localStorage + memoización en DamageCalculator**
+**7. Debounce en localStorage + memoización en DamageCalculator**✅
 Dos cambios pequeños con impacto directo en fluidez. El guardado ocurre en cada cambio del personaje sin debounce.
 
 ---

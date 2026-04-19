@@ -1,8 +1,12 @@
 const CHARACTER_STORAGE_KEY = 'dnd_character'
+const CHARACTERS_STORAGE_KEY  = 'dnd_characters'
+const ACTIVE_CHARACTER_ID_KEY  = 'dnd_active_id'
 const THEME_STORAGE_KEY = 'dnd_theme'
 
 export const STORAGE_KEYS = {
   character: CHARACTER_STORAGE_KEY,
+  characters: CHARACTERS_STORAGE_KEY,
+  activeId: ACTIVE_CHARACTER_ID_KEY,
   theme: THEME_STORAGE_KEY,
   aiKey: 'dnd_ai_key',
   aiEndpoint: 'dnd_ai_api_url',
@@ -19,6 +23,7 @@ export const DEFAULT_CHARACTER = {
   level: 1,
   background: '',
   alignment: '',
+  inspiration: 0,
   stats: { FUE: 10, DES: 10, CON: 10, INT: 10, SAB: 10, CAR: 10 },
   savingThrows: { FUE: 0, DES: 0, CON: 0, INT: 0, SAB: 0, CAR: 0 },
   savingThrowProficiencies: {
@@ -94,6 +99,10 @@ export const DEFAULT_CHARACTER = {
   spells: [],
   equipment: [],
   traits: '',
+}
+
+export function generateCharacterId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
 }
 
 function canUseLocalStorage() {
@@ -172,6 +181,9 @@ export function writeStoredJSON(key, value) {
 export function normalizeCharacterData(rawCharacter) {
   const next = rawCharacter && typeof rawCharacter === 'object' ? rawCharacter : {}
   const nextSpellSlots = next.spellSlots && typeof next.spellSlots === 'object' ? next.spellSlots : {}
+  const rawInspiration = typeof next.inspiration === 'boolean'
+    ? (next.inspiration ? 1 : 0)
+    : next.inspiration
 
   const normalizedSpellSlots = {}
   for (let level = 1; level <= 9; level += 1) {
@@ -186,12 +198,14 @@ export function normalizeCharacterData(rawCharacter) {
   return {
     ...DEFAULT_CHARACTER,
     ...next,
+    id: typeof next.id === 'string' && next.id ? next.id : generateCharacterId(),
     name: String(next.name || '').trim(),
     class: String(next.class || '').trim(),
     subclass: String(next.subclass || '').trim(),
     race: String(next.race || '').trim(),
     background: String(next.background || '').trim(),
     alignment: String(next.alignment || '').trim(),
+    inspiration: clampNumber(rawInspiration, DEFAULT_CHARACTER.inspiration, 0, 99),
     level: clampNumber(next.level, DEFAULT_CHARACTER.level, 1, 20),
     currentHP: clampNumber(next.currentHP, DEFAULT_CHARACTER.currentHP, 0, 999),
     maxHP: clampNumber(next.maxHP, DEFAULT_CHARACTER.maxHP, 1, 999),
@@ -286,6 +300,33 @@ export function saveCharacter(character) {
 export function clearCharacterStorage() {
   removeStoredValue(CHARACTER_STORAGE_KEY)
   return DEFAULT_CHARACTER
+}
+
+// ── Multi-personaje ──────────────────────────────────────────
+
+export function loadAllCharacters() {
+  const stored = readStoredJSON(CHARACTERS_STORAGE_KEY, null)
+  if (Array.isArray(stored) && stored.length > 0) {
+    return stored.map(c => normalizeCharacterData(c))
+  }
+  // Migración: si existe el personaje único anterior, lo importa
+  const old = readStoredJSON(CHARACTER_STORAGE_KEY, null)
+  const migrated = normalizeCharacterData(old || {})
+  // Guarda inmediatamente para que una segunda llamada no regenere el id
+  writeStoredJSON(CHARACTERS_STORAGE_KEY, [migrated])
+  return [migrated]
+}
+
+export function saveAllCharacters(characters) {
+  writeStoredJSON(CHARACTERS_STORAGE_KEY, characters)
+}
+
+export function loadActiveCharacterId() {
+  return readStoredString(ACTIVE_CHARACTER_ID_KEY, '')
+}
+
+export function saveActiveCharacterId(id) {
+  writeStoredString(ACTIVE_CHARACTER_ID_KEY, id)
 }
 
 export function importCharacterData(rawData) {

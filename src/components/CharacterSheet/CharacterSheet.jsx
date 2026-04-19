@@ -230,6 +230,20 @@ export default function CharacterSheet({ onReset }) {
               {DND_ALIGNMENTS.map(a => <option key={a} value={a} />)}
             </datalist>
           </div>
+
+          {/* Inspiración */}
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>Inspiración</label>
+            <input
+              type="number"
+              className={styles.input}
+              value={character.inspiration ?? 0}
+              min={0}
+              max={99}
+              onChange={e => handleField('inspiration', Math.max(0, parseInt(e.target.value, 10) || 0))}
+              title="Puntos de inspiración"
+            />
+          </div>
         </div>
       </section>
 
