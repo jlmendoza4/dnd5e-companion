@@ -175,6 +175,39 @@ const LOCAL_SPELLS = [
     }
   },
   {
+    index: 'custom:shadow-of-moil',
+    name: 'Shadow of Moil',
+    esName: 'Sombra de Moil',
+    aliases: [
+      'sombra de moil', 'shadow of moil', 'moil', 'sombra moil'
+    ],
+    classes: ['warlock'],
+    detail: {
+      index: 'custom:shadow-of-moil',
+      name: 'Shadow of Moil',
+      level: 4,
+      school: { name: 'Necromancy' },
+      casting_time: '1 action',
+      range: 'Self',
+      duration: 'Up to 1 minute',
+      components: ['V', 'S', 'M'],
+      material: 'An undead eyeball encased in a gem worth at least 150 gp',
+      concentration: true,
+      ritual: false,
+      desc: [
+        'Flame-like shadows wreathe your body until the spell ends, causing you to become heavily obscured to others.',
+        'The shadows turn dim light within 10 feet of you into darkness, and bright light in the same area to dim light.',
+        'Until the spell ends, you have resistance to radiant damage.',
+        'In addition, whenever a creature within 10 feet of you hits you with an attack, the shadows lash out at that creature, dealing it 2d8 necrotic damage.'
+      ],
+      higher_level: [],
+      damage: {
+        damage_type: { name: 'Necrotic' },
+        damage_at_slot_level: { 4: '2d8 necrotic (retribution)' }
+      }
+    }
+  },
+  {
     index: 'custom:comprehend-languages',
     name: 'Comprehend Languages',
     esName: 'Comprensión de lenguas',
@@ -225,6 +258,9 @@ export const SPELL_SEARCH_ALIASES = {
   'comprensión de lenguas': ['comprehend languages'],
   'entender idiomas': ['comprehend languages'],
   'lenguas': ['comprehend languages'],
+  'sombra de moil': ['shadow-of-moil'],
+  'shadow of moil': ['shadow-of-moil'],
+  'moil': ['shadow-of-moil'],
 }
 
 export function getLocalSpellsByClass(classIndex) {

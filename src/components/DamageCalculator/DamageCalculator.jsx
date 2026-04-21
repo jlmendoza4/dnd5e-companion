@@ -50,6 +50,16 @@ import styles from './DamageCalculator.module.css'
 
 export default function DamageCalculator() {
   const { character, updateCharacter: onUpdate } = useCharacter()
+  const [hpDelta, setHpDelta] = useState('')
+  const applyHpDelta = (sign) => {
+    const val = parseInt(hpDelta)
+    if (!val || val <= 0) return
+    const next = sign === 'heal'
+      ? Math.min(character.maxHP, character.currentHP + val)
+      : Math.max(0, character.currentHP - val)
+    onUpdate({ currentHP: next })
+    setHpDelta('')
+  }
   const [category, setCategory]       = useState('weapon') // 'weapon' | 'spell'
   const [selectedItem, setSelectedItem] = useState(QUICK_WEAPONS[2]) // Espada larga por defecto
   const [spellSearch, setSpellSearch] = useState('')
@@ -386,7 +396,7 @@ export default function DamageCalculator() {
       })
 
     return () => { cancelled = true }
-  }, [category, selectedItem])
+  }, [category, selectedItem?.index, selectedItem?.source])
 
   // ── Traduce la descripción del hechizo (rápido por diccionario + refinado automático) ──
   useEffect(() => {
@@ -651,7 +661,14 @@ export default function DamageCalculator() {
   useEffect(() => {
     if (category !== 'spell') return
     if (!items.length) return
-    if (!selectedItem || !items.some((item) => item.name === selectedItem.name)) {
+
+    const selectedKey = selectedItem?.index || normalizeSpellText(selectedItem?.name || '')
+    const hasSelectedItem = items.some((item) => {
+      const itemKey = item?.index || normalizeSpellText(item?.name || '')
+      return itemKey && itemKey === selectedKey
+    })
+
+    if (!selectedItem || !hasSelectedItem) {
       setSelectedItem(items[0])
     }
   }, [category, items, selectedItem])
@@ -699,6 +716,40 @@ export default function DamageCalculator() {
                 </div>
               </>
             )}
+          </div>
+
+          {/* Widget de PG */}
+          <div className={styles.hpWidget}>
+            <div className={styles.hpWidgetTop}>
+              <span className={styles.hpWidgetLabel}>❤️ PG</span>
+              <span className={styles.hpWidgetValue}>{character.currentHP} / {character.maxHP}</span>
+            </div>
+            <div className={styles.hpWidgetBar}>
+              <div
+                className={styles.hpWidgetFill}
+                style={{
+                  width: `${Math.max(0, Math.min(100, (character.currentHP / character.maxHP) * 100))}%`,
+                  background: character.currentHP / character.maxHP > 0.5
+                    ? 'var(--color-success, #22c55e)'
+                    : character.currentHP / character.maxHP > 0.25
+                    ? 'var(--color-warning, #f97316)'
+                    : 'var(--color-danger, #ef4444)'
+                }}
+              />
+            </div>
+            <div className={styles.hpWidgetRow}>
+              <button type="button" className={styles.hpDmgBtn} onClick={() => applyHpDelta('damage')}>⚔️ Daño</button>
+              <input
+                type="number"
+                className={styles.hpDeltaInput}
+                value={hpDelta}
+                min={1}
+                placeholder="0"
+                onChange={e => setHpDelta(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') applyHpDelta('damage') }}
+              />
+              <button type="button" className={styles.hpHealBtn} onClick={() => applyHpDelta('heal')}>💚 Curar</button>
+            </div>
           </div>
 
           {/* Categoría: Arma o Hechizo */}

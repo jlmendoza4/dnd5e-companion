@@ -73,6 +73,16 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
   // Armor of Agathys tracker
   const [agathysSlot, setAgathysSlot] = useState(1)
   const [agathysTempHP, setAgathysTempHP] = useState(0)
+  const [hpDelta, setHpDelta] = useState('')
+  const applyHpDelta = (sign) => {
+    const val = parseInt(hpDelta)
+    if (!val || val <= 0) return
+    const next = sign === 'heal'
+      ? Math.min(character.maxHP ?? 999, (character.currentHP ?? 0) + val)
+      : Math.max(0, (character.currentHP ?? 0) - val)
+    onUpdate?.({ currentHP: next })
+    setHpDelta('')
+  }
 
   const cursedTarget = useMemo(() => targets.find((t) => t.cursed), [targets])
   const curseBonus = cursedTarget ? prof : 0
@@ -343,9 +353,24 @@ Responde en 5 lineas maximo.`
             const pct = max > 0 ? Math.round((hp / max) * 100) : 0
             const barClass = pct <= 25 ? styles.hpBarDanger : pct <= 50 ? styles.hpBarWarn : styles.hpBarOk
             return (
+              <>
               <div className={styles.hpBarWrap}>
                 <div className={`${styles.hpBar} ${barClass}`} style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
               </div>
+              <div className={styles.hpDeltaRow}>
+                <button type="button" className={styles.hpDmgBtn} onClick={() => applyHpDelta('damage')}>⚔️ Daño</button>
+                <input
+                  type="number"
+                  className={styles.hpDeltaInput}
+                  value={hpDelta}
+                  min={1}
+                  placeholder="0"
+                  onChange={e => setHpDelta(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') applyHpDelta('damage') }}
+                />
+                <button type="button" className={styles.hpHealBtn} onClick={() => applyHpDelta('heal')}>💚 Curar</button>
+              </div>
+              </>
             )
           })()}
         </div>

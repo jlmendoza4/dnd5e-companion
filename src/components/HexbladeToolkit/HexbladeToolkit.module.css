@@ -211,6 +211,54 @@
 .hpBarWarn   { background: #f59e0b; }
 .hpBarDanger { background: #ef4444; }
 
+.hpDeltaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.hpDeltaInput {
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-medium);
+  color: var(--text-primary);
+}
+
+.hpDmgBtn {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.hpDmgBtn:hover { opacity: 0.82; }
+
+.hpHealBtn {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: #22c55e;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.hpHealBtn:hover { opacity: 0.82; }
+
 /* ─── AGATHYS TRACKER ────────────────────────────────────────── */
 .agathysPreview {
   display: flex;

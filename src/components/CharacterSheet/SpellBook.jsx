@@ -277,6 +277,12 @@ export default function SpellBook({ character, onUpdate }) {
   const profBonus   = getProficiencyBonus(character.level)
   const saveCD      = spellMod !== null ? 8 + profBonus + spellMod : null
   const attackBonus = spellMod !== null ? profBonus + spellMod : null
+  const perceptionBonusRaw = Number(character.skills?.perception ?? 0)
+  const perceptionBonus = Number.isFinite(perceptionBonusRaw) ? perceptionBonusRaw : 0
+  const passivePerception = 10 + perceptionBonus
+  const insightBonusRaw = Number(character.skills?.insight ?? 0)
+  const insightBonus = Number.isFinite(insightBonusRaw) ? insightBonusRaw : 0
+  const passiveInsight = 10 + insightBonus
 
   // Hechizos conocidos normalizados [{index, name}]
   const knownSpells = useMemo(() => (character.spells || []).map(normEntry), [character.spells])
@@ -390,17 +396,18 @@ export default function SpellBook({ character, onUpdate }) {
 
   // ── Pre-cargar detalles de hechizos conocidos con índice ──
   useEffect(() => {
+    // Solo disparamos la carga inicial una vez para evitar bucles con loadingSet
     for (const s of knownSpells) {
-      if (s.index && !detailCache[s.index] && !loadingSet.has(s.index)) {
+      if (s.index && !detailCache[s.index]) {
         loadDetail(s.index)
       }
     }
-  }, [knownSpells]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [knownSpells.length, detailCache]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Traducir descripción cuando un hechizo se expande y su detalle llega ──
   useEffect(() => {
-    for (const [idx, isOpen] of Object.entries(expanded)) {
-      if (!isOpen) continue
+    const activeIndices = Object.keys(expanded).filter(idx => expanded[idx])
+    for (const idx of activeIndices) {
       if (transDesc[idx]) continue
       const d = detailCache[idx]
       if (!d?.desc) continue
@@ -472,27 +479,41 @@ export default function SpellBook({ character, onUpdate }) {
       <h3 className={styles.sectionTitle}>✨ Hechizos Conocidos</h3>
 
       {/* ── BANNER DE STATS DE CONJURO ── */}
-      {saveCD !== null && (
+      {(saveCD !== null || Number.isFinite(passivePerception) || Number.isFinite(passiveInsight)) && (
         <div className={styles.statsBanner}>
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Cap. conjuradora</span>
-            <span className={styles.statValue}>{ABILITY_LABELS[abilityKey]}</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Modificador</span>
-            <span className={styles.statValue}>{spellMod >= 0 ? `+${spellMod}` : spellMod}</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statLabel}>Competencia</span>
-            <span className={styles.statValue}>+{profBonus}</span>
+          {saveCD !== null && (
+            <>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>Cap. conjuradora</span>
+                <span className={styles.statValue}>{ABILITY_LABELS[abilityKey]}</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>Modificador</span>
+                <span className={styles.statValue}>{spellMod >= 0 ? `+${spellMod}` : spellMod}</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>Competencia</span>
+                <span className={styles.statValue}>+{profBonus}</span>
+              </div>
+              <div className={`${styles.statItem} ${styles.statHi}`}>
+                <span className={styles.statLabel}>CD de conjuros</span>
+                <span className={styles.statBigValue}>{saveCD}</span>
+              </div>
+              <div className={`${styles.statItem} ${styles.statHi}`}>
+                <span className={styles.statLabel}>Bono ataque</span>
+                <span className={styles.statBigValue}>{attackBonus >= 0 ? `+${attackBonus}` : attackBonus}</span>
+              </div>
+            </>
+          )}
+          <div className={`${styles.statItem} ${styles.statHi}`}>
+            <span className={styles.statLabel}>Percepcion pasiva</span>
+            <span className={styles.statBigValue}>{passivePerception}</span>
+            <span className={styles.statValue}>10 + ({formatSigned(perceptionBonus)})</span>
           </div>
           <div className={`${styles.statItem} ${styles.statHi}`}>
-            <span className={styles.statLabel}>CD de conjuros</span>
-            <span className={styles.statBigValue}>{saveCD}</span>
-          </div>
-          <div className={`${styles.statItem} ${styles.statHi}`}>
-            <span className={styles.statLabel}>Bono ataque</span>
-            <span className={styles.statBigValue}>{attackBonus >= 0 ? `+${attackBonus}` : attackBonus}</span>
+            <span className={styles.statLabel}>Perspicacia pasiva</span>
+            <span className={styles.statBigValue}>{passiveInsight}</span>
+            <span className={styles.statValue}>10 + ({formatSigned(insightBonus)})</span>
           </div>
         </div>
       )}

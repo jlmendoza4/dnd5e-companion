@@ -408,7 +408,24 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
+.spellGained {
+  color: #a78bfa;
+  font-weight: 600;
+}
 
+.pactNote {
+  font-size: 0.82rem;
+  color: #c084fc;
+  margin: 0 0 0.7rem;
+  font-style: italic;
+}
+
+.preparedNote {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.7rem;
+  line-height: 1.4;
+}
 .slotsLabel {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -430,6 +447,14 @@
   border-radius: 6px;
   padding: 0.35rem 0.83rem;
   min-width: 3rem;
+}
+
+.slotChipPact {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.5);
+}
+.slotChipPact .slotCount {
+  color: #fbbf24;
 }
 
 .slotLevel {

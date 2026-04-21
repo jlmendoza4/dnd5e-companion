@@ -1,0 +1,265 @@
+/* ============================================================
+   EquipmentPanel.module.css — Panel visual de equipamiento
+   ============================================================ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HEADER ── */
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.25);
+}
+
+.panelTitle {
+  font-size: 1.35rem;
+  margin: 0;
+  color: var(--heading-color);
+  font-family: var(--font-title);
+}
+
+.equippedBadge {
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: var(--purple-light);
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-family: var(--font-title);
+  letter-spacing: 0.05em;
+}
+
+/* ── MUÑECO / DOLL ── */
+.doll {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* ── COLUMNAS LATERALES ── */
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+/* ── COLUMNA CENTRAL (SILUETA) ── */
+.centerCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 130px;
+}
+
+.silhouette {
+  width: 130px;
+  height: auto;
+  fill: rgba(139, 92, 246, 0.18);
+  stroke: rgba(139, 92, 246, 0.7);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.3));
+  transition: fill 0.2s, filter 0.2s;
+}
+
+.silhouette:hover {
+  fill: rgba(139, 92, 246, 0.28);
+  filter: drop-shadow(0 0 18px rgba(139, 92, 246, 0.55));
+}
+
+.charName {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  color: var(--heading-color);
+  margin: 0;
+  text-align: center;
+}
+
+.charClass {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+/* ── FILA INFERIOR ── */
+.bottomRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+
+/* ── RANURA DE EQUIPO ── */
+.slot {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  backdrop-filter: blur(6px);
+}
+
+.slot:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.1);
+}
+
+.slotFilled {
+  border-color: rgba(180, 140, 50, 0.55);
+  background: rgba(180, 140, 50, 0.06);
+  box-shadow: 0 0 8px rgba(180, 140, 50, 0.12);
+}
+
+.slotHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.slotIcon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.slotLabel {
+  font-size: 0.72rem;
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--purple-light);
+}
+
+.slotInput {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.3rem 0.55rem;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition);
+  box-sizing: border-box;
+}
+
+.slotInput:focus {
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.12);
+}
+
+.slotInput::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.slotBonus {
+  font-size: 0.72rem;
+  color: var(--gold-light, #f4c06f);
+  border-color: rgba(180, 140, 50, 0.3);
+}
+
+.slotBonus::placeholder {
+  color: rgba(180, 140, 50, 0.45);
+}
+
+/* ── RESUMEN DE BONUSES ── */
+.bonusSummary {
+  background: var(--bg-glass);
+  border: 1px solid rgba(180, 140, 50, 0.3);
+  border-radius: var(--border-radius-lg);
+  padding: 1rem 1.25rem;
+  backdrop-filter: blur(6px);
+}
+
+.bonusTitle {
+  font-size: 0.85rem;
+  color: var(--purple-light);
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.bonusList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bonusItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(180, 140, 50, 0.3);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.bonusSlotIcon {
+  font-size: 0.8rem;
+}
+
+.bonusItemName {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.bonusValue {
+  color: var(--gold-light, #f4c06f);
+  font-size: 0.73rem;
+}
+
+.bonusValue::before {
+  content: '— ';
+  opacity: 0.5;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .doll {
+    grid-template-columns: 1fr;
+  }
+
+  .centerCol {
+    order: -1;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .silhouette {
+    width: 80px;
+  }
+
+  .sideCol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bottomRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}

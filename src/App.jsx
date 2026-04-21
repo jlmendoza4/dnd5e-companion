@@ -14,6 +14,7 @@ import Compendium from './components/Compendium/Compendium'
 import SessionNotes from './components/SessionNotes/SessionNotes'
 import AIAdvisor from './components/AIAdvisor/AIAdvisor'
 import Settings from './components/Settings/Settings'
+import EquipmentPanel from './components/EquipmentPanel/EquipmentPanel'
 import ConfirmDialog from './components/Common/ConfirmDialog'
 import ErrorBoundary from './components/Common/ErrorBoundary'
 import styles from './App.module.css'
@@ -120,6 +121,7 @@ function CharacterSwitcher() {
 // Tabs de navegación principal
 const TABS = [
   { id: 'character',  label: 'Ficha',        icon: '📜' },
+  { id: 'equipment',  label: 'Equipamiento', icon: '🧙' },
   { id: 'damage',     label: 'Daño',       icon: '⚔️' },
   { id: 'dice',       label: 'Dados',        icon: '🎲' },
   { id: 'compendium', label: 'Compendio',    icon: '📚' },
@@ -183,6 +185,13 @@ function AppContent() {
             aria-hidden={activeTab === 'character' ? undefined : true}
           >
             <CharacterSheet onReset={handleReset} />
+          </section>
+
+          <section
+            className={`${styles.tabPanel} ${activeTab === 'equipment' ? styles.tabPanelActive : styles.tabPanelHidden}`}
+            aria-hidden={activeTab === 'equipment' ? undefined : true}
+          >
+            <EquipmentPanel />
           </section>
 
           <section

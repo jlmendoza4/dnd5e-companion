@@ -23,11 +23,35 @@ import SpellBook from './SpellBook'
 import ClassPanel from './ClassPanel'
 import styles from './CharacterSheet.module.css'
 
+const FEAT_WAR_CASTER = `LANZADOR EN COMBATE
+Requisitos: la capacidad de lanzar al menos un conjuro.
+Has practicado como lanzar conjuros en medio del combate, aprendiendo tecnicas que te proporcionan los beneficios siguientes:
+- Tienes ventaja en las tiradas de salvacion de Constitucion que hagas para mantener la concentracion en un conjuro cuando recibes dano.
+- Puedes ejecutar los componentes somaticos de tus conjuros incluso cuando empunas armas o un escudo, en una o ambas manos.
+- Cuando el movimiento de una criatura hostil te permite hacer un ataque de oportunidad contra ella, puedes usar tu reaccion para, en lugar de realizar este ataque, lanzar un conjuro contra la criatura. Dicho conjuro debera tener un tiempo de lanzamiento de 1 accion y tener como objetivo una unica criatura.`
+
+const FEAT_RESILIENT = `RESILIENTE
+Elige una puntuacion de caracteristica. Obtienes los beneficios siguientes:
+- Tu puntuacion de caracteristica elegida aumenta en 1, hasta un maximo de 20.
+- Obtienes competencia en las tiradas de salvacion de la caracteristica elegida.
+Caracteristica elegida: (pendiente de definir)`
+
 export default function CharacterSheet({ onReset }) {
   const { character, updateCharacter: onUpdate } = useCharacter()
   // Estado local para el campo de nuevo hechizo/equipo que se está añadiendo
   const [newEquipment, setNewEquipment] = useState('')
   const [showLevelUp, setShowLevelUp] = useState(false)
+  const [hpDelta, setHpDelta] = useState('')
+
+  const applyHpDelta = (sign) => {
+    const val = parseInt(hpDelta)
+    if (!val || val <= 0) return
+    const next = sign === 'heal'
+      ? Math.min(character.maxHP, character.currentHP + val)
+      : Math.max(0, character.currentHP - val)
+    onUpdate({ currentHP: next })
+    setHpDelta('')
+  }
 
   // ── Manejadores de cambio de campos simples ──
   const handleField = (field, value) => onUpdate({ [field]: value })
@@ -35,7 +59,28 @@ export default function CharacterSheet({ onReset }) {
   // ── Manejadores de estadísticas ──
   const handleStat = (statKey, value) => {
     const numVal = Math.max(1, Math.min(30, parseInt(value) || 1))
-    onUpdate({ stats: { ...character.stats, [statKey]: numVal } })
+    const newMod = getModifier(numVal)
+
+    const updates = { stats: { ...character.stats, [statKey]: numVal } }
+
+    // Recalcular habilidades asociadas: statMod + profBonus si tiene competencia
+    const rawProfs = { ...EMPTY_SKILL_PROFS, ...(character.skillProficiencies || {}) }
+    const rawSkills = { ...EMPTY_SKILLS, ...(character.skills || {}) }
+    SKILLS_CONFIG.forEach(skill => {
+      if (skill.stat === statKey) {
+        const isProficient = !!rawProfs[skill.key]
+        rawSkills[skill.key] = newMod + (isProficient ? profBonus : 0)
+      }
+    })
+    updates.skills = rawSkills
+
+    // Recalcular tirada de salvación asociada: statMod + profBonus si tiene competencia
+    const rawSaveProfs = { ...EMPTY_SAVE_PROFS, ...(character.savingThrowProficiencies || {}) }
+    const rawSaves = { ...EMPTY_SAVES, ...(character.savingThrows || {}) }
+    rawSaves[statKey] = newMod + (!!rawSaveProfs[statKey] ? profBonus : 0)
+    updates.savingThrows = rawSaves
+
+    onUpdate(updates)
   }
 
   const handleSkill = (skillKey, value) => {
@@ -81,21 +126,74 @@ export default function CharacterSheet({ onReset }) {
   // ── Añadir equipo ──
   const addEquipment = () => {
     const trimmed = newEquipment.trim()
-    if (!trimmed || character.equipment.includes(trimmed)) return
-    onUpdate({ equipment: [...character.equipment, trimmed] })
+    if (!trimmed) return
+    const existing = character.equipment.find(e => e.name === trimmed)
+    if (existing) {
+      onUpdate({ equipment: character.equipment.map(e => e.name === trimmed ? { ...e, qty: e.qty + 1 } : e) })
+    } else {
+      onUpdate({ equipment: [...character.equipment, { name: trimmed, qty: 1 }] })
+    }
     setNewEquipment('')
   }
 
+  // ── Cambiar cantidad de equipo ──
+  const changeEquipmentQty = (name, delta) => {
+    const next = character.equipment
+      .map(e => e.name === name ? { ...e, qty: e.qty + delta } : e)
+      .filter(e => e.qty > 0)
+    onUpdate({ equipment: next })
+  }
+
   // ── Eliminar equipo ──
-  const removeEquipment = (item) => {
-    onUpdate({ equipment: character.equipment.filter(e => e !== item) })
+  const removeEquipment = (name) => {
+    onUpdate({ equipment: character.equipment.filter(e => e.name !== name) })
+  }
+
+  const addRequestedFeats = () => {
+    const currentTraits = String(character.traits || '').trim()
+    const blocksToAdd = []
+
+    if (!currentTraits.includes('LANZADOR EN COMBATE')) {
+      blocksToAdd.push(FEAT_WAR_CASTER)
+    }
+    if (!currentTraits.includes('RESILIENTE')) {
+      blocksToAdd.push(FEAT_RESILIENT)
+    }
+
+    if (blocksToAdd.length === 0) return
+
+    const separator = currentTraits ? '\n\n' : ''
+    onUpdate({ traits: `${currentTraits}${separator}${blocksToAdd.join('\n\n')}` })
   }
 
   const profBonus = getProficiencyBonus(character.level)
+
+  // Recalcula todas las habilidades y salvaciones a partir de los stats actuales
+  const recalcularDesdeStats = () => {
+    const newMods = {}
+    STATS_CONFIG.forEach(s => {
+      newMods[s.key] = getModifier(character.stats?.[s.key] ?? 10)
+    })
+    const rawProfs = { ...EMPTY_SKILL_PROFS, ...(character.skillProficiencies || {}) }
+    const newSkills = { ...EMPTY_SKILLS }
+    SKILLS_CONFIG.forEach(skill => {
+      const isProficient = !!rawProfs[skill.key]
+      newSkills[skill.key] = newMods[skill.stat] + (isProficient ? profBonus : 0)
+    })
+    const rawSaveProfs = { ...EMPTY_SAVE_PROFS, ...(character.savingThrowProficiencies || {}) }
+    const newSaves = { ...EMPTY_SAVES }
+    SAVE_CONFIG.forEach(save => {
+      newSaves[save.key] = newMods[save.key] + (!!rawSaveProfs[save.key] ? profBonus : 0)
+    })
+    onUpdate({ skills: newSkills, savingThrows: newSaves })
+  }
+
   const skillValues = { ...EMPTY_SKILLS, ...(character.skills || {}) }
   const skillProficiencies = { ...EMPTY_SKILL_PROFS, ...(character.skillProficiencies || {}) }
   const savingThrows = { ...EMPTY_SAVES, ...(character.savingThrows || {}) }
   const savingThrowProficiencies = { ...EMPTY_SAVE_PROFS, ...(character.savingThrowProficiencies || {}) }
+  const passivePerception = 10 + (skillValues.perception ?? 0)
+  const passiveInsight = 10 + (skillValues.insight ?? 0)
 
   return (
     <>
@@ -107,6 +205,9 @@ export default function CharacterSheet({ onReset }) {
           <span className={styles.profBonus} title="Bonificador de competencia">
             +{profBonus} Competencia
           </span>
+          <button className="btn btn-secondary" onClick={recalcularDesdeStats} title="Recalcula habilidades y salvaciones desde los stats actuales">
+            🔄 Recalcular
+          </button>
           <button className="btn btn-danger" onClick={onReset} title="Reiniciar ficha">
             🗑️ Reiniciar
           </button>
@@ -316,7 +417,17 @@ export default function CharacterSheet({ onReset }) {
 
       {/* ══ SECCIÓN 4: HABILIDADES ══ */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>🎯 Habilidades</h3>
+        <div className={styles.skillsHeader}>
+          <h3 className={styles.sectionTitle}>🎯 Habilidades</h3>
+          <div className={styles.passiveBadges}>
+            <span className={styles.passiveBadge} title="Percepcion pasiva = 10 + bonificador de Percepcion">
+              👁️ Percepcion pasiva: 10 + ({skillValues.perception ?? 0}) = {passivePerception}
+            </span>
+            <span className={styles.passiveBadge} title="Perspicacia pasiva = 10 + bonificador de Perspicacia">
+              🧠 Perspicacia pasiva: 10 + ({skillValues.insight ?? 0}) = {passiveInsight}
+            </span>
+          </div>
+        </div>
         <div className={styles.skillsTable}>
           {SKILLS_CONFIG.map(skill => {
             const value = skillValues[skill.key] ?? 0
@@ -381,6 +492,33 @@ export default function CharacterSheet({ onReset }) {
                 />
               </div>
             </div>
+            {/* Daño / Curación rápida */}
+            <div className={styles.hpDeltaRow}>
+              <button
+                type="button"
+                className={styles.hpDmgBtn}
+                onClick={() => applyHpDelta('damage')}
+                title="Aplicar daño"
+              >⚔️ Daño</button>
+              <input
+                type="number"
+                className={`${styles.input} ${styles.hpDeltaInput}`}
+                value={hpDelta}
+                min={1}
+                placeholder="0"
+                onChange={e => setHpDelta(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') applyHpDelta('damage')
+                }}
+              />
+              <button
+                type="button"
+                className={styles.hpHealBtn}
+                onClick={() => applyHpDelta('heal')}
+                title="Aplicar curación"
+              >💚 Curar</button>
+            </div>
+
             {/* Barra visual de PG */}
             <div className={styles.hpBar}>
               <div
@@ -444,11 +582,26 @@ export default function CharacterSheet({ onReset }) {
               <p className={styles.emptyMsg}>No hay equipo registrado</p>
             ) : (
               character.equipment.map(item => (
-                <span key={item} className={styles.tag} style={{ '--tag-color': 'var(--gold-dark)' }}>
-                  ⚔️ {item}
+                <span key={item.name} className={styles.tag} style={{ '--tag-color': 'var(--gold-dark)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                  ⚔️ {item.name}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.15rem', marginLeft: '0.25rem' }}>
+                    <button
+                      className={styles.tagRemove}
+                      style={{ fontSize: '0.8rem', padding: '0 0.3rem' }}
+                      onClick={() => changeEquipmentQty(item.name, -1)}
+                      title="Reducir cantidad"
+                    >−</button>
+                    <span style={{ minWidth: '1.2rem', textAlign: 'center', fontWeight: 700 }}>{item.qty}</span>
+                    <button
+                      className={styles.tagRemove}
+                      style={{ fontSize: '0.8rem', padding: '0 0.3rem' }}
+                      onClick={() => changeEquipmentQty(item.name, 1)}
+                      title="Aumentar cantidad"
+                    >+</button>
+                  </span>
                   <button
                     className={styles.tagRemove}
-                    onClick={() => removeEquipment(item)}
+                    onClick={() => removeEquipment(item.name)}
                     title="Eliminar"
                   >×</button>
                 </span>
@@ -461,6 +614,11 @@ export default function CharacterSheet({ onReset }) {
       {/* ══ SECCIÓN 8: RASGOS Y NOTAS ══ */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>📝 Rasgos, Características y Notas</h3>
+        <div className={styles.addRow} style={{ marginBottom: '0.65rem' }}>
+          <button className="btn btn-primary" type="button" onClick={addRequestedFeats}>
+            ➕ Añadir dotes solicitadas
+          </button>
+        </div>
         <textarea
           className={`${styles.input} ${styles.textarea}`}
           value={character.traits}

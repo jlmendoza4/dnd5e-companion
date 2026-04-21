@@ -221,10 +221,12 @@
 /* FILA DE HECHIZO */
 .spellRow {
   border-radius: var(--border-radius);
-  overflow: hidden;
   background: var(--bg-glass);
   border: 1px solid rgba(124, 58, 237, 0.14);
-  transition: border-color var(--transition);
+  transition: all 0.25s ease;
+  height: min-content;
+  display: flex;
+  flex-direction: column;
 }
 .spellRow:hover { border-color: rgba(124, 58, 237, 0.3); }
 
@@ -232,6 +234,7 @@
   display: flex;
   align-items: stretch;
   gap: 0;
+  min-height: 2.8rem;
 }
 
 .spellBtn {
@@ -300,11 +303,17 @@
 }
 
 .loadingDot {
+  display: inline-block;
   font-size: 0.82rem;
-  animation: pulse 1s infinite;
+  margin-left: 0.5rem;
+  animation: pulse 1.5s infinite ease-in-out;
 }
 
-@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+@keyframes pulse {
+  0%   { opacity: 0.1; transform: scale(0.95); }
+  50%  { opacity: 1;   transform: scale(1.05); }
+  100% { opacity: 0.1; transform: scale(0.95); }
+}
 
 .removeBtn {
   padding: 0 0.8rem;
@@ -325,6 +334,21 @@
   padding: 0.8rem 0.9rem;
   border-top: 1px solid rgba(124, 58, 237, 0.12);
   background: var(--surface-1);
+  animation: slideDown 0.25s ease-out;
+  overflow: hidden;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
 }
 
 .detailGrid {

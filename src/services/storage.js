@@ -98,6 +98,19 @@ export const DEFAULT_CHARACTER = {
   sessionNotes: '',
   spells: [],
   equipment: [],
+  gearSlots: {
+    head:     { name: '', bonus: '' },
+    neck:     { name: '', bonus: '' },
+    chest:    { name: '', bonus: '' },
+    cloak:    { name: '', bonus: '' },
+    gloves:   { name: '', bonus: '' },
+    ring1:    { name: '', bonus: '' },
+    ring2:    { name: '', bonus: '' },
+    belt:     { name: '', bonus: '' },
+    boots:    { name: '', bonus: '' },
+    mainHand: { name: '', bonus: '' },
+    offHand:  { name: '', bonus: '' },
+  },
   traits: '',
 }
 
@@ -285,7 +298,26 @@ export function normalizeCharacterData(rawCharacter) {
     },
     spellSlots: normalizedSpellSlots,
     spells: Array.isArray(next.spells) ? next.spells : [],
-    equipment: Array.isArray(next.equipment) ? next.equipment : [],
+    equipment: Array.isArray(next.equipment)
+      ? next.equipment.map(item =>
+          typeof item === 'string'
+            ? { name: item, qty: 1 }
+            : { name: String(item.name || ''), qty: Math.max(1, parseInt(item.qty) || 1) }
+        )
+      : [],
+    gearSlots: {
+      head:     { name: String(next.gearSlots?.head?.name     || ''), bonus: String(next.gearSlots?.head?.bonus     || '') },
+      neck:     { name: String(next.gearSlots?.neck?.name     || ''), bonus: String(next.gearSlots?.neck?.bonus     || '') },
+      chest:    { name: String(next.gearSlots?.chest?.name    || ''), bonus: String(next.gearSlots?.chest?.bonus    || '') },
+      cloak:    { name: String(next.gearSlots?.cloak?.name    || ''), bonus: String(next.gearSlots?.cloak?.bonus    || '') },
+      gloves:   { name: String(next.gearSlots?.gloves?.name   || ''), bonus: String(next.gearSlots?.gloves?.bonus   || '') },
+      ring1:    { name: String(next.gearSlots?.ring1?.name    || ''), bonus: String(next.gearSlots?.ring1?.bonus    || '') },
+      ring2:    { name: String(next.gearSlots?.ring2?.name    || ''), bonus: String(next.gearSlots?.ring2?.bonus    || '') },
+      belt:     { name: String(next.gearSlots?.belt?.name     || ''), bonus: String(next.gearSlots?.belt?.bonus     || '') },
+      boots:    { name: String(next.gearSlots?.boots?.name    || ''), bonus: String(next.gearSlots?.boots?.bonus    || '') },
+      mainHand: { name: String(next.gearSlots?.mainHand?.name || ''), bonus: String(next.gearSlots?.mainHand?.bonus || '') },
+      offHand:  { name: String(next.gearSlots?.offHand?.name  || ''), bonus: String(next.gearSlots?.offHand?.bonus  || '') },
+    },
   }
 }
 

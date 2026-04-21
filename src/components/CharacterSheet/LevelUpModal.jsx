@@ -47,6 +47,68 @@ const ASI_LEVELS = {
 // ── Nombres en español de los niveles de conjuro ─────────────
 const SLOT_LABELS = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º']
 
+// ── Tablas locales de espacios de conjuro (fallback si la API falla) ──
+// Lanzadores completos: Bardo, Clérigo, Druida, Hechicero, Mago
+// [nivel-1] → [1º, 2º, 3º, 4º, 5º, 6º, 7º, 8º, 9º]
+const FULL_CASTER_SLOTS = [
+  [2,0,0,0,0,0,0,0,0],[3,0,0,0,0,0,0,0,0],[4,2,0,0,0,0,0,0,0],[4,3,0,0,0,0,0,0,0],
+  [4,3,2,0,0,0,0,0,0],[4,3,3,0,0,0,0,0,0],[4,3,3,1,0,0,0,0,0],[4,3,3,2,0,0,0,0,0],
+  [4,3,3,3,1,0,0,0,0],[4,3,3,3,2,0,0,0,0],[4,3,3,3,2,1,0,0,0],[4,3,3,3,2,1,0,0,0],
+  [4,3,3,3,2,1,1,0,0],[4,3,3,3,2,1,1,0,0],[4,3,3,3,2,1,1,1,0],[4,3,3,3,2,1,1,1,0],
+  [4,3,3,3,2,1,1,1,1],[4,3,3,3,3,1,1,1,1],[4,3,3,3,3,2,1,1,1],[4,3,3,3,3,2,2,1,1],
+]
+// Lanzadores medios: Paladín, Explorador (empiezan en nivel 2)
+const HALF_CASTER_SLOTS = [
+  [0,0,0,0,0],[2,0,0,0,0],[3,0,0,0,0],[3,0,0,0,0],[4,2,0,0,0],[4,2,0,0,0],
+  [4,3,0,0,0],[4,3,0,0,0],[4,3,2,0,0],[4,3,2,0,0],[4,3,3,0,0],[4,3,3,0,0],
+  [4,3,3,1,0],[4,3,3,1,0],[4,3,3,2,0],[4,3,3,2,0],[4,3,3,3,1],[4,3,3,3,1],
+  [4,3,3,3,2],[4,3,3,3,2],
+]
+// Magia de Pacto del Brujo (nivel 1-20)
+const WARLOCK_PACT = [
+  { slots:1,lvl:1,cantrips:2,known:2  },{ slots:2,lvl:1,cantrips:2,known:3  },
+  { slots:2,lvl:2,cantrips:2,known:4  },{ slots:2,lvl:2,cantrips:3,known:5  },
+  { slots:2,lvl:3,cantrips:3,known:6  },{ slots:2,lvl:3,cantrips:3,known:7  },
+  { slots:2,lvl:4,cantrips:3,known:8  },{ slots:2,lvl:4,cantrips:3,known:9  },
+  { slots:2,lvl:5,cantrips:3,known:10 },{ slots:2,lvl:5,cantrips:4,known:10 },
+  { slots:3,lvl:5,cantrips:4,known:11 },{ slots:3,lvl:5,cantrips:4,known:11 },
+  { slots:3,lvl:5,cantrips:4,known:12 },{ slots:3,lvl:5,cantrips:4,known:12 },
+  { slots:3,lvl:5,cantrips:4,known:13 },{ slots:3,lvl:5,cantrips:4,known:13 },
+  { slots:4,lvl:5,cantrips:4,known:14 },{ slots:4,lvl:5,cantrips:4,known:14 },
+  { slots:4,lvl:5,cantrips:4,known:15 },{ slots:4,lvl:5,cantrips:4,known:15 },
+]
+// Trucos conocidos por clase (índice = nivel-1)
+const LOCAL_CANTRIPS = {
+  bard:     [2,2,2,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4],
+  cleric:   [3,3,3,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5],
+  druid:    [2,2,2,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4],
+  sorcerer: [4,4,4,5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6],
+  wizard:   [3,3,3,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5],
+}
+// Conjuros conocidos para clases de lista fija (índice = nivel-1)
+const LOCAL_SPELLS_KNOWN = {
+  bard:     [4,5,6,7,8,9,10,11,12,14,15,15,16,18,19,19,20,22,22,22],
+  ranger:   [0,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11],
+  sorcerer: [2,3,4,5,6,7,8,9,10,11,12,12,13,13,14,14,15,15,15,15],
+}
+// Habilidad de lanzamiento para clases preparadoras
+const PREP_CAST_ABILITY = { cleric:'SAB', druid:'SAB', wizard:'INT', paladin:'CAR' }
+
+function getLocalSpellData(cIdx, level) {
+  if (!cIdx || level < 1 || level > 20) return null
+  const i = level - 1
+  if (cIdx === 'warlock') return { isPact: true, ...WARLOCK_PACT[i] }
+  const isHalf = cIdx === 'paladin' || cIdx === 'ranger'
+  const isFull = ['bard','cleric','druid','sorcerer','wizard'].includes(cIdx)
+  if (!isHalf && !isFull) return null
+  return {
+    slots:      (isHalf ? HALF_CASTER_SLOTS : FULL_CASTER_SLOTS)[i],
+    cantrips:   LOCAL_CANTRIPS[cIdx]?.[i] ?? null,
+    known:      LOCAL_SPELLS_KNOWN[cIdx]?.[i] ?? null,
+    isPrepared: !!PREP_CAST_ABILITY[cIdx],
+  }
+}
+
 // ── Dotes recomendadas para Brujo Filo Maléfico ───────────────
 const HEXBLADE_ASI_FEATS = [
   {
@@ -269,16 +331,55 @@ export default function LevelUpModal({ character, onConfirm, onCancel }) {
   }
 
   // ── Datos de rasgos y conjuros del nuevo nivel ──────────────
-  const features    = levelData?.features || []
-  const sp          = levelData?.spellcasting
-  const spellSlots  = sp
-    ? SLOT_LABELS.map((label, i) => ({
-        label,
-        count: sp[`spell_slots_level_${i + 1}`] || 0
-      })).filter(s => s.count > 0)
-    : []
+  const features   = levelData?.features || []
+  const sp         = levelData?.spellcasting
+  const cs         = levelData?.class_specific   // datos específicos de clase (Brujo, etc.)
+
+  // Datos locales como fallback si la API no devuelve info de conjuros
+  const hasApiSpell = sp && (sp.cantrips_known != null || SLOT_LABELS.some((_, i) => (sp[`spell_slots_level_${i+1}`] || 0) > 0))
+  const localNow  = getLocalSpellData(classIndex, newLevel)
+  const localPrev = getLocalSpellData(classIndex, newLevel - 1)
+
+  // Espacios de conjuro
+  let spellSlots = []
+  if (localNow?.isPact) {
+    // Brujo — Magia de Pacto
+    const pactSlots = cs?.spell_slots_available ?? localNow.slots
+    const pactLevel = cs?.spell_slot_level      ?? localNow.lvl
+    if (pactSlots && pactLevel) {
+      spellSlots = [{ label: SLOT_LABELS[pactLevel - 1], count: pactSlots, isPact: true }]
+    }
+  } else if (hasApiSpell) {
+    spellSlots = SLOT_LABELS.map((label, i) => ({
+      label, count: sp[`spell_slots_level_${i + 1}`] || 0
+    })).filter(s => s.count > 0)
+  } else if (localNow?.slots) {
+    spellSlots = SLOT_LABELS.map((label, i) => ({
+      label, count: localNow.slots[i] || 0
+    })).filter(s => s.count > 0)
+  }
+
+  // Trucos y conjuros conocidos (API primero, local como fallback)
   const cantripsKnown = sp?.cantrips_known
+    ?? (localNow?.isPact ? (cs?.cantrips_known ?? localNow.cantrips) : localNow?.cantrips)
   const spellsKnown   = sp?.spells_known
+    ?? (localNow?.isPact ? localNow.known : localNow?.known)
+
+  // Nuevos conjuros ganados este nivel (clases de lista conocida)
+  const prevKnown       = localPrev?.known ?? null
+  const newSpellsGained = (spellsKnown != null && prevKnown != null && spellsKnown > prevKnown)
+    ? spellsKnown - prevKnown
+    : null
+
+  // Fórmula de preparación (Mago, Clérigo, Druida, Paladín)
+  const prepAbil = PREP_CAST_ABILITY[classIndex]
+  let preparedCount = null
+  if (prepAbil && !localNow?.isPact) {
+    const abilMod = Math.floor((Number(character.stats?.[prepAbil] || 10) - 10) / 2)
+    preparedCount = classIndex === 'paladin'
+      ? Math.max(1, abilMod + Math.floor(newLevel / 2))
+      : Math.max(1, abilMod + newLevel)
+  }
 
   // ── Nivel máximo ────────────────────────────────────────────
   if ((character.level || 1) >= 20) {
@@ -497,27 +598,47 @@ export default function LevelUpModal({ character, onConfirm, onCancel }) {
           </section>
 
           {/* ── ESPACIOS DE CONJURO ──────────────────────────── */}
-          {(spellSlots.length > 0 || cantripsKnown || spellsKnown) && (
+          {(spellSlots.length > 0 || cantripsKnown != null || spellsKnown != null || preparedCount != null) && (
             <section className={styles.section}>
               <h3 className={styles.sectionTitle}>🔮 Conjuros al Nivel {newLevel}</h3>
 
-              {(cantripsKnown || spellsKnown) && (
+              {localNow?.isPact && (
+                <p className={styles.pactNote}>⚡ Magia de Pacto — los espacios se recuperan con descanso corto</p>
+              )}
+
+              {(cantripsKnown != null || spellsKnown != null) && (
                 <div className={styles.spellKnown}>
                   {cantripsKnown != null && (
                     <span className={styles.spellKnownItem}>Trucos conocidos: <strong>{cantripsKnown}</strong></span>
                   )}
                   {spellsKnown != null && (
-                    <span className={styles.spellKnownItem}>Conjuros conocidos: <strong>{spellsKnown}</strong></span>
+                    <span className={styles.spellKnownItem}>
+                      Conjuros conocidos: <strong>{spellsKnown}</strong>
+                      {newSpellsGained > 0 && (
+                        <span className={styles.spellGained}> (+{newSpellsGained} nuevo{newSpellsGained > 1 ? 's' : ''})</span>
+                      )}
+                    </span>
                   )}
                 </div>
               )}
 
+              {preparedCount != null && (
+                <p className={styles.preparedNote}>
+                  {classIndex === 'wizard'
+                    ? <>📖 Añades <strong>2</strong> conjuros a tu libro. Puedes preparar hasta <strong>{preparedCount}</strong> (INT mod + nivel).</>
+                    : classIndex === 'paladin'
+                    ? <>Puedes preparar hasta <strong>{preparedCount}</strong> conjuros (CAR mod + ½ nivel).</>
+                    : <>Puedes preparar hasta <strong>{preparedCount}</strong> conjuros ({prepAbil} mod + nivel).</>
+                  }
+                </p>
+              )}
+
               {spellSlots.length > 0 && (
                 <>
-                  <p className={styles.slotsLabel}>Espacios de conjuro:</p>
+                  <p className={styles.slotsLabel}>{localNow?.isPact ? 'Espacios de pacto:' : 'Espacios de conjuro:'}</p>
                   <div className={styles.slotsGrid}>
                     {spellSlots.map(s => (
-                      <div key={s.label} className={styles.slotChip}>
+                      <div key={s.label} className={`${styles.slotChip} ${s.isPact ? styles.slotChipPact : ''}`}>
                         <span className={styles.slotLevel}>{s.label}</span>
                         <span className={styles.slotCount}>×{s.count}</span>
                       </div>
