@@ -97,6 +97,7 @@ export const DEFAULT_CHARACTER = {
   spellSlotsCustomized: false,
   sessionNotes: '',
   spells: [],
+  invocations: [],
   equipment: [],
   gearSlots: {
     head:     { name: '', bonus: '' },
@@ -298,6 +299,9 @@ export function normalizeCharacterData(rawCharacter) {
     },
     spellSlots: normalizedSpellSlots,
     spells: Array.isArray(next.spells) ? next.spells : [],
+    invocations: Array.isArray(next.invocations)
+      ? next.invocations.map((name) => String(name || '').trim()).filter(Boolean)
+      : [],
     equipment: Array.isArray(next.equipment)
       ? next.equipment.map(item =>
           typeof item === 'string'

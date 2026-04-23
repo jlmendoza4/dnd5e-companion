@@ -279,5 +279,325 @@
   color: var(--color-danger);
 }
 
+.invocSpellCallout {
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--border-radius);
+  background: linear-gradient(120deg, rgba(10, 29, 58, 0.84), rgba(33, 67, 123, 0.7));
+  border: 1px solid rgba(56, 189, 248, 0.36);
+}
+
+.invocSpellTitle {
+  margin: 0 0 0.45rem 0;
+  font-size: 0.8rem;
+  color: #dff6ff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-title);
+}
+
+.invocInlineRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed rgba(96, 110, 160, 0.35);
+}
+
+.invocInlineSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.invocInlineCount {
+  font-size: 0.85rem;
+  color: #4f628f;
+  white-space: nowrap;
+}
+
+.invocOpenBtn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, #6c5ce7, #4a9eba);
+  color: #fff;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.invocOpenBtn:hover {
+  opacity: 0.88;
+}
+
+/* ── MODAL OVERLAY ── */
+.invocOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.invocModal {
+  background: var(--bg-glass, #1a2340);
+  border: 1px solid rgba(96, 110, 160, 0.3);
+  border-radius: var(--border-radius-lg, 0.75rem);
+  width: min(660px, 100%);
+  max-height: 80dvh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.invocModalHead {
+  padding: 0.85rem 1rem 0.7rem;
+  border-bottom: 1px solid rgba(96, 110, 160, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.invocModalTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #e2e8ff);
+  font-family: var(--font-title);
+  letter-spacing: 0.04em;
+  padding-right: 2rem;
+}
+
+.invocModalClose {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.15rem;
+  color: var(--text-muted, #7380a5);
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border-radius: 0.3rem;
+  transition: background 0.15s;
+}
+.invocModalClose:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.invocModalBody {
+  overflow-y: auto;
+  padding: 0.7rem 1rem 1rem;
+  flex: 1;
+}
+
+.invocBlock {
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed rgba(96, 110, 160, 0.35);
+}
+
+.invocTitle {
+  margin: 0 0 0.55rem 0;
+  color: #33507d;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+}
+
+.invocCounter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  margin: 0 0 0.35rem 0;
+  font-size: 0.84rem;
+  color: #4f628f;
+}
+
+.invocBestWrap {
+  margin-bottom: 0.4rem;
+}
+
+.invocBestLabel {
+  margin: 0 0 0.35rem 0;
+  font-size: 0.75rem;
+  color: #5e6ea0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.invocItemSelected {
+  border-color: rgba(45, 169, 211, 0.45) !important;
+  background: rgba(45, 169, 211, 0.06) !important;
+}
+
+.invocChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.invocChip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.22rem 0.58rem;
+  font-size: 0.77rem;
+  color: #3f4f7c;
+  background: #e9eef9;
+  border: 1px solid rgba(118, 132, 180, 0.35);
+}
+
+.invocChipBest {
+  color: #1e3a66;
+  background: linear-gradient(120deg, #b8f3ff, #e1f6ff);
+  border-color: rgba(45, 169, 211, 0.48);
+  box-shadow: 0 0 0 1px rgba(45, 169, 211, 0.15) inset;
+}
+
+.invocFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem 0;
+}
+
+.invocFilterLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.invocFilterSelect {
+  border: 1px solid var(--border-color);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border-radius: 0.45rem;
+  padding: 0.24rem 0.5rem;
+  font-size: 0.84rem;
+  line-height: 1.2;
+}
+
+.invocFilterSelect option {
+  background: var(--bg-medium);
+  color: var(--text-primary);
+}
+
+:root[data-theme='dark'] .invocFilterSelect {
+  border-color: rgba(122, 138, 198, 0.45);
+  background: rgba(16, 25, 44, 0.95);
+  color: #edf3ff;
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] .invocFilterSelect option {
+  background: #141f36;
+  color: #edf3ff;
+}
+
+.invocList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.invocItem {
+  background: var(--surface-1);
+  border: 1px solid rgba(96, 110, 160, 0.18);
+  border-radius: var(--border-radius);
+  padding: 0.52rem 0.7rem;
+}
+
+.invocHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+
+.invocCheckWrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.invocCheck {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f7ca8;
+  cursor: pointer;
+}
+
+.invocCheck:disabled {
+  cursor: not-allowed;
+}
+
+.invocName {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.invocMeta {
+  font-size: 0.75rem;
+  color: #6274a6;
+  background: #edf1ff;
+  border: 1px solid rgba(122, 138, 198, 0.3);
+  border-radius: 999px;
+  padding: 0.08rem 0.45rem;
+}
+
+.invocSourceTag {
+  font-size: 0.72rem;
+  color: #13486e;
+  background: #dff4ff;
+  border: 1px solid rgba(45, 169, 211, 0.42);
+  border-radius: 999px;
+  padding: 0.09rem 0.42rem;
+  font-weight: 700;
+}
+
+.invocBestTag {
+  font-size: 0.72rem;
+  color: #0c3a5a;
+  background: linear-gradient(120deg, #7dd3fc, #67e8f9);
+  border-radius: 999px;
+  padding: 0.09rem 0.42rem;
+  border: 1px solid rgba(8, 145, 178, 0.5);
+  font-weight: 700;
+}
+
+.invocLimitTag {
+  font-size: 0.72rem;
+  color: #675400;
+  background: #ffefb3;
+  border-radius: 999px;
+  padding: 0.09rem 0.42rem;
+  border: 1px solid rgba(181, 137, 0, 0.45);
+  font-weight: 700;
+}
+
+.invocDesc {
+  margin: 0.35rem 0 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 
 

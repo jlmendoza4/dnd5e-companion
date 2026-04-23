@@ -32,13 +32,13 @@ function getEldritchBeams(level) {
 
 function getHexbladeBuildAdvice(level) {
   if (level <= 4) return 'Prioriza CAR 18-20, Hex y Armor of Agathys. Invocaciones: Blast Agonizante + Mente Eldritch.'
-  if (level <= 8) return 'Activa MaldiciÃ³n en objetivo clave y decide entre burst melee o kite con Eldritch Blast.'
-  if (level <= 12) return 'Shadow of Moil y control del tempo. Optimiza reacciÃ³n defensiva y posicionamiento.'
+  if (level <= 8) return 'Activa Maldición en objetivo clave y decide entre burst melee o kite con Eldritch Blast.'
+  if (level <= 12) return 'Shadow of Moil y control del tempo. Optimiza reacción defensiva y posicionamiento.'
   if (level <= 16) return 'Gestiona recursos por descanso corto y ejecuta focus fire en jefes con burst por ventana.'
-  return 'Modo endgame: presiÃ³n constante, control de concentraciÃ³n y castigo de errores del boss.'
+  return 'Modo endgame: presión constante, control de concentración y castigo de errores del boss.'
 }
 
-// â”€â”€â”€ DATOS ESTÃTICOS (importados de src/constants/hexblade.js) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- DATOS ESTATICOS (importados de src/constants/hexblade.js) ---
 
 export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBonus, rollHistory, onUpdate }) {
   const { character } = useCharacter()
@@ -102,8 +102,8 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
     const gfbBase = hitChance * (weaponDice + weaponMod + diceAverage('1d8') + curseBonus)
 
     return [
-      { name: 'Arma + MaldiciÃ³n', dpr: weaponDpr },
-      { name: 'Arma + MaldiciÃ³n + Hex', dpr: weaponHexDpr, extra: 'Con Hex activo' },
+      { name: 'Arma + Maldición', dpr: weaponDpr },
+      { name: 'Arma + Maldición + Hex', dpr: weaponHexDpr, extra: 'Con Hex activo' },
       { name: 'Eldritch Blast (Agonizante)', dpr: blastDpr },
       { name: 'EB + Hex', dpr: blastHexDpr, extra: `${beams} rayo${beams > 1 ? 's' : ''}` },
       { name: 'Booming Blade', dpr: boomingBase, extra: 'Si se mueve: +1d8' },
@@ -116,12 +116,12 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
       return 'Objetivo duro: prioriza Eldritch Blast y conserva slots para defensa/ventana de burst.'
     }
     if (!actionUsed && !bonusUsed && cursedTarget) {
-      return 'Ya tienes maldiciÃ³n activa: entra en modo burst sobre el objetivo maldito este turno.'
+      return 'Ya tienes maldición activa: entra en modo burst sobre el objetivo maldito este turno.'
     }
     if (!cursedTarget) {
-      return 'Abre combate con MaldiciÃ³n sobre el enemigo mÃ¡s peligroso para mejorar daÃ±o y crÃ­tico.'
+      return 'Abre combate con Maldición sobre el enemigo más peligroso para mejorar daño y crítico.'
     }
-    return 'MantÃ©n presiÃ³n constante y reserva reacciÃ³n para supervivencia (Shield / oportunidad crÃ­tica).'
+    return 'Mantén presión constante y reserva reacción para supervivencia (Shield / oportunidad crítica).'
   }, [enemyAC, dprTable, actionUsed, bonusUsed, cursedTarget])
 
   const analytics = useMemo(() => {
@@ -168,7 +168,7 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
     setBonusUsed(false)
     setReactionUsed(false)
     if (concentration) {
-      setTimeline((prev) => [`Ronda nueva: concentraciÃ³n activa en ${concentration}`, ...prev].slice(0, 30))
+      setTimeline((prev) => [`Ronda nueva: concentración activa en ${concentration}`, ...prev].slice(0, 30))
     }
   }
 
@@ -178,7 +178,7 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
     const heal = target.cursed ? Math.max(1, level + chaMod) : 0
     setTargets((prev) => prev.filter((t) => t.id !== id))
     if (heal > 0) {
-      setTimeline((prev) => [`${target.name} cae. Recuperas ${heal} PG por MaldiciÃ³n.`, ...prev].slice(0, 30))
+      setTimeline((prev) => [`${target.name} cae. Recuperas ${heal} PG por Maldición.`, ...prev].slice(0, 30))
     }
   }
 
@@ -218,7 +218,7 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
     try {
       const config = await loadAIConfig()
       if (!config.apiKey) {
-        setAiAdvice('Configura tu API key en Ajustes para activar consejo tÃ¡ctico IA.')
+        setAiAdvice('Configura tu API key en Ajustes para activar consejo táctico IA.')
         return
       }
 
@@ -240,7 +240,7 @@ Responde en 5 lineas maximo.`
     }
   }
 
-  // â”€â”€â”€ COMPUTADOS NUEVAS MEJORAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // --- COMPUTADOS NUEVAS MEJORAS ---
   const pactSlotData = WARLOCK_PACT_SLOTS[clamp(level, 1, 20)] || { slots: 1, slotLevel: 1 }
   const totalSlots = pactSlotData.slots
   const slotLevel = pactSlotData.slotLevel
@@ -248,14 +248,14 @@ Responde en 5 lineas maximo.`
 
   function getShortRestRec() {
     if (slotsUsed >= totalSlots && encountersSinceRest < 3)
-      return 'âš ï¸ DESCANSO CORTO URGENTE â€” sin slots antes del prÃ³ximo encuentro. Pide al grupo una pausa de 1h.'
+      return '⚠️ DESCANSO CORTO URGENTE - sin slots antes del próximo encuentro. Pide al grupo una pausa de 1h.'
     if (slotsUsed >= totalSlots)
-      return 'âš ï¸ Sin slots. Usa Eldritch Blast + invocaciones (gratis) hasta descansar.'
+      return '⚠️ Sin slots. Usa Eldritch Blast + invocaciones (gratis) hasta descansar.'
     if (slotsUsed === totalSlots - 1 && encountersSinceRest >= 2)
-      return 'ðŸ”¶ Considera descanso corto: te queda 1 slot.'
+      return '🔶 Considera descanso corto: te queda 1 slot.'
     if (slotsUsed === 0)
-      return 'âœ… Slots llenos: juega agresivo. VacÃ­a TODOS en los primeros turnos del encuentro.'
-    return 'âš¡ TÃ¡ctica brujo: vacÃ­a los slots en cada encuentro importante. El descanso corto es tu recarga.'
+      return '✅ Slots llenos: juega agresivo. Vacía TODOS en los primeros turnos del encuentro.'
+    return '⚡ Táctica brujo: vacía los slots en cada encuentro importante. El descanso corto es tu recarga.'
   }
 
   const shortRestRec = getShortRestRec()
@@ -279,27 +279,27 @@ Responde en 5 lineas maximo.`
     const plan = []
     if (!actionUsed) {
       if (!cursedTarget)
-        plan.push({ slot: 'ACCIÃ“N', text: 'Eldritch Blast para hostigar; el slot de apertura va prÃ³ximo turno.' })
+        plan.push({ slot: 'ACCIÓN', text: 'Eldritch Blast para hostigar; el slot de apertura va próximo turno.' })
       else if (slotsRemaining > 0 && Number(enemyHP) > 40)
-        plan.push({ slot: 'ACCIÃ“N', text: 'Slot en Hypnotic Pattern / Hold Person / Banishment, o EB+Agonizante si descarta control.' })
+        plan.push({ slot: 'ACCIÓN', text: 'Slot en Hypnotic Pattern / Hold Person / Banishment, o EB+Agonizante si descarta control.' })
       else
-        plan.push({ slot: 'ACCIÃ“N', text: 'Eldritch Blast cantrip â€” sin gastar slot; el DPR libre es suficiente.' })
+        plan.push({ slot: 'ACCIÓN', text: 'Eldritch Blast cantrip - sin gastar slot; el DPR libre es suficiente.' })
     }
     if (!bonusUsed) {
       if (!cursedTarget)
-        plan.push({ slot: 'BONUS', text: 'Activa MaldiciÃ³n del Filo MalÃ©fico sobre el enemigo mÃ¡s peligroso.' })
+        plan.push({ slot: 'BONUS', text: 'Activa Maldición del Filo Maléfico sobre el enemigo más peligroso.' })
       else if (concentration && /hex/i.test(concentration))
-        plan.push({ slot: 'BONUS', text: 'Hex activo. Si el objetivo cae: mueve Hex al siguiente objetivo (acciÃ³n bonus).' })
+        plan.push({ slot: 'BONUS', text: 'Hex activo. Si el objetivo cae: mueve Hex al siguiente objetivo (acción bonus).' })
       else
         plan.push({ slot: 'BONUS', text: 'Misty Step para reposicionamiento seguro o segundo ataque con Thirsting Blade (Nv.5+).' })
     }
     if (!reactionUsed) {
       const defText = level >= 10
-        ? 'Armadura de Maldiciones â€” 1d6 â‰¥ 4 el ataque enemigo falla. O Shield con un slot.'
-        : 'GuÃ¡rdala para Shield (slot), Counterspell o Ataque de Oportunidad en objetivo que huye.'
-      plan.push({ slot: 'REACCIÃ“N', text: defText })
+        ? 'Armadura de Maldiciones - 1d6 >= 4 el ataque enemigo falla. O Shield con un slot.'
+        : 'Guárdala para Shield (slot), Counterspell o Ataque de Oportunidad en objetivo que huye.'
+      plan.push({ slot: 'REACCIÓN', text: defText })
     }
-    return plan.length ? plan : [{ slot: 'âœ…', text: 'Todas las acciones usadas. Pulsa "Siguiente ronda".' }]
+    return plan.length ? plan : [{ slot: '✅', text: 'Todas las acciones usadas. Pulsa "Siguiente ronda".' }]
   }, [actionUsed, bonusUsed, reactionUsed, cursedTarget, concentration, level, slotsRemaining, enemyHP])
 
   return (

@@ -628,7 +628,7 @@ export default function CharacterSheet({ onReset }) {
         />
       </section>
       {/* ══ PANEL DE RASGOS DE CLASE ══ */}
-      <ClassPanel character={character} />
+      <ClassPanel character={character} onUpdate={onUpdate} />
     </div>
 
     {/* ══ MODAL DE SUBIDA DE NIVEL ══ */}
