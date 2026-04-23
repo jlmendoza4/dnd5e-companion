@@ -692,9 +692,6 @@ export default function DamageCalculator() {
             <div className={styles.statChip}>
               <span>Nivel {level}</span>
             </div>
-            <div className={styles.statChip}>
-              <span>+{profBonus} Competencia</span>
-            </div>
             {category === 'weapon' && selectedItem?.atkMod && (
               <div className={styles.statChip}>
                 <span>
@@ -716,40 +713,6 @@ export default function DamageCalculator() {
                 </div>
               </>
             )}
-          </div>
-
-          {/* Widget de PG */}
-          <div className={styles.hpWidget}>
-            <div className={styles.hpWidgetTop}>
-              <span className={styles.hpWidgetLabel}>❤️ PG</span>
-              <span className={styles.hpWidgetValue}>{character.currentHP} / {character.maxHP}</span>
-            </div>
-            <div className={styles.hpWidgetBar}>
-              <div
-                className={styles.hpWidgetFill}
-                style={{
-                  width: `${Math.max(0, Math.min(100, (character.currentHP / character.maxHP) * 100))}%`,
-                  background: character.currentHP / character.maxHP > 0.5
-                    ? 'var(--color-success, #22c55e)'
-                    : character.currentHP / character.maxHP > 0.25
-                    ? 'var(--color-warning, #f97316)'
-                    : 'var(--color-danger, #ef4444)'
-                }}
-              />
-            </div>
-            <div className={styles.hpWidgetRow}>
-              <button type="button" className={styles.hpDmgBtn} onClick={() => applyHpDelta('damage')}>⚔️ Daño</button>
-              <input
-                type="number"
-                className={styles.hpDeltaInput}
-                value={hpDelta}
-                min={1}
-                placeholder="0"
-                onChange={e => setHpDelta(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') applyHpDelta('damage') }}
-              />
-              <button type="button" className={styles.hpHealBtn} onClick={() => applyHpDelta('heal')}>💚 Curar</button>
-            </div>
           </div>
 
           {/* Categoría: Arma o Hechizo */}
