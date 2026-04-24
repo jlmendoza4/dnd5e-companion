@@ -8,15 +8,10 @@
  *
  * La API key se guarda en localStorage (nunca se envía a ningún servidor propio).
  */
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import ConfirmDialog from '../Common/ConfirmDialog'
 import styles from './Settings.module.css'
 import { parsePDFCharacterSheet, debugPDFFields } from '../../services/pdfParser'
-import {
-  clearAIKey,
-  loadAIConfig,
-  saveAIConfig,
-} from '../../services/aiService'
 import { useCharacter } from '../../contexts/CharacterContext'
 
 export default function Settings({ onNavigate }) {
@@ -33,46 +28,8 @@ export default function Settings({ onNavigate }) {
   const [pdfResult, setPdfResult]   = useState(null)
   const [debugFields, setDebugFields] = useState(null)
   const [dataResult, setDataResult] = useState(null)
-  const [configLoading, setConfigLoading] = useState(true)
   const [showClearDialog, setShowClearDialog] = useState(false)
   const themeToggleId = useId()
-
-  // ── IA ──
-  const [aiKey, setAiKey]                 = useState('')
-  const [aiEndpoint, setAiEndpoint]       = useState('')
-  const [aiModel, setAiModel]             = useState('')
-  const [showAiKey, setShowAiKey]         = useState(false)
-  const [aiKeySaved, setAiKeySaved]       = useState(false)
-
-  useEffect(() => {
-    let active = true
-
-    loadAIConfig()
-      .then((config) => {
-        if (!active) return
-        setAiKey(config.apiKey)
-        setAiEndpoint(config.endpoint)
-        setAiModel(config.model)
-      })
-      .finally(() => {
-        if (active) setConfigLoading(false)
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
-
-  const persistAiConfig = async () => {
-    await saveAIConfig({ apiKey: aiKey, endpoint: aiEndpoint, model: aiModel })
-    setAiKeySaved(true)
-    setTimeout(() => setAiKeySaved(false), 2000)
-  }
-
-  const applyGemmaPreset = () => {
-    setAiEndpoint('https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent')
-    setAiModel('gemma-4-31b-it')
-  }
 
   // ── Debug: muestra todos los campos del PDF ──
   const debugPDF = async (e) => {
@@ -191,105 +148,6 @@ export default function Settings({ onNavigate }) {
               <span className={styles.themeSwitchThumb} />
             </button>
           </label>
-        </div>
-      </section>
-
-      {/* ══ SECCIÓN: MODELO IA ══ */}
-      <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>🤖 Modelo IA</h3>
-        <p className={styles.sectionDesc}>
-          Configura endpoint, modelo y API key para activar el{' '}
-          <strong>Consejero IA</strong>: recomendaciones de hechizos, equipo, subidas de nivel
-          y estrategias personalizadas para tu personaje.
-        </p>
-
-        <div className={styles.apiKeyField}>
-          <label className={styles.fieldLabel}>Endpoint API</label>
-          <input
-            className={styles.apiKeyInput}
-            type="text"
-            value={aiEndpoint}
-            onChange={e => setAiEndpoint(e.target.value)}
-            disabled={configLoading}
-            placeholder="https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent"
-            autoComplete="off"
-            spellCheck={false}
-          />
-
-          <label className={styles.fieldLabel}>Modelo</label>
-          <input
-            className={styles.apiKeyInput}
-            type="text"
-            value={aiModel}
-            onChange={e => setAiModel(e.target.value)}
-            disabled={configLoading}
-            placeholder="gemma-4-31b-it"
-            autoComplete="off"
-            spellCheck={false}
-          />
-
-          <div className={styles.apiKeyActions}>
-            <button className="btn btn-secondary" type="button" onClick={applyGemmaPreset}>
-              🧩 Preset Google Gemma 4
-            </button>
-          </div>
-
-          <p className={styles.sectionDesc} style={{ marginTop: '0.4rem' }}>
-            Si usas el preset de Google Gemma puedes dejar el valor por defecto. Si usas otro proveedor
-            (por ejemplo Gemma 4), pon aquí su endpoint y modelo exactos.
-            Claves de Google AI en{' '}
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
-            aistudio.google.com
-          </a>.
-          </p>
-
-          <div className={styles.apiKeyInputWrapper}>
-            <input
-              className={styles.apiKeyInput}
-              type={showAiKey ? 'text' : 'password'}
-              value={aiKey}
-              onChange={e => setAiKey(e.target.value)}
-              disabled={configLoading}
-              placeholder="sk-... o AIza..."
-              autoComplete="off"
-              spellCheck={false}
-            />
-            <button
-              type="button"
-              className={styles.toggleVisibility}
-              onClick={() => setShowAiKey(v => !v)}
-              title={showAiKey ? 'Ocultar' : 'Mostrar'}
-            >
-              {showAiKey ? '🙈' : '👁️'}
-            </button>
-          </div>
-          <div className={styles.apiKeyActions}>
-            <button className="btn btn-primary" onClick={persistAiConfig} type="button" disabled={configLoading}>
-              💾 Guardar configuración IA
-            </button>
-            {aiKey && (
-              <button
-                className="btn btn-secondary"
-                type="button"
-                onClick={async () => {
-                  await clearAIKey()
-                  setAiKey('')
-                }}
-                disabled={configLoading}
-              >
-                🗑️ Borrar clave
-              </button>
-            )}
-          </div>
-          {aiKeySaved && (
-            <div className={`${styles.testResult} ${styles.testOk}`}>
-              ✅ Configuración IA guardada correctamente.
-            </div>
-          )}
-          <div className={styles.keyStatus}>
-            <span className={`${styles.statusDot} ${aiKey ? styles.dotGreen : styles.dotRed}`} />
-            {aiKey ? 'API key configurada' : 'Sin API key — el Consejero IA estará desactivado'}
-          </div>
         </div>
       </section>
 

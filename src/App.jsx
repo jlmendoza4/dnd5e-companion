@@ -12,7 +12,6 @@ import DamageCalculator from './components/DamageCalculator/DamageCalculator'
 import DiceRoller from './components/DiceRoller/DiceRoller'
 import Compendium from './components/Compendium/Compendium'
 import SessionNotes from './components/SessionNotes/SessionNotes'
-import AIAdvisor from './components/AIAdvisor/AIAdvisor'
 import Settings from './components/Settings/Settings'
 import EquipmentPanel from './components/EquipmentPanel/EquipmentPanel'
 import ConfirmDialog from './components/Common/ConfirmDialog'
@@ -126,7 +125,6 @@ const TABS = [
   { id: 'dice',       label: 'Dados',        icon: '🎲' },
   { id: 'compendium', label: 'Compendio',    icon: '📚' },
   { id: 'notes',      label: 'Notas',        icon: '📝' },
-  { id: 'ai',         label: 'Consejero IA', icon: '🤖' },
   { id: 'settings',   label: 'Config',       icon: '⚙️' },
 ]
 
@@ -220,13 +218,6 @@ function AppContent() {
             aria-hidden={activeTab === 'notes' ? undefined : true}
           >
             <SessionNotes />
-          </section>
-
-          <section
-            className={`${styles.tabPanel} ${activeTab === 'ai' ? styles.tabPanelActive : styles.tabPanelHidden}`}
-            aria-hidden={activeTab === 'ai' ? undefined : true}
-          >
-            <ErrorBoundary label="Consejero IA"><AIAdvisor /></ErrorBoundary>
           </section>
 
           <section

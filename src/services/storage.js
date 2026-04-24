@@ -8,9 +8,6 @@ export const STORAGE_KEYS = {
   characters: CHARACTERS_STORAGE_KEY,
   activeId: ACTIVE_CHARACTER_ID_KEY,
   theme: THEME_STORAGE_KEY,
-  aiKey: 'dnd_ai_key',
-  aiEndpoint: 'dnd_ai_api_url',
-  aiModel: 'dnd_ai_model',
   spellScope: 'dnd_spell_scope',
   translateCache: 'dnd_trans_v1',
 }

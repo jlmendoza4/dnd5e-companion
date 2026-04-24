@@ -1,5 +1,4 @@
 ﻿import { useMemo, useState } from 'react'
-import { askAI, buildCharacterContext, loadAIConfig } from '../../services/aiService'
 import { getModifier } from '../../services/dndUtils'
 import { getProficiencyBonus } from '../../services/dndRules'
 import { useCharacter } from '../../contexts/CharacterContext'
@@ -61,8 +60,6 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
   const [comboSteps, setComboSteps] = useState('')
   const [combos, setCombos] = useState([])
   const [timeline, setTimeline] = useState([])
-  const [aiAdvice, setAiAdvice] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
   // Short rest planner
   const [slotsUsed, setSlotsUsed] = useState(0)
   const [encountersSinceRest, setEncountersSinceRest] = useState(0)
@@ -211,33 +208,6 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
     setCombos((prev) => [{ id: Date.now(), name, steps }, ...prev].slice(0, 12))
     setComboName('')
     setComboSteps('')
-  }
-
-  const requestAIAdvice = async () => {
-    setAiLoading(true)
-    try {
-      const config = await loadAIConfig()
-      if (!config.apiKey) {
-        setAiAdvice('Configura tu API key en Ajustes para activar consejo táctico IA.')
-        return
-      }
-
-      const prompt = `Dame un plan tactico corto para un Brujo del Filo Malefico.
-Enemigo AC ${enemyAC}, HP ${enemyHP}, resistencias detectadas: ${resistances || 'ninguna'}.
-Concentracion actual: ${concentration || 'ninguna'}.
-Objetivo maldito: ${cursedTarget?.name || 'ninguno'}.
-Responde en 5 lineas maximo.`
-
-      const text = await askAI(config.apiKey, [
-        { role: 'system', content: `Eres un asesor tactico experto de D&D 5e.\n${buildCharacterContext(character)}` },
-        { role: 'user', content: prompt },
-      ])
-      setAiAdvice(String(text || '').trim())
-    } catch (error) {
-      setAiAdvice(`No se pudo obtener consejo IA: ${error.message}`)
-    } finally {
-      setAiLoading(false)
-    }
   }
 
   // --- COMPUTADOS NUEVAS MEJORAS ---
