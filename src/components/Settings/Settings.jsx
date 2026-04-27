@@ -2,11 +2,8 @@
  * Settings.jsx — Configuración de la aplicación
  *
  * Permite al usuario:
- * - Introducir y guardar su API key de Claude
  * - Exportar/importar la ficha del personaje
  * - Información sobre la aplicación
- *
- * La API key se guarda en localStorage (nunca se envía a ningún servidor propio).
  */
 import { useId, useState } from 'react'
 import ConfirmDialog from '../Common/ConfirmDialog'

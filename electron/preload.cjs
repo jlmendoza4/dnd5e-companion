@@ -5,3 +5,8 @@ contextBridge.exposeInMainWorld('dndDesktopSettings', {
   saveAIConfig: (config) => ipcRenderer.invoke('dnd:ai-config:save', config),
   clearAIKey: () => ipcRenderer.invoke('dnd:ai-config:clear-key'),
 })
+
+contextBridge.exposeInMainWorld('dndDesktopCharacters', {
+  loadSharedState: () => ipcRenderer.invoke('dnd:characters:load'),
+  saveSharedState: (state) => ipcRenderer.invoke('dnd:characters:save', state),
+})

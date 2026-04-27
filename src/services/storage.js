@@ -138,6 +138,14 @@ export function getDesktopSettingsBridge() {
   }
 }
 
+export function getDesktopCharactersBridge() {
+  try {
+    return typeof window !== 'undefined' ? window.dndDesktopCharacters || null : null
+  } catch {
+    return null
+  }
+}
+
 export function readStoredString(key, fallback = '') {
   if (!canUseLocalStorage()) return fallback
   try {
@@ -352,6 +360,65 @@ export function loadAllCharacters() {
 
 export function saveAllCharacters(characters) {
   writeStoredJSON(CHARACTERS_STORAGE_KEY, characters)
+}
+
+export async function loadSharedCharactersState() {
+  const bridge = getDesktopCharactersBridge()
+  if (!bridge || typeof bridge.loadSharedState !== 'function') {
+    try {
+      if (typeof fetch !== 'function') return null
+      const response = await fetch('/characters.shared.json', { cache: 'no-store' })
+      if (!response.ok) return null
+      const state = await response.json()
+      const storedCharacters = Array.isArray(state?.characters) ? state.characters : []
+      if (storedCharacters.length === 0) return null
+
+      const characters = storedCharacters.map(c => normalizeCharacterData(c))
+      const activeId = typeof state?.activeId === 'string' ? state.activeId : ''
+      const resolvedActiveId = characters.some(c => c.id === activeId)
+        ? activeId
+        : characters[0]?.id || ''
+
+      return { characters, activeId: resolvedActiveId }
+    } catch {
+      return null
+    }
+  }
+
+  try {
+    const state = await bridge.loadSharedState()
+    const storedCharacters = Array.isArray(state?.characters) ? state.characters : []
+    if (storedCharacters.length === 0) return null
+
+    const characters = storedCharacters.map(c => normalizeCharacterData(c))
+    const activeId = typeof state?.activeId === 'string' ? state.activeId : ''
+    const resolvedActiveId = characters.some(c => c.id === activeId)
+      ? activeId
+      : characters[0]?.id || ''
+
+    return { characters, activeId: resolvedActiveId }
+  } catch {
+    return null
+  }
+}
+
+export async function saveSharedCharactersState(characters, activeId) {
+  const bridge = getDesktopCharactersBridge()
+  if (!bridge || typeof bridge.saveSharedState !== 'function') return false
+
+  try {
+    const normalizedCharacters = Array.isArray(characters)
+      ? characters.map(c => normalizeCharacterData(c))
+      : []
+    const safeActiveId = typeof activeId === 'string' ? activeId : ''
+    await bridge.saveSharedState({
+      characters: normalizedCharacters,
+      activeId: safeActiveId,
+    })
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function loadActiveCharacterId() {

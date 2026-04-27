@@ -10,6 +10,13 @@ function getDesktopConfigPath() {
   return path.join(app.getPath('userData'), 'desktop-config.json')
 }
 
+function getSharedCharactersPath() {
+  if (!app.isPackaged) {
+    return path.join(app.getAppPath(), 'public', 'characters.shared.json')
+  }
+  return path.join(app.getPath('userData'), 'shared-characters.json')
+}
+
 function readDesktopConfig() {
   try {
     const raw = fs.readFileSync(getDesktopConfigPath(), 'utf8')
@@ -54,6 +61,28 @@ function decodeSecret(entry) {
   return String(entry.value || '')
 }
 
+function readSharedCharactersState() {
+  try {
+    const raw = fs.readFileSync(getSharedCharactersPath(), 'utf8')
+    const parsed = JSON.parse(raw)
+    const characters = Array.isArray(parsed?.characters) ? parsed.characters : []
+    const activeId = typeof parsed?.activeId === 'string' ? parsed.activeId : ''
+    return { characters, activeId }
+  } catch {
+    return { characters: [], activeId: '' }
+  }
+}
+
+function writeSharedCharactersState(nextState) {
+  const targetPath = getSharedCharactersPath()
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true })
+  const safeState = {
+    characters: Array.isArray(nextState?.characters) ? nextState.characters : [],
+    activeId: typeof nextState?.activeId === 'string' ? nextState.activeId : '',
+  }
+  fs.writeFileSync(targetPath, JSON.stringify(safeState, null, 2), 'utf8')
+}
+
 function registerDesktopSettingsHandlers() {
   ipcMain.handle('dnd:ai-config:load', () => {
     const config = readDesktopConfig()
@@ -88,6 +117,15 @@ function registerDesktopSettingsHandlers() {
       },
     }
     writeDesktopConfig(next)
+    return true
+  })
+
+  ipcMain.handle('dnd:characters:load', () => {
+    return readSharedCharactersState()
+  })
+
+  ipcMain.handle('dnd:characters:save', (_, payload) => {
+    writeSharedCharactersState(payload)
     return true
   })
 }

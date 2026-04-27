@@ -6,9 +6,11 @@ import {
   importCharacterData,
   loadActiveCharacterId,
   loadAllCharacters,
+  loadSharedCharactersState,
   loadTheme,
   saveActiveCharacterId,
   saveAllCharacters,
+  saveSharedCharactersState,
   saveTheme,
 } from '../services/storage'
 
@@ -29,6 +31,28 @@ export function CharacterProvider({ children }) {
   const [characters, setCharacters] = useState(() => initRef.current.chars)
   const [activeId, setActiveId]     = useState(() => initRef.current.activeId)
   const [theme, setTheme]           = useState(() => loadTheme())
+  const sharedSyncReadyRef = useRef(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrateFromSharedState = async () => {
+      try {
+        const shared = await loadSharedCharactersState()
+        if (!shared || cancelled) return
+
+        setCharacters(shared.characters)
+        setActiveId(shared.activeId)
+        saveAllCharacters(shared.characters)
+        saveActiveCharacterId(shared.activeId)
+      } finally {
+        sharedSyncReadyRef.current = true
+      }
+    }
+
+    hydrateFromSharedState()
+    return () => { cancelled = true }
+  }, [])
 
   // Personaje activo (nunca undefined)
   const character = characters.find(c => c.id === activeId) || characters[0] || { ...DEFAULT_CHARACTER, id: '' }
@@ -42,6 +66,17 @@ export function CharacterProvider({ children }) {
     }, 400)
     return () => clearTimeout(saveTimerRef.current)
   }, [characters])
+
+  const saveSharedTimerRef = useRef(null)
+  useEffect(() => {
+    clearTimeout(saveSharedTimerRef.current)
+    saveSharedTimerRef.current = setTimeout(() => {
+      if (!sharedSyncReadyRef.current) return
+      void saveSharedCharactersState(characters, activeId)
+    }, 500)
+    return () => clearTimeout(saveSharedTimerRef.current)
+  }, [characters, activeId])
+
   useEffect(() => { saveActiveCharacterId(activeId) }, [activeId])
   useEffect(() => {
     document.documentElement.dataset.theme = theme
