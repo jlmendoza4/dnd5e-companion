@@ -110,6 +110,7 @@ export const DEFAULT_CHARACTER = {
     offHand:  { name: '', bonus: '' },
   },
   traits: '',
+  conditions: [],
 }
 
 export function generateCharacterId() {
@@ -304,6 +305,7 @@ export function normalizeCharacterData(rawCharacter) {
     },
     spellSlots: normalizedSpellSlots,
     spells: Array.isArray(next.spells) ? next.spells : [],
+    conditions: Array.isArray(next.conditions) ? next.conditions.map(String) : [],
     invocations: Array.isArray(next.invocations)
       ? next.invocations.map((name) => String(name || '').trim()).filter(Boolean)
       : [],

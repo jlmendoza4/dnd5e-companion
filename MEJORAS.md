@@ -61,3 +61,35 @@ Actualmente ningún componente tiene validación de props.
 
 **12. Tests para lógica crítica**
 Solo hay 2 archivos de test para toda la app. Priorizar `dndRules.js` y `DamageCalculator`.
+
+---
+
+## Prioridad 6 — Mayo 2026 (análisis profundo del codebase)
+
+### Funcionalidades de alto impacto
+
+**13. Descanso Largo y Descanso Corto automatizados** ✅
+Botones en la cabecera de la ficha que restauran PG al máximo y resetean todos los slots de conjuro (largo), o solo los pact slots del brujo (corto). Ahora hay que hacerlo campo a campo manualmente.
+
+**14. Rastreador de condiciones de combate** ✅
+Panel en la ficha con las 15 condiciones oficiales de D&D 5e (Cegado, Paralizado, Envenenado, etc.), activables con un clic. Cada condición muestra su efecto mecánico. Estado persistido en el personaje.
+
+**15. Rastreador de iniciativa / encuentro** ✅
+Nueva pestaña `⚔️ Encuentro` con lista de combatientes (nombre, iniciativa, HP, CA), ordenación automática por iniciativa, seguimiento del turno activo y contador de rondas.
+
+**16. Lazy loading con `React.lazy` + `Suspense`** ✅
+Todos los componentes de pestaña importados con `React.lazy`. Solo se carga el bundle de la pestaña activa, reduciendo el tiempo de arranque.
+
+**17. `React.memo` en componentes pesados** ✅
+`DamageCalculator`, `Compendium`, `EquipmentPanel` y `SessionNotes` envueltos con `React.memo` para evitar re-renders innecesarios al cambiar datos de otros módulos.
+
+### Calidad de código
+
+**18. Error handling en escritura a localStorage**
+`writeStoredJSON` silencia `QuotaExceededError`. Añadir notificación al usuario si el almacenamiento está lleno.
+
+**19. Debounce en búsqueda del Compendio**
+El campo de búsqueda de hechizos re-filtra en cada pulsación de tecla. Con un debounce de 300 ms sobre una lista de +300 entradas se mejora la fluidez.
+
+**20. Descanso largo de partido (multi-personaje)**
+Cuando hay varios personajes activos, aplicar el descanso largo a todos de una vez.

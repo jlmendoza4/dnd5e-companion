@@ -21,6 +21,7 @@ import { STATS_CONFIG, SKILLS_CONFIG, SAVE_CONFIG, EMPTY_SKILLS, EMPTY_SKILL_PRO
 import LevelUpModal from './LevelUpModal'
 import SpellBook from './SpellBook'
 import ClassPanel from './ClassPanel'
+import ConditionTracker from '../ConditionTracker/ConditionTracker'
 import styles from './CharacterSheet.module.css'
 
 const FEAT_WAR_CASTER = `LANZADOR EN COMBATE
@@ -168,6 +169,28 @@ export default function CharacterSheet({ onReset }) {
 
   const profBonus = getProficiencyBonus(character.level)
 
+  // ── Descanso Largo: PG al máximo + todos los slots restaurados ──
+  const longRest = () => {
+    const resetSlots = {}
+    for (let i = 1; i <= 9; i++) {
+      const key = String(i)
+      const max = character.spellSlots?.[key]?.max ?? 0
+      resetSlots[key] = { max, current: max }
+    }
+    onUpdate({ currentHP: character.maxHP, spellSlots: resetSlots })
+  }
+
+  // ── Descanso Corto: solo slots de pacto (brujos) ──
+  const shortRest = () => {
+    const resetSlots = {}
+    for (let i = 1; i <= 9; i++) {
+      const key = String(i)
+      const max = character.spellSlots?.[key]?.max ?? 0
+      resetSlots[key] = { max, current: max }
+    }
+    onUpdate({ spellSlots: resetSlots })
+  }
+
   // Recalcula todas las habilidades y salvaciones a partir de los stats actuales
   const recalcularDesdeStats = () => {
     const newMods = {}
@@ -205,6 +228,12 @@ export default function CharacterSheet({ onReset }) {
           <span className={styles.profBonus} title="Bonificador de competencia">
             +{profBonus} Competencia
           </span>
+          <button className="btn btn-secondary" onClick={shortRest} title="Descanso corto: restaura slots de conjuro">
+            ☀️ Descanso Corto
+          </button>
+          <button className="btn btn-primary" onClick={longRest} title="Descanso largo: restaura PG y todos los slots">
+            🌙 Descanso Largo
+          </button>
           <button className="btn btn-secondary" onClick={recalcularDesdeStats} title="Recalcula habilidades y salvaciones desde los stats actuales">
             🔄 Recalcular
           </button>
@@ -627,6 +656,12 @@ export default function CharacterSheet({ onReset }) {
           rows={5}
         />
       </section>
+
+      {/* ══ SECCIÓN 9: CONDICIONES ══ */}
+      <section className={styles.section}>
+        <ConditionTracker />
+      </section>
+
       {/* ══ PANEL DE RASGOS DE CLASE ══ */}
       <ClassPanel character={character} onUpdate={onUpdate} />
     </div>

@@ -12,7 +12,7 @@
  * - Historial de tiradas
  * - Simulador de críticos
  */
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { memo, useState, useEffect, useCallback, useMemo } from 'react'
 import {
   getProficiencyBonus,
   getSpellcastingAbilityKey,
@@ -48,7 +48,7 @@ import { useSkillRolls } from '../../hooks/useSkillRolls'
 import HexbladeToolkit from '../HexbladeToolkit/HexbladeToolkit'
 import styles from './DamageCalculator.module.css'
 
-export default function DamageCalculator() {
+const DamageCalculator = memo(function DamageCalculator() {
   const { character, updateCharacter: onUpdate } = useCharacter()
   const [hpDelta, setHpDelta] = useState('')
   const applyHpDelta = (sign) => {
@@ -1515,4 +1515,6 @@ export default function DamageCalculator() {
       )}
     </div>
   )
-}
+})
+
+export default DamageCalculator

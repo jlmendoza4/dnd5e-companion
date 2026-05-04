@@ -5,7 +5,7 @@
  * cabeza, cuello, armadura, capa, guantes, anillos, cinturón,
  * botas, mano principal y mano secundaria.
  */
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { useCharacter } from '../../contexts/CharacterContext'
 import styles from './EquipmentPanel.module.css'
 
@@ -130,7 +130,7 @@ function GearSlot({ slotKey, label, icon, gearSlots, onChange, onHover, onLeave 
   )
 }
 
-export default function EquipmentPanel() {
+const EquipmentPanel = memo(function EquipmentPanel() {
   const { character, updateCharacter } = useCharacter()
   const [hoveredSlot, setHoveredSlot] = useState(null)
 
@@ -219,4 +219,6 @@ export default function EquipmentPanel() {
       )}
     </div>
   )
-}
+})
+
+export default EquipmentPanel

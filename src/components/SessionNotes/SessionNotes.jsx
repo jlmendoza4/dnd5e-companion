@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { useCharacter } from '../../contexts/CharacterContext'
 import styles from './SessionNotes.module.css'
 
-export default function SessionNotes() {
+const SessionNotes = memo(function SessionNotes() {
   const { character, updateCharacter: onUpdate } = useCharacter()
   const notes = useMemo(() => String(character?.sessionNotes || ''), [character?.sessionNotes])
 
@@ -27,4 +27,6 @@ export default function SessionNotes() {
       />
     </section>
   )
-}
+})
+
+export default SessionNotes

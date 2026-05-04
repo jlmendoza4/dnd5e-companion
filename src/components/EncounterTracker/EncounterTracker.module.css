@@ -1,0 +1,365 @@
+/* ============================================================
+   EncounterTracker.module.css
+   ============================================================ */
+
+.tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── CABECERA ── */
+.pageHeader {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+  color: var(--heading-color);
+}
+
+.pageSubtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem;
+  backdrop-filter: blur(8px);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.card:hover {
+  border-color: var(--border-bright);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.08);
+}
+
+.cardTitle {
+  font-size: 0.88rem;
+  color: var(--purple-light);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+}
+
+/* ── FORMULARIO ── */
+.addForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-ui);
+  transition: border-color var(--transition);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+}
+
+.inputSmall {
+  width: 70px;
+  padding: 0.5rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-ui);
+  text-align: center;
+  transition: border-color var(--transition);
+}
+
+.inputSmall:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+}
+
+.select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+
+/* ── CONTROLES ── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.roundBadge {
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  color: var(--purple-light);
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-family: var(--font-title);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* ── TURNO ACTIVO ── */
+.activeTurn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.2rem;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: var(--border-radius-lg);
+  flex-wrap: wrap;
+}
+
+.activeTurnLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-success);
+  font-family: var(--font-title);
+}
+
+.activeTurnName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* ── PILLS DE TIPO ── */
+.typePill {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.enemy {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+}
+
+.ally {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: var(--color-success);
+}
+
+.neutral {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--gold);
+}
+
+/* ── LISTA DE COMBATIENTES ── */
+.combatantList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.combatantRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  flex-wrap: wrap;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.combatantRowActive {
+  border-color: var(--color-success);
+  background: rgba(34, 197, 94, 0.06);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.1);
+}
+
+.combatantRowDefeated {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+/* Iniciativa */
+.initBadge {
+  min-width: 2.2rem;
+  text-align: center;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  color: var(--purple-light);
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: var(--font-title);
+}
+
+/* Nombre e info */
+.combatantInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.combatantName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* CA */
+.acBadge {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* HP */
+.hpGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hpBar {
+  width: 80px;
+  height: 6px;
+  background: rgba(100, 100, 120, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hpFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.hpGreen { background: var(--color-success); }
+.hpOrange { background: var(--color-warning); }
+.hpRed { background: var(--color-danger); }
+
+.hpText {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 45px;
+}
+
+.hpDeltaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hpDeltaInput {
+  width: 52px;
+  padding: 0.28rem 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.hpDeltaInput:focus {
+  outline: none;
+  border-color: var(--purple);
+}
+
+.hpBtn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+/* Acciones */
+.combatantActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.defeatedBadge {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: color var(--transition);
+}
+
+.removeBtn:hover {
+  color: var(--color-danger);
+}
+
+/* ── ESTADO VACÍO ── */
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  background: var(--bg-glass);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-lg);
+}
+
+.emptyState p {
+  font-size: 1rem;
+  margin: 0;
+}

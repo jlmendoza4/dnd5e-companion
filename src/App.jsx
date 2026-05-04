@@ -5,18 +5,24 @@
  * - Navegación entre módulos mediante tabs
  * - Estado global del personaje y tema (via CharacterContext)
  */
-import { useRef, useState } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import { CharacterProvider, useCharacter } from './contexts/CharacterContext'
-import CharacterSheet from './components/CharacterSheet/CharacterSheet'
-import DamageCalculator from './components/DamageCalculator/DamageCalculator'
-import DiceRoller from './components/DiceRoller/DiceRoller'
-import Compendium from './components/Compendium/Compendium'
-import SessionNotes from './components/SessionNotes/SessionNotes'
-import Settings from './components/Settings/Settings'
-import EquipmentPanel from './components/EquipmentPanel/EquipmentPanel'
 import ConfirmDialog from './components/Common/ConfirmDialog'
 import ErrorBoundary from './components/Common/ErrorBoundary'
 import styles from './App.module.css'
+
+const CharacterSheet    = lazy(() => import('./components/CharacterSheet/CharacterSheet'))
+const DamageCalculator  = lazy(() => import('./components/DamageCalculator/DamageCalculator'))
+const DiceRoller        = lazy(() => import('./components/DiceRoller/DiceRoller'))
+const Compendium        = lazy(() => import('./components/Compendium/Compendium'))
+const SessionNotes      = lazy(() => import('./components/SessionNotes/SessionNotes'))
+const Settings          = lazy(() => import('./components/Settings/Settings'))
+const EquipmentPanel    = lazy(() => import('./components/EquipmentPanel/EquipmentPanel'))
+const EncounterTracker  = lazy(() => import('./components/EncounterTracker/EncounterTracker'))
+
+function TabLoader() {
+  return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Cargando...</div>
+}
 
 // Selector de personajes activo
 function CharacterSwitcher() {
@@ -123,6 +129,7 @@ const TABS = [
   { id: 'equipment',  label: 'Equipamiento', icon: '🧙' },
   { id: 'damage',     label: 'Daño',       icon: '⚔️' },
   { id: 'dice',       label: 'Dados',        icon: '🎲' },
+  { id: 'encounter',  label: 'Encuentro',    icon: '🗡️' },
   { id: 'compendium', label: 'Compendio',    icon: '📚' },
   { id: 'notes',      label: 'Notas',        icon: '📝' },
   { id: 'settings',   label: 'Config',       icon: '⚙️' },
@@ -178,6 +185,7 @@ function AppContent() {
       {/* ── CONTENIDO PRINCIPAL ── */}
       <main className={styles.main}>
         <div className={styles.tabContent}>
+          <Suspense fallback={<TabLoader />}>
           <section
             className={`${styles.tabPanel} ${activeTab === 'character' ? styles.tabPanelActive : styles.tabPanelHidden}`}
             aria-hidden={activeTab === 'character' ? undefined : true}
@@ -207,6 +215,13 @@ function AppContent() {
           </section>
 
           <section
+            className={`${styles.tabPanel} ${activeTab === 'encounter' ? styles.tabPanelActive : styles.tabPanelHidden}`}
+            aria-hidden={activeTab === 'encounter' ? undefined : true}
+          >
+            <ErrorBoundary label="Encuentro"><EncounterTracker /></ErrorBoundary>
+          </section>
+
+          <section
             className={`${styles.tabPanel} ${activeTab === 'compendium' ? styles.tabPanelActive : styles.tabPanelHidden}`}
             aria-hidden={activeTab === 'compendium' ? undefined : true}
           >
@@ -226,6 +241,7 @@ function AppContent() {
           >
             <Settings onNavigate={setActiveTab} />
           </section>
+          </Suspense>
         </div>
       </main>
 
