@@ -812,66 +812,91 @@ const DamageCalculator = memo(function DamageCalculator() {
             </div>
           )}
 
-          {/* Selector de ítem */}
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>
-              {category === 'weapon' ? 'Arma' : 'Hechizo'}
-            </label>
-            {category === 'spell' && (
-              <input
-                type="text"
-                className={styles.searchInput}
-                placeholder="Buscar hechizo..."
-                value={spellSearch}
-                onChange={(e) => setSpellSearch(e.target.value)}
-              />
-            )}
-            <select
-              className={styles.select}
-              value={selectedItem?.index || selectedItem?.name || ''}
-              onChange={e => {
-                const found = items.find(i => (i.index || i.name) === e.target.value)
-                if (found) setSelectedItem(found)
-              }}
-            >
-              {items.length === 0 && <option value="">Sin resultados</option>}
-              {items.map(item => (
-                <option key={item.index || item.name} value={item.index || item.name}>
-                  {tSpellName(item.name)}{item.dmgDice && item.dmgDice !== '?' && item.dmgDice !== '0d0' ? ` — ${item.dmgDice}` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {category === 'weapon' && canUseBladeCantips && (
-            <div className={styles.field}>
-              <label className={styles.fieldLabel}>Cantrip sobre ataque</label>
+          <div className={styles.quickConfigGrid}>
+            {/* Selector de ítem */}
+            <div className={`${styles.field} ${styles.fieldWide}`}>
+              <label className={styles.fieldLabel}>
+                {category === 'weapon' ? 'Arma' : 'Hechizo'}
+              </label>
+              {category === 'spell' && (
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder="Buscar hechizo..."
+                  value={spellSearch}
+                  onChange={(e) => setSpellSearch(e.target.value)}
+                />
+              )}
               <select
                 className={styles.select}
-                value={weaponBladeCantrip}
-                onChange={(e) => setWeaponBladeCantrip(e.target.value)}
+                value={selectedItem?.index || selectedItem?.name || ''}
+                onChange={e => {
+                  const found = items.find(i => (i.index || i.name) === e.target.value)
+                  if (found) setSelectedItem(found)
+                }}
               >
-                <option value="none">Sin cantrip</option>
-                <option value="green-flame-blade">Filo de llamas verdes</option>
-                <option value="booming-blade">Filo atronador</option>
+                {items.length === 0 && <option value="">Sin resultados</option>}
+                {items.map(item => (
+                  <option key={item.index || item.name} value={item.index || item.name}>
+                    {tSpellName(item.name)}{item.dmgDice && item.dmgDice !== '?' && item.dmgDice !== '0d0' ? ` — ${item.dmgDice}` : ''}
+                  </option>
+                ))}
               </select>
             </div>
-          )}
 
-          {category === 'weapon' && (
-            <div className={styles.field}>
-              <label className={styles.fieldLabel}>Ataques por accion</label>
-              <input
-                className={styles.searchInput}
-                type="number"
-                min={1}
-                max={6}
-                value={attacksPerAction}
-                onChange={(e) => updateAttacksPerAction(e.target.value)}
-              />
-              <p className={styles.apiHint}>{attacksReason}</p>
-            </div>
-          )}
+            {category === 'weapon' && canUseBladeCantips && (
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>Cantrip sobre ataque</label>
+                <select
+                  className={styles.select}
+                  value={weaponBladeCantrip}
+                  onChange={(e) => setWeaponBladeCantrip(e.target.value)}
+                >
+                  <option value="none">Sin cantrip</option>
+                  <option value="green-flame-blade">Filo de llamas verdes</option>
+                  <option value="booming-blade">Filo atronador</option>
+                </select>
+              </div>
+            )}
+
+            {category === 'weapon' && (
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>Ataques por accion</label>
+                <input
+                  className={styles.searchInput}
+                  type="number"
+                  min={1}
+                  max={6}
+                  value={attacksPerAction}
+                  onChange={(e) => updateAttacksPerAction(e.target.value)}
+                />
+                <p className={styles.apiHint}>{attacksReason}</p>
+              </div>
+            )}
+
+            {category === 'spell' && Number(selectedItem?.level || 0) > 0 && (
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>Espacio a gastar</label>
+                <select
+                  className={styles.select}
+                  value={String(castSlotLevel || selectedItem.level)}
+                  onChange={(e) => setCastSlotLevel(e.target.value)}
+                >
+                  {SPELL_SLOT_LEVELS
+                    .filter((slotLevel) => slotLevel >= Number(selectedItem.level || 1))
+                    .map((slotLevel) => {
+                      const key = String(slotLevel)
+                      const row = spellSlots[key]
+                      return (
+                        <option key={slotLevel} value={slotLevel}>
+                          Nivel {slotLevel} ({row.current}/{row.max})
+                        </option>
+                      )
+                    })}
+                </select>
+              </div>
+            )}
+          </div>
 
           {category === 'weapon' && isHexblade && (
             <div className={styles.slotManager}>
@@ -928,29 +953,6 @@ const DamageCalculator = memo(function DamageCalculator() {
                   ? `Activo: +${getSpiritShroudDiceBySlot(spiritShroudSlotLevel)} ${spiritShroudDamageType} en cada impacto con tirada de ataque.`
                   : 'Inactivo. Lánzalo para añadir daño extra a tus ataques.'}
               </p>
-            </div>
-          )}
-
-          {category === 'spell' && Number(selectedItem?.level || 0) > 0 && (
-            <div className={styles.field}>
-              <label className={styles.fieldLabel}>Espacio a gastar</label>
-              <select
-                className={styles.select}
-                value={String(castSlotLevel || selectedItem.level)}
-                onChange={(e) => setCastSlotLevel(e.target.value)}
-              >
-                {SPELL_SLOT_LEVELS
-                  .filter((slotLevel) => slotLevel >= Number(selectedItem.level || 1))
-                  .map((slotLevel) => {
-                    const key = String(slotLevel)
-                    const row = spellSlots[key]
-                    return (
-                      <option key={slotLevel} value={slotLevel}>
-                        Nivel {slotLevel} ({row.current}/{row.max})
-                      </option>
-                    )
-                  })}
-              </select>
             </div>
           )}
 
