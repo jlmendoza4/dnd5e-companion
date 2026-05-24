@@ -18,6 +18,7 @@ import { getModifier } from '../../services/dndUtils'
 import { useCharacter } from '../../contexts/CharacterContext'
 import { DND_CLASSES, DND_RACES, DND_BACKGROUNDS, DND_ALIGNMENTS } from '../../constants/dndData'
 import { STATS_CONFIG, SKILLS_CONFIG, SAVE_CONFIG, EMPTY_SKILLS, EMPTY_SKILL_PROFS, EMPTY_SAVES, EMPTY_SAVE_PROFS } from '../../constants/stats'
+import { WARLOCK_INVOCATIONS } from '../../constants/hexblade'
 import LevelUpModal from './LevelUpModal'
 import SpellBook from './SpellBook'
 import ClassPanel from './ClassPanel'
@@ -43,6 +44,7 @@ export default function CharacterSheet({ onReset }) {
   const [newEquipment, setNewEquipment] = useState('')
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [hpDelta, setHpDelta] = useState('')
+  const [selectedInvocation, setSelectedInvocation] = useState(null)
 
   const applyHpDelta = (sign) => {
     const val = parseInt(hpDelta)
@@ -137,6 +139,17 @@ export default function CharacterSheet({ onReset }) {
     setNewEquipment('')
   }
 
+  const addInvocation = (invName) => {
+    const currentInvocations = character.invocations || []
+    if (currentInvocations.includes(invName)) return
+    onUpdate({ invocations: [...currentInvocations, invName] })
+  }
+
+  const removeInvocation = (invName) => {
+    onUpdate({ invocations: (character.invocations || []).filter(name => name !== invName) })
+  }
+
+
   // ── Cambiar cantidad de equipo ──
   const changeEquipmentQty = (name, delta) => {
     const next = character.equipment
@@ -166,6 +179,7 @@ export default function CharacterSheet({ onReset }) {
     const separator = currentTraits ? '\n\n' : ''
     onUpdate({ traits: `${currentTraits}${separator}${blocksToAdd.join('\n\n')}` })
   }
+
 
   const profBonus = getProficiencyBonus(character.level)
 
@@ -640,9 +654,80 @@ export default function CharacterSheet({ onReset }) {
         </div>
       </section>
 
-      {/* ══ SECCIÓN 8: RASGOS Y NOTAS ══ */}
+      {/* ══ SECCIÓN 8: INVOCACIONES ══ */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>🔮 Invocaciones</h3>
+
+        <div className={styles.listSection}>
+          <div className={styles.tagList}>
+            {(character.invocations || []).length === 0 ? (
+              <p className={styles.emptyMsg}>No hay invocaciones activas</p>
+            ) : (
+              (character.invocations || []).map(invName => {
+                const invData = WARLOCK_INVOCATIONS.find(i => i.name === invName)
+                return (
+                  <span key={invName} className={styles.tag} style={{ '--tag-color': 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <button
+                      type="button"
+                      className="btn-info"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '1rem' }}
+                      onClick={() => setSelectedInvocation(invData)}
+                      title="Ver descripción"
+                    >
+                      ℹ️
+                    </button>
+                    {invName}
+                    <button className={styles.tagRemove} onClick={() => removeInvocation(invName)} title="Eliminar">×</button>
+                  </span>
+                )
+              })
+            )}
+          </div>
+        </div>
+
+        {selectedInvocation && (
+          <div style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: 'var(--color-bg-dark)',
+            borderRadius: '8px',
+            borderLeft: '4px solid var(--color-primary)',
+            animation: 'fadeIn 0.3s ease'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <strong style={{ color: 'var(--color-primary)', fontSize: '1rem' }}>{selectedInvocation.name}</strong>
+              <button className="btn btn-secondary" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem' }} onClick={() => setSelectedInvocation(null)}>✕</button>
+            </div>
+            <p style={{ fontSize: '0.9rem', margin: 0, lineHeight: '1.4', color: 'var(--color-text-main)' }}>
+              {selectedInvocation.desc}
+            </p>
+          </div>
+        )}
+
+        <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--color-bg-dark)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+          <label className={styles.label} style={{ fontSize: '0.85rem', marginBottom: '0.5rem', display: 'block' }}>
+            ⚡ Añadir nueva invocación:
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {WARLOCK_INVOCATIONS.map(inv => (
+              <button
+                key={inv.name}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
+                onClick={() => addInvocation(inv.name)}
+                title={inv.desc}
+              >
+                {inv.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ SECCIÓN 9: RASGOS Y NOTAS ══ */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>📝 Rasgos, Características y Notas</h3>
+
         <div className={styles.addRow} style={{ marginBottom: '0.65rem' }}>
           <button className="btn btn-primary" type="button" onClick={addRequestedFeats}>
             ➕ Añadir dotes solicitadas

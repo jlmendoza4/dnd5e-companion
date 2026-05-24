@@ -49,7 +49,8 @@ export function mapApiSpellToCalculator(detail) {
     level: detail.level,
     saveType,
     saveMod: saveType,
-    noRoll
+    noRoll,
+    casting_time: detail.casting_time || null
   }
 }
 

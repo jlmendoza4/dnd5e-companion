@@ -147,10 +147,23 @@ function Chip({ label, value, highlight, wide }) {
 }
 
 // ── Sub-componente: fila de hechizo conocido ──────────────────
+function castingTimeBadge(castingTime) {
+  if (!castingTime) return null
+  const t = castingTime.toLowerCase()
+  if (t.includes('bonus action') || t.includes('acción adicional') || t.includes('accion adicional'))
+    return { label: 'Acción Adicional', cls: 'castBonus' }
+  if (t.includes('1 action') || t.includes('1 acción') || t.includes('1 accion'))
+    return { label: '1 Acción', cls: 'castAction' }
+  if (t.includes('reaction') || t.includes('reacción'))
+    return { label: 'Reacción', cls: 'castReaction' }
+  return null
+}
+
 function SpellRow({ entry, detail, isOpen, isLoading, translatedDesc, saveCD, attackBonus, spellMod, characterLevel, onToggle, onRemove }) {
   const canExpand = !!entry.index
   const school = detail?.school?.name
   const dmgDice = detail?.damage?.damage_dice
+  const ctBadge = castingTimeBadge(detail?.casting_time)
   const currentScaling = detail?.damage?.damage_at_character_level
     ? getCurrentScalingDamage(detail.damage.damage_at_character_level, characterLevel, spellMod)
     : null
@@ -168,6 +181,7 @@ function SpellRow({ entry, detail, isOpen, isLoading, translatedDesc, saveCD, at
           {canExpand && <span className={styles.spellArrow}>{isOpen ? '▲' : '▼'}</span>}
           <span className={styles.spellName}>{detail?.translatedName || tSpellName(entry.name)}</span>
           {school && <span className={styles.spellSchool}>{SCHOOLS[school] || school}</span>}
+          {ctBadge && <span className={`${styles.spellTag} ${styles[ctBadge.cls]}`}>{ctBadge.label}</span>}
           {detail?.ritual && <span className={styles.spellTag}>Ritual</span>}
           {detail?.concentration && <span className={styles.spellTag}>Conc.</span>}
           {dmgDice && !isOpen && <span className={styles.dmgPreview}>{dmgDice}</span>}

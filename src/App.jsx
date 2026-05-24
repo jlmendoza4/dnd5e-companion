@@ -129,7 +129,6 @@ const TABS = [
   { id: 'equipment',  label: 'Equipamiento', icon: '🧙' },
   { id: 'damage',     label: 'Daño',       icon: '⚔️' },
   { id: 'dice',       label: 'Dados',        icon: '🎲' },
-  { id: 'encounter',  label: 'Encuentro',    icon: '🗡️' },
   { id: 'compendium', label: 'Compendio',    icon: '📚' },
   { id: 'notes',      label: 'Notas',        icon: '📝' },
   { id: 'settings',   label: 'Config',       icon: '⚙️' },
@@ -205,6 +204,7 @@ function AppContent() {
             aria-hidden={activeTab === 'damage' ? undefined : true}
           >
             <DamageCalculator />
+            <ErrorBoundary label="Encuentro"><EncounterTracker /></ErrorBoundary>
           </section>
 
           <section
@@ -212,13 +212,6 @@ function AppContent() {
             aria-hidden={activeTab === 'dice' ? undefined : true}
           >
             <DiceRoller />
-          </section>
-
-          <section
-            className={`${styles.tabPanel} ${activeTab === 'encounter' ? styles.tabPanelActive : styles.tabPanelHidden}`}
-            aria-hidden={activeTab === 'encounter' ? undefined : true}
-          >
-            <ErrorBoundary label="Encuentro"><EncounterTracker /></ErrorBoundary>
           </section>
 
           <section

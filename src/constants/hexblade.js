@@ -67,6 +67,9 @@ export const WLOCK_INVOCATIONS = [
   { name: 'Undying Servitude', minLevel: 5, priority: 'SITUACIONAL', pact: null, source: 'TCE', desc: 'Animate Dead 1/día con slot.' },
 ]
 
+// Alias legible y compatible para módulos antiguos.
+export const WARLOCK_INVOCATIONS = WLOCK_INVOCATIONS
+
 export const KEY_SPELLS_NO_CONC = [
   {
     name: 'Armor of Agathys',
