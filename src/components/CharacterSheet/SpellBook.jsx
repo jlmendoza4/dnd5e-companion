@@ -33,7 +33,13 @@ const SCHOOLS = {
 
 // ── Helpers ──────────────────────────────────────────────────
 function normalize(str) {
-  return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+  return String(str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 function getMod(score) { return Math.floor((Number(score) - 10) / 2) }
 function formatSigned(n) { return Number(n) >= 0 ? `+${n}` : String(n) }

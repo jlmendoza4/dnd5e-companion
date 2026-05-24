@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { readStoredJSON, writeStoredJSON } from '../services/storage'
-import { getSkillHistoryStorageKey } from '../components/DamageCalculator/damageUtils'
+import { getSkillHistoryStorageKey, rollDie } from '../components/DamageCalculator/damageUtils'
+import { playRollOutcomeSound } from '../services/rollSounds'
 
 const LEGACY_KEY = 'dnd_skill_roll_history'
 
@@ -63,16 +64,19 @@ export function useSkillRolls(character) {
   const rollSkillCheck = (modifier, label) => {
     setSkillRolling(true)
     setSkillRollResult(null)
-    const d20 = () => Math.floor(Math.random() * 20) + 1
     setTimeout(() => {
-      const die1 = d20()
-      const die2 = skillRollMode !== 'normal' ? d20() : null
+      const die1 = rollDie(20)
+      const die2 = skillRollMode !== 'normal' ? rollDie(20) : null
       let chosen = die1
       if (skillRollMode === 'advantage')    chosen = Math.max(die1, die2)
       if (skillRollMode === 'disadvantage') chosen = Math.min(die1, die2)
       const total  = chosen + modifier
       const isCrit = chosen === 20
       const isFail = chosen === 1
+
+      if (isCrit) playRollOutcomeSound('critical')
+      if (isFail) playRollOutcomeSound('fumble')
+
       const result = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         label,

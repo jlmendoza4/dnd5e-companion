@@ -49,10 +49,18 @@ export default function CharacterSheet({ onReset }) {
   const applyHpDelta = (sign) => {
     const val = parseInt(hpDelta)
     if (!val || val <= 0) return
-    const next = sign === 'heal'
-      ? Math.min(character.maxHP, character.currentHP + val)
-      : Math.max(0, character.currentHP - val)
-    onUpdate({ currentHP: next })
+    if (sign === 'heal') {
+      const next = Math.min(character.maxHP, character.currentHP + val)
+      onUpdate({ currentHP: next })
+      setHpDelta('')
+      return
+    }
+
+    const currentTemp = Number(character.tempHP || 0)
+    const nextTemp = Math.max(0, currentTemp - val)
+    const overflowDamage = Math.max(0, val - currentTemp)
+    const nextCurrent = Math.max(0, character.currentHP - overflowDamage)
+    onUpdate({ currentHP: nextCurrent, tempHP: nextTemp })
     setHpDelta('')
   }
 
@@ -191,7 +199,7 @@ export default function CharacterSheet({ onReset }) {
       const max = character.spellSlots?.[key]?.max ?? 0
       resetSlots[key] = { max, current: max }
     }
-    onUpdate({ currentHP: character.maxHP, spellSlots: resetSlots })
+    onUpdate({ currentHP: character.maxHP, tempHP: 0, spellSlots: resetSlots })
   }
 
   // ── Descanso Corto: solo slots de pacto (brujos) ──

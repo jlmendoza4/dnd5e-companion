@@ -5,6 +5,7 @@
  */
 import { normalizeClassName } from '../../services/dndRules'
 import { SPIRIT_SHROUD_MIN_SLOT, SPELL_SLOT_LEVELS, EMPTY_SPELL_SLOTS } from '../../constants/spellSlots'
+import { randomIntInclusive } from '../../services/random'
 
 // ── Extrae el primer string de dados de daño de un detalle de hechizo de la API ──
 export function getFirstDamageDice(detail) {
@@ -56,7 +57,7 @@ export function mapApiSpellToCalculator(detail) {
 
 // ── Lanza un dado virtual ──
 export function rollDie(sides) {
-  return Math.floor(Math.random() * sides) + 1
+  return randomIntInclusive(1, sides)
 }
 
 // ── Parsea una expresión de dados (p.ej. "2d6") ──

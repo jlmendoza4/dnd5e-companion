@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { getModifier } from '../../services/dndUtils'
 import { getProficiencyBonus } from '../../services/dndRules'
 import { useCharacter } from '../../contexts/CharacterContext'
@@ -69,15 +69,36 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
   const [invFilter, setInvFilter] = useState('todo')
   // Armor of Agathys tracker
   const [agathysSlot, setAgathysSlot] = useState(1)
-  const [agathysTempHP, setAgathysTempHP] = useState(0)
+  const [agathysTempHP, setAgathysTempHP] = useState(() => Number(character?.tempHP || 0))
   const [hpDelta, setHpDelta] = useState('')
+
+  useEffect(() => {
+    setAgathysTempHP(Number(character?.tempHP || 0))
+  }, [character?.tempHP])
+
+  const updateAgathysTempHP = (nextValue) => {
+    const maxTemp = agathysSlot * 5
+    const normalized = Math.max(0, Math.min(maxTemp, Number(nextValue) || 0))
+    setAgathysTempHP(normalized)
+    onUpdate?.({ tempHP: normalized })
+  }
+
   const applyHpDelta = (sign) => {
     const val = parseInt(hpDelta)
     if (!val || val <= 0) return
-    const next = sign === 'heal'
-      ? Math.min(character.maxHP ?? 999, (character.currentHP ?? 0) + val)
-      : Math.max(0, (character.currentHP ?? 0) - val)
-    onUpdate?.({ currentHP: next })
+
+    if (sign === 'heal') {
+      const next = Math.min(character.maxHP ?? 999, (character.currentHP ?? 0) + val)
+      onUpdate?.({ currentHP: next })
+      setHpDelta('')
+      return
+    }
+
+    const currentTemp = Number(character?.tempHP ?? agathysTempHP ?? 0)
+    const nextTemp = Math.max(0, currentTemp - val)
+    const overflowDamage = Math.max(0, val - currentTemp)
+    const nextCurrent = Math.max(0, (character.currentHP ?? 0) - overflowDamage)
+    onUpdate?.({ currentHP: nextCurrent, tempHP: nextTemp })
     setHpDelta('')
   }
 
@@ -294,17 +315,23 @@ export default function HexbladeToolkit({ selectedItem, weaponMod, spellAttackBo
           </div>
           <div className={styles.row}>
             <label className={styles.noteLabel}>PG temp. restantes</label>
-            <button className="btn btn-secondary" type="button" onClick={() => setAgathysTempHP(v => Math.max(0, v - 1))}>−</button>
+            <button className="btn btn-secondary" type="button" onClick={() => updateAgathysTempHP(agathysTempHP - 1)}>−</button>
             <input
               className={styles.inputSmall}
               type="number"
               min={0}
               max={agathysSlot * 5}
               value={agathysTempHP}
-              onChange={(e) => setAgathysTempHP(Math.max(0, Math.min(agathysSlot * 5, Number(e.target.value))))}
+              onChange={(e) => updateAgathysTempHP(e.target.value)}
             />
-            <button className="btn btn-secondary" type="button" onClick={() => setAgathysTempHP(v => Math.min(agathysSlot * 5, v + 1))}>+</button>
-            <button className="btn btn-primary" type="button" onClick={() => setAgathysTempHP(agathysSlot * 5)}>Activar</button>
+            <button className="btn btn-secondary" type="button" onClick={() => updateAgathysTempHP(agathysTempHP + 1)}>+</button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => updateAgathysTempHP(Math.max(Number(character?.tempHP || 0), agathysSlot * 5))}
+            >
+              Activar
+            </button>
           </div>
           {agathysTempHP > 0 && (
             <p className={styles.noteRec}>

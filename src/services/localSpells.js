@@ -236,6 +236,81 @@ const LOCAL_SPELLS = [
       ],
       higher_level: []
     }
+  },
+  {
+    index: 'custom:mind-sliver',
+    name: 'Mind Sliver',
+    esName: 'Romper la mente',
+    aliases: [
+      'romper la mente', 'mind sliver', 'esquirla mental', 'mente'
+    ],
+    classes: ['warlock', 'wizard', 'sorcerer'],
+    detail: {
+      index: 'custom:mind-sliver',
+      name: 'Mind Sliver',
+      level: 0,
+      school: { name: 'Enchantment' },
+      casting_time: '1 acción',
+      range: '60 feet',
+      duration: '1 round',
+      components: ['V'],
+      concentration: false,
+      ritual: false,
+      desc: [
+        'Conduces una desorientadora punta de energía psíquica hacia la mente de una criatura que puedas ver dentro del alcance.',
+        'El objetivo debe superar una tirada de salvación de Inteligencia o sufre 1d6 de daño psíquico.',
+        'Hasta el final de tu siguiente turno, el objetivo resta 1d4 de la próxima tirada de salvación que haga.'
+      ],
+      higher_level: [
+        'El daño aumenta en 1d6 cuando alcanzas nivel 5 (2d6), nivel 11 (3d6) y nivel 17 (4d6).'
+      ],
+      damage: {
+        damage_type: { name: 'Psychic' },
+        damage_at_character_level: {
+          1: '1d6',
+          5: '2d6',
+          11: '3d6',
+          17: '4d6'
+        }
+      },
+      dc: {
+        dc_type: { name: 'INT' },
+        dc_success: 'none'
+      }
+    }
+  },
+  {
+    index: 'custom:maddening-darkness',
+    name: 'Maddening Darkness',
+    esName: 'Oscuridad enloquecedora',
+    aliases: [
+      'oscuridad enloquecedora', 'maddening darkness', 'maddening-darkness', 'enloquecedora'
+    ],
+    classes: ['warlock', 'wizard', 'sorcerer'],
+    detail: {
+      index: 'custom:maddening-darkness',
+      name: 'Maddening Darkness',
+      level: 8,
+      school: { name: 'Evocation' },
+      casting_time: '1 acción',
+      range: '150 feet',
+      duration: 'Concentration, up to 10 minutes',
+      components: ['V', 'M'],
+      material: 'A drop of pitch mixed with a drop of mercury',
+      concentration: true,
+      ritual: false,
+      desc: [
+        'Magical darkness spreads from a point you choose within range to fill a 60-foot-radius sphere until the spell ends.',
+        'The darkness spreads around corners. A creature with darkvision cannot see through this darkness, and nonmagical light cannot illuminate it.',
+        'If the point you choose is on the ground, the darkness is 10 feet high.',
+        'When a creature starts its turn in the darkness, it takes 8d8 psychic damage.'
+      ],
+      higher_level: [],
+      damage: {
+        damage_type: { name: 'Psychic' },
+        damage_dice: '8d8'
+      }
+    }
   }
 ]
 
@@ -261,6 +336,13 @@ export const SPELL_SEARCH_ALIASES = {
   'sombra de moil': ['shadow-of-moil'],
   'shadow of moil': ['shadow-of-moil'],
   'moil': ['shadow-of-moil'],
+  'romper la mente': ['mind sliver'],
+  'romper la  mente': ['mind sliver'],
+  'mind sliver': ['mind sliver'],
+  'esquirla mental': ['mind sliver'],
+  'oscuridad enloquecedora': ['maddening darkness'],
+  'maddening darkness': ['maddening darkness'],
+  'maddening-darkness': ['maddening darkness'],
 }
 
 export function getLocalSpellsByClass(classIndex) {

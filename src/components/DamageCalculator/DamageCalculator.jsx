@@ -25,6 +25,7 @@ import { getSpells, getSpellDetail } from '../../services/dndApi'
 import { getLocalSpellsByClass, getLocalSpellDetail } from '../../services/localSpells'
 import { translateArray } from '../../services/autoTranslate'
 import { tSpellName, tDamageType, tSimpleText } from '../../services/dndTranslations'
+import { playRollOutcomeSound } from '../../services/rollSounds'
 import { useCharacter } from '../../contexts/CharacterContext'
 import { QUICK_WEAPONS, QUICK_SPELLS } from '../../constants/weapons'
 import { SPELL_SLOT_LEVELS, SPIRIT_SHROUD_MIN_SLOT, SPIRIT_SHROUD_DAMAGE_TYPES } from '../../constants/spellSlots'
@@ -50,6 +51,71 @@ import EncounterTracker from '../EncounterTracker/EncounterTracker'
 import ErrorBoundary from '../Common/ErrorBoundary'
 import styles from './DamageCalculator.module.css'
 
+const DAMAGE_TYPE_LABELS = {
+  acido: 'Ácido',
+  contundente: 'Contundente',
+  cortante: 'Cortante',
+  perforante: 'Perforante',
+  fuego: 'Fuego',
+  frio: 'Frío',
+  relampago: 'Relámpago',
+  trueno: 'Trueno',
+  veneno: 'Veneno',
+  necrotico: 'Necrótico',
+  radiante: 'Radiante',
+  psiquico: 'Psíquico',
+  fuerza: 'Fuerza',
+}
+
+const DAMAGE_TYPE_ALIASES = {
+  acido: ['acido', 'ácido', 'acid'],
+  contundente: ['contundente', 'bludgeoning'],
+  cortante: ['cortante', 'slashing'],
+  perforante: ['perforante', 'piercing'],
+  fuego: ['fuego', 'fire'],
+  frio: ['frio', 'frío', 'cold'],
+  relampago: ['relampago', 'relámpago', 'lightning'],
+  trueno: ['trueno', 'thunder'],
+  veneno: ['veneno', 'poison'],
+  necrotico: ['necrotico', 'necrótico', 'necrotic'],
+  radiante: ['radiante', 'radiant'],
+  psiquico: ['psiquico', 'psíquico', 'psychic'],
+  fuerza: ['fuerza', 'force'],
+}
+
+function normalizeText(value = '') {
+  return String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
+function resolveDamageFamily(rawType) {
+  const normalized = normalizeText(rawType)
+  if (!normalized) return null
+
+  for (const [family, aliases] of Object.entries(DAMAGE_TYPE_ALIASES)) {
+    if (aliases.some((alias) => normalizeText(alias) === normalized)) return family
+  }
+
+  return null
+}
+
+function getDefenseForDamageType(rawType, defenses) {
+  const family = resolveDamageFamily(rawType)
+  if (!family) return 'normal'
+  return defenses[family] || 'normal'
+}
+
+function applyDamageDefense(amount, defense) {
+  const safe = Math.max(0, Number(amount) || 0)
+  if (defense === 'immunity') return 0
+  if (defense === 'resistance') return Math.floor(safe / 2)
+  if (defense === 'vulnerability') return safe * 2
+  return safe
+}
+
 function castingTimeBadge(castingTime) {
   if (!castingTime) return null
   const t = castingTime.toLowerCase()
@@ -68,10 +134,19 @@ const DamageCalculator = memo(function DamageCalculator() {
   const applyHpDelta = (sign) => {
     const val = parseInt(hpDelta)
     if (!val || val <= 0) return
-    const next = sign === 'heal'
-      ? Math.min(character.maxHP, character.currentHP + val)
-      : Math.max(0, character.currentHP - val)
-    onUpdate({ currentHP: next })
+
+    if (sign === 'heal') {
+      const next = Math.min(character.maxHP, character.currentHP + val)
+      onUpdate({ currentHP: next })
+      setHpDelta('')
+      return
+    }
+
+    const currentTemp = Number(character.tempHP || 0)
+    const nextTemp = Math.max(0, currentTemp - val)
+    const overflowDamage = Math.max(0, val - currentTemp)
+    const nextCurrent = Math.max(0, character.currentHP - overflowDamage)
+    onUpdate({ currentHP: nextCurrent, tempHP: nextTemp })
     setHpDelta('')
   }
   const [category, setCategory]       = useState('weapon') // 'weapon' | 'spell'
@@ -90,6 +165,8 @@ const DamageCalculator = memo(function DamageCalculator() {
   const [attacksPerAction, setAttacksPerAction] = useState(() => Math.max(1, Number(character?.attacksPerAction) || 1))
   const [weaponBladeCantrip, setWeaponBladeCantrip] = useState('none')
   const [castSlotLevel, setCastSlotLevel] = useState('')
+  const [targetName, setTargetName] = useState('Objetivo')
+  const [targetDefenses, setTargetDefenses] = useState({})
   const [spellScope, setSpellScope] = useState(() => {
     const saved = readStoredString(STORAGE_KEYS.spellScope, 'class')
     return ['class', 'all', 'learned'].includes(saved) ? saved : 'class'
@@ -137,6 +214,12 @@ const DamageCalculator = memo(function DamageCalculator() {
       Boolean(character.attacksPerActionCustomized)
     ),
     [character.class, character.subclass, level, attacksPerAction, character.attacksPerActionCustomized]
+  )
+
+  const damageTypes = useMemo(() => Object.keys(DAMAGE_TYPE_LABELS), [])
+  const hasTargetDefenses = useMemo(
+    () => damageTypes.some((type) => (targetDefenses[type] || 'normal') !== 'normal'),
+    [damageTypes, targetDefenses]
   )
 
   const learnedSpellList = useMemo(() => {
@@ -525,6 +608,10 @@ const DamageCalculator = memo(function DamageCalculator() {
 
       const isCriticalHit = usesAttackRoll && finalD20 === 20
       const isCriticalFail = usesAttackRoll && finalD20 === 1
+
+      if (isCriticalHit) playRollOutcomeSound('critical')
+      if (isCriticalFail) playRollOutcomeSound('fumble')
+
       const finalAtkRoll = usesAttackRoll ? finalD20 + totalAtkBonus : null
 
       const dmgResult = rollDice(selectedItem.dmgDice, isCriticalHit)
@@ -573,6 +660,28 @@ const DamageCalculator = memo(function DamageCalculator() {
       const baseDmg = dmgResult.total + dmgMod
       const totalDmg = baseDmg + bladePrimaryBonus + spiritShroudBonus
 
+      const baseDamageDefense = getDefenseForDamageType(selectedItem.dmgType, targetDefenses)
+      const bladeDamageDefense = bladePrimaryBonus > 0
+        ? getDefenseForDamageType(bladePrimaryType, targetDefenses)
+        : 'normal'
+      const shroudDamageDefense = spiritShroudBonus > 0
+        ? getDefenseForDamageType(spiritShroudDamageType, targetDefenses)
+        : 'normal'
+
+      const effectiveBaseDmg = applyDamageDefense(baseDmg, baseDamageDefense)
+      const effectiveBladePrimaryBonus = applyDamageDefense(bladePrimaryBonus, bladeDamageDefense)
+      const effectiveSpiritShroudBonus = applyDamageDefense(spiritShroudBonus, shroudDamageDefense)
+      const totalEffectiveDmg = effectiveBaseDmg + effectiveBladePrimaryBonus + effectiveSpiritShroudBonus
+
+      const hasDefenseAdjustment = totalEffectiveDmg !== totalDmg
+      if (hasDefenseAdjustment) {
+        const defenseNotes = []
+        if (baseDamageDefense !== 'normal') defenseNotes.push(`${tDamageType(selectedItem.dmgType)}: ${baseDamageDefense}`)
+        if (bladePrimaryBonus > 0 && bladeDamageDefense !== 'normal') defenseNotes.push(`${bladePrimaryType}: ${bladeDamageDefense}`)
+        if (spiritShroudBonus > 0 && shroudDamageDefense !== 'normal') defenseNotes.push(`${spiritShroudDamageType}: ${shroudDamageDefense}`)
+        extrasParts.push(`Ajuste vs ${targetName || 'objetivo'} -> ${defenseNotes.join(', ')}`)
+      }
+
       generatedRolls.push({
         id: Date.now() + attackIndex,
         itemName: selectedItem.name,
@@ -598,6 +707,11 @@ const DamageCalculator = memo(function DamageCalculator() {
         spiritShroudType: spiritShroudDamageType,
         spiritShroudDice,
         totalDmg,
+        totalEffectiveDmg,
+        effectiveBaseDmg,
+        effectiveBladePrimaryBonus,
+        effectiveSpiritShroudBonus,
+        hasDefenseAdjustment,
         dmgType: selectedItem.dmgType,
         saveDC: usesSave ? spellSaveDC : null,
         saveType,
@@ -634,6 +748,8 @@ const DamageCalculator = memo(function DamageCalculator() {
     spiritShroudActive,
     spiritShroudDamageType,
     spiritShroudSlotLevel,
+    targetDefenses,
+    targetName,
     spendSpellSlot,
   ])
 
@@ -735,6 +851,11 @@ const DamageCalculator = memo(function DamageCalculator() {
               <span className={styles.hpWidgetLabel}>❤️ PG</span>
               <span className={styles.hpWidgetValue}>{character.currentHP} / {character.maxHP}</span>
             </div>
+            {Number(character.tempHP || 0) > 0 && (
+              <div className={styles.hpTempBadge}>
+                🧊 PG temporales: {Number(character.tempHP || 0)}
+              </div>
+            )}
             <div className={styles.hpWidgetBar}>
               <div
                 className={styles.hpWidgetFill}
@@ -1004,6 +1125,49 @@ const DamageCalculator = memo(function DamageCalculator() {
             </div>
           )}
 
+          <div className={styles.targetDefenseBox}>
+            <div className={styles.targetDefenseHeader}>
+              <span className={styles.fieldLabel}>Defensas del objetivo</span>
+              <button
+                className={styles.slotResetBtn}
+                type="button"
+                onClick={() => setTargetDefenses({})}
+                disabled={!hasTargetDefenses}
+              >
+                Limpiar
+              </button>
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Nombre del objetivo</label>
+              <input
+                type="text"
+                className={styles.searchInput}
+                value={targetName}
+                placeholder="Objetivo"
+                onChange={(e) => setTargetName(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.targetDefenseGrid}>
+              {damageTypes.map((type) => (
+                <div key={type} className={styles.targetDefenseRow}>
+                  <span className={styles.targetDefenseType}>{DAMAGE_TYPE_LABELS[type]}</span>
+                  <select
+                    className={styles.select}
+                    value={targetDefenses[type] || 'normal'}
+                    onChange={(e) => setTargetDefenses((prev) => ({ ...prev, [type]: e.target.value }))}
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="resistance">Resistencia (x0.5)</option>
+                    <option value="vulnerability">Vulnerabilidad (x2)</option>
+                    <option value="immunity">Inmunidad (x0)</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Detalles del ítem seleccionado */}
           {selectedItem && (
             <div className={styles.itemDetail}>
@@ -1272,6 +1436,16 @@ const DamageCalculator = memo(function DamageCalculator() {
                       </div>
                     )}
 
+                    {lastRoll.hasDefenseAdjustment && (
+                      <div className={styles.dmgExtraRow}>
+                        <span className={styles.rollOp}>⇒</span>
+                        <div className={`${styles.totalDmg} ${styles.dmgEffectiveTotal}`}>
+                          <span>{lastRoll.totalEffectiveDmg}</span>
+                          <span className={styles.dmgType}>efectivo</span>
+                        </div>
+                      </div>
+                    )}
+
                     {lastRoll.extras && (
                       <p className={styles.extrasNote}>{lastRoll.extras}</p>
                     )}
@@ -1316,7 +1490,7 @@ const DamageCalculator = memo(function DamageCalculator() {
                         : `Atq: ${roll.totalAtkRoll}`}
                     </span>
                     <span className={styles.historyDmg}>
-                      {roll.totalDmg} {roll.dmgType}
+                      {(roll.totalEffectiveDmg ?? roll.totalDmg)} {roll.dmgType}
                       {roll.isCriticalHit && ' ⚡'}
                     </span>
                     <button

@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react'
+import { playRollOutcomeSound } from '../services/rollSounds'
+import { randomIntInclusive } from '../services/random'
 
 /**
  * useDiceRoll — Hook genérico para tiradas de dados.
@@ -11,7 +13,7 @@ export function useDiceRoll() {
   const [rolls, setRolls] = useState([])
 
   const rollDie = useCallback((sides) => {
-    return Math.floor(Math.random() * sides) + 1
+    return randomIntInclusive(1, sides)
   }, [])
 
   /**
@@ -33,6 +35,10 @@ export function useDiceRoll() {
                : diceResults.length === 1 && diceResults[0] === 1  ? 'fallo'
                : 'normal',
     }
+
+          if (result.isNatural === 'crítico') playRollOutcomeSound('critical')
+          if (result.isNatural === 'fallo') playRollOutcomeSound('fumble')
+
     setLastRoll(result)
     setRolls(prev => [result, ...prev])
     return result
